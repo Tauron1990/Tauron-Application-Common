@@ -1,0 +1,345 @@
+﻿// The file DefaultExport.cs is part of Tauron.Application.Common.
+// 
+// CoreEngine is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CoreEngine is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
+
+#region
+
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="DefaultExport.cs" company="Tauron Parallel Works">
+//   Tauron Application © 2013
+// </copyright>
+// <summary>
+//   The default export.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Reflection;
+using Tauron.Application.Ioc.LifeTime;
+
+#endregion
+
+namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
+{
+    /// <summary>The default export.</summary>
+    public sealed class DefaultExport : IExport
+    {
+        #region Fields
+
+        private readonly ICustomAttributeProvider attributeProvider;
+
+        /// <summary>The _exportet type.</summary>
+        private readonly Type exportetType;
+
+        /// <summary>The _exports.</summary>
+        private ExportMetadata[] exports;
+
+        #endregion
+
+        #region Constructors and Destructors
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="DefaultExport" /> class.
+        ///     Initialisiert eine neue Instanz der <see cref="DefaultExport" /> Klasse.
+        ///     Initializes a new instance of the <see cref="DefaultExport" /> class.
+        /// </summary>
+        /// <param name="exportetType">
+        ///     The exportet type.
+        /// </param>
+        /// <param name="externalInfo">
+        ///     The external info.
+        /// </param>
+        /// <param name="asAnonym">
+        ///     The as anonym.
+        /// </param>
+        public DefaultExport(Type exportetType, ExternalExportInfo externalInfo, bool asAnonym)
+        {
+            Contract.Requires<ArgumentNullException>(exportetType != null, "exportetType");
+            Contract.Requires<ArgumentNullException>(externalInfo != null, "externalInfo");
+
+            Globalmetadata = new Dictionary<string, object>();
+            this.exportetType = exportetType;
+            attributeProvider = exportetType;
+            ExternalInfo = externalInfo;
+            Initialize(asAnonym);
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="DefaultExport" /> class.
+        ///     Initialisiert eine neue Instanz der <see cref="DefaultExport" /> Klasse.
+        ///     Initializes a new instance of the <see cref="DefaultExport" /> class.
+        /// </summary>
+        /// <param name="info">
+        ///     The exportet type.
+        /// </param>
+        /// <param name="externalInfo">
+        ///     The external info.
+        /// </param>
+        /// <param name="asAnonym">
+        ///     The as anonym.
+        /// </param>
+        public DefaultExport(MethodInfo info, ExternalExportInfo externalInfo, bool asAnonym)
+        {
+            Contract.Requires<ArgumentNullException>(info != null, "exportetType");
+            Contract.Requires<ArgumentNullException>(externalInfo != null, "externalInfo");
+
+            Globalmetadata = new Dictionary<string, object>();
+            attributeProvider = info;
+            ExternalInfo = externalInfo;
+            Initialize(asAnonym);
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets the export metadata.</summary>
+        /// <value>The export metadata.</value>
+        public IEnumerable<ExportMetadata> ExportMetadata
+        {
+            get { return exports; }
+        }
+
+        /// <summary>Gets the exports.</summary>
+        /// <value>The exports.</value>
+        public IEnumerable<Type> Exports
+        {
+            get { return exports.Select(ex => ex.InterfaceType); }
+        }
+
+        /// <summary>Gets the external info.</summary>
+        /// <value>The external info.</value>
+        public ExternalExportInfo ExternalInfo { get; private set; }
+
+        /// <summary>Gets or sets the globalmetadata.</summary>
+        /// <value>The globalmetadata.</value>
+        public Dictionary<string, object> Globalmetadata { get; private set; }
+
+        /// <summary>Gets the implement type.</summary>
+        /// <value>The implement type.</value>
+        public Type ImplementType
+        {
+            get { return exportetType; }
+        }
+
+        /// <summary>Gets the import metadata.</summary>
+        /// <value>The import metadata.</value>
+        public IEnumerable<ImportMetadata> ImportMetadata { get; internal set; }
+
+        /// <summary>Gets a value indicating whether share lifetime.</summary>
+        /// <value>The share lifetime.</value>
+        public bool ShareLifetime { get; private set; }
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>
+        ///     The equals.
+        /// </summary>
+        /// <param name="other">
+        ///     The other.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        public bool Equals(IExport other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+
+            if (ReferenceEquals(this, other)) return true;
+
+            return ImplementType == other.ImplementType;
+        }
+
+        /// <summary>
+        ///     The get export metadata.
+        /// </summary>
+        /// <param name="contractName">
+        ///     The contract name.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="ExportMetadata" />.
+        /// </returns>
+        [ContractVerification(false)]
+        public ExportMetadata GetNamedExportMetadata(string contractName)
+        {
+            return exports.Single(exm => exm.ContractName == contractName);
+        }
+
+        /// <summary>
+        ///     The select contract name.
+        /// </summary>
+        /// <param name="contractName">
+        ///     The contract name.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="IEnumerable{T}" />.
+        /// </returns>
+        public IEnumerable<ExportMetadata> SelectContractName(string contractName)
+        {
+            return exports.Where(meta => meta.ContractName == contractName);
+        }
+
+        /// <summary>
+        ///     The is export.
+        /// </summary>
+        /// <param name="type">
+        ///     The type.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        public static bool IsExport(ICustomAttributeProvider type)
+        {
+            Contract.Requires<ArgumentNullException>(type != null, "type");
+
+            return type.GetCustomAttributes(typeof (ExportAttribute), false).Length != 0;
+        }
+
+        /// <summary>The ==.</summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns></returns>
+        public static bool operator ==(DefaultExport left, DefaultExport right)
+        {
+            Contract.Requires<ArgumentNullException>(left != null, "left");
+            Contract.Requires<ArgumentNullException>(right != null, "right");
+
+            return Equals(left, right);
+        }
+
+        /// <summary>The !=.</summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns></returns>
+        public static bool operator !=(DefaultExport left, DefaultExport right)
+        {
+            Contract.Requires<ArgumentNullException>(left != null, "left");
+            Contract.Requires<ArgumentNullException>(right != null, "right");
+
+            return !Equals(left, right);
+        }
+
+        /// <summary>
+        ///     The equals.
+        /// </summary>
+        /// <param name="obj">
+        ///     The obj.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+
+            if (ReferenceEquals(this, obj)) return true;
+
+            return obj is DefaultExport && Equals(obj);
+        }
+
+        /// <summary>The get hash code.</summary>
+        /// <returns>
+        ///     The <see cref="int" />.
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return attributeProvider.GetHashCode();
+        }
+
+        /// <summary>The to string.</summary>
+        /// <returns>
+        ///     The <see cref="string" />.
+        /// </returns>
+        public override string ToString()
+        {
+            return ImplementType != null ? ImplementType.ToString() : string.Empty;
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        ///     The initialize.
+        /// </summary>
+        /// <param name="anonym">
+        ///     The anonym.
+        /// </param>
+        private void Initialize(bool anonym)
+        {
+            Contract.Requires(attributeProvider != null);
+
+            Globalmetadata = new Dictionary<string, object>();
+
+            IEnumerable<ExportMetadataBaseAttribute> metadata =
+                attributeProvider.GetAllCustomAttributes<ExportMetadataBaseAttribute>();
+            foreach (ExportMetadataBaseAttribute exportMetadataAttribute in metadata) Globalmetadata[exportMetadataAttribute.InternalKey] = exportMetadataAttribute.InternalValue;
+
+            var attr = Globalmetadata.TryGetAndCast<LifetimeContextAttribute>(AopConstants.LiftimeMetadataName);
+
+            Type lifetime = attr != null ? attr.LifeTimeType ?? typeof (SharedLifetime) : typeof (SharedLifetime);
+
+            if (anonym)
+            {
+                exports = new[]
+                {
+                    new ExportMetadata(
+                        exportetType,
+                        ExternalInfo.ExtenalComponentName,
+                        typeof (NotSharedLifetime),
+                        new Dictionary<string, object>(Globalmetadata),
+                        this)
+                };
+                return;
+            }
+
+            exports = attributeProvider.GetAllCustomAttributes<ExportAttribute>().Select(
+                attribute =>
+                {
+                    var temp = new Dictionary<string, object>(Globalmetadata);
+
+                    Type realLifetime;
+
+                    if (attr == null)
+                    {
+                        var customLifeTime = attribute.GetOverrideDefaultPolicy();
+                        if (customLifeTime != null)
+                        {
+                            realLifetime = customLifeTime.LifeTimeType;
+                            attr = customLifeTime;
+                        }
+                        else realLifetime = lifetime;
+                    }
+                    else realLifetime = lifetime;
+
+                    foreach (var tuple in attribute.Metadata)
+                    {
+                        temp.Add(tuple.Item1,
+                                 tuple.Item2);
+                    }
+
+                    return new ExportMetadata(attribute.Export, attribute.ContractName, realLifetime, temp, this);
+                }).ToArray();
+
+            ShareLifetime = attr == null || attr.ShareLiftime;
+        }
+
+        #endregion
+    }
+}

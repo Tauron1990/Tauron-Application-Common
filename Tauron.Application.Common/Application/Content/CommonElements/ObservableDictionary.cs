@@ -1,0 +1,1148 @@
+﻿// The file ObservableDictionary.cs is part of Tauron.Application.Common.
+// 
+// CoreEngine is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// CoreEngine is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
+
+#region
+
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ObservableDictionary.cs" company="Tauron Parallel Works">
+//   Tauron Application © 2013
+// </copyright>
+// <summary>
+//   The observable dictionary.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Threading;
+
+#endregion
+
+namespace Tauron.Application
+{
+    /// <summary>
+    ///     The observable dictionary.
+    /// </summary>
+    /// <typeparam name="TKey">
+    /// </typeparam>
+    /// <typeparam name="TValue">
+    /// </typeparam>
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
+    [Serializable]
+    public sealed class ObservableDictionary<TKey, TValue> : ObservableObject,
+        IDictionary<TKey, TValue>,
+        INotifyCollectionChanged
+    {
+        #region Fields
+
+        /// <summary>The _entrys.</summary>
+        private Entry[] _entrys;
+
+        /// <summary>The _helper.</summary>
+        [NonSerialized] private BlockHelper _helper;
+
+        /// <summary>The _key equals.</summary>
+        [NonSerialized] private IEqualityComparer<TKey> _keyEquals;
+
+        /// <summary>The _keys.</summary>
+        [NonSerialized] private KeyCollection _keys;
+
+        /// <summary>The _values.</summary>
+        [NonSerialized] private ValueCollection _values;
+
+        /// <summary>The _version.</summary>
+        [NonSerialized] private int _version;
+
+        #endregion
+
+        #region Constructors and Destructors
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableDictionary{TKey,TValue}" /> class.
+        ///     Initialisiert eine neue Instanz der <see cref="ObservableDictionary{TKey,TValue}" /> Klasse.
+        ///     Initializes a new instance of the <see cref="ObservableDictionary{TKey,TValue}" /> class.
+        /// </summary>
+        public ObservableDictionary()
+        {
+            _helper = new BlockHelper();
+            _version = 1;
+            _entrys = new Entry[4];
+            _keyEquals = EqualityComparer<TKey>.Default;
+            _keys = new KeyCollection(this);
+            _values = new ValueCollection(this);
+        }
+
+        #endregion
+
+        #region Public Events
+
+        /// <summary>The collection changed.</summary>
+        public event NotifyCollectionChangedEventHandler CollectionChanged
+        {
+            add { AddEvent("NotifyCollectionChangedEventHandler", value); }
+
+            remove { RemoveEvent("NotifyCollectionChangedEventHandler", value); }
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets the count.</summary>
+        /// <value>The count.</value>
+        public int Count { get; private set; }
+
+        /// <summary>Gets the keys.</summary>
+        /// <value>The keys.</value>
+        public ICollection<TKey> Keys
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<ICollection<TKey>>() != null);
+
+                return _keys;
+            }
+        }
+
+        /// <summary>Gets the values.</summary>
+        /// <value>The values.</value>
+        public ICollection<TValue> Values
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<ICollection<TValue>>() != null);
+
+                return _values;
+            }
+        }
+
+        #endregion
+
+        #region Explicit Interface Properties
+
+        /// <summary>Gets a value indicating whether is read only.</summary>
+        /// <value>The is read only.</value>
+        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly
+        {
+            get { return false; }
+        }
+
+        #endregion
+
+        #region Public Indexers
+
+        /// <summary>
+        ///     The this.
+        /// </summary>
+        /// <param name="key">
+        ///     The key.
+        /// </param>
+        /// <exception cref="KeyNotFoundException">
+        /// </exception>
+        /// <returns>
+        ///     The <see cref="TValue" />.
+        /// </returns>
+        public TValue this[TKey key]
+        {
+            get
+            {
+                int index;
+                Entry ent = FindEntry(key, out index);
+                if (ent == null) throw new KeyNotFoundException(key.ToString());
+
+                return ent.Value;
+            }
+
+            set
+            {
+                int index;
+                Entry entry = FindEntry(key, out index);
+
+                if (entry == null) AddCore(key, value);
+                else
+                {
+                    KeyValuePair<TKey, TValue> temp = Entry.Construct(entry);
+                    entry.Value = value;
+                    OnCollectionReplace(Entry.Construct(entry), temp, index);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>
+        ///     The add.
+        /// </summary>
+        /// <param name="key">
+        ///     The key.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// </exception>
+        public void Add(TKey key, TValue value)
+        {
+            int i;
+            if (FindEntry(key, out i) != null) throw new ArgumentException("The key is in the collection unkown.");
+
+            AddCore(key, value);
+        }
+
+        /// <summary>The clear.</summary>
+        public void Clear()
+        {
+            Count = 0;
+            Array.Clear(_entrys, 0, _entrys.Length);
+
+            OnCollectionReset();
+        }
+
+        /// <summary>
+        ///     The contains key.
+        /// </summary>
+        /// <param name="key">
+        ///     The key.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        [ContractVerification(false)]
+        public bool ContainsKey(TKey key)
+        {
+            int i;
+            return FindEntry(key, out i) != null;
+        }
+
+        /// <summary>The get enumerator.</summary>
+        /// <returns>
+        ///     The <see cref="IEnumerator" />.
+        /// </returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        {
+            Contract.Ensures(Contract.Result<IEnumerator<KeyValuePair<TKey, TValue>>>() != null);
+
+            int currver = _version;
+            foreach (Entry t in _entrys)
+            {
+                if (t == null) break;
+
+                if (currver != _version) throw new InvalidOperationException();
+
+                yield return Entry.Construct(t);
+            }
+        }
+
+        /// <summary>
+        ///     The remove.
+        /// </summary>
+        /// <param name="key">
+        ///     The key.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        [ContractVerification(false)]
+        public bool Remove(TKey key)
+        {
+            int index;
+            Entry entry = FindEntry(key, out index);
+            if (entry == null) return false;
+
+            Contract.Assume(index >= 0 && index <= _entrys.Length);
+
+            _entrys[index] = null;
+
+            Array.Copy(_entrys, index + 1, _entrys, index, Count - index);
+            Count--;
+
+            OnCollectionRemove(Entry.Construct(entry), index);
+
+            return true;
+        }
+
+        /// <summary>
+        ///     The try get value.
+        /// </summary>
+        /// <param name="key">
+        ///     The key.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        [ContractVerification(false)]
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            int index;
+            Entry ent = FindEntry(key, out index);
+
+            bool flag = ent != null;
+
+            value = flag ? ent.Value : default(TValue);
+
+            return flag;
+        }
+
+        #endregion
+
+        #region Explicit Interface Methods
+
+        /// <summary>
+        ///     The add.
+        /// </summary>
+        /// <param name="item">
+        ///     The item.
+        /// </param>
+        [ContractVerification(false)]
+        void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item)
+        {
+            Add(item.Key, item.Value);
+        }
+
+        /// <summary>
+        ///     The contains.
+        /// </summary>
+        /// <param name="item">
+        ///     The item.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        [ContractVerification(false)]
+        bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item)
+        {
+            int index;
+            Entry ent = FindEntry(item.Key, out index);
+
+            return ent != null && EqualityComparer<TValue>.Default.Equals(ent.Value, item.Value);
+        }
+
+        /// <summary>
+        ///     The copy to.
+        /// </summary>
+        /// <param name="array">
+        ///     The array.
+        /// </param>
+        /// <param name="arrayIndex">
+        ///     The array index.
+        /// </param>
+        [ContractVerification(false)]
+        void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            if (Count == 0) return;
+
+            int index = 0;
+
+            for (int i = arrayIndex; i < array.Length; i++)
+            {
+                array[i] = Entry.Construct(_entrys[index]);
+
+                index++;
+                if (index == Count) break;
+            }
+        }
+
+        /// <summary>The get enumerator.</summary>
+        /// <returns>
+        ///     The <see cref="IEnumerator" />.
+        /// </returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            Contract.Ensures(Contract.Result<IEnumerator>() != null);
+
+            return GetEnumerator();
+        }
+
+        /// <summary>
+        ///     The remove.
+        /// </summary>
+        /// <param name="item">
+        ///     The item.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item)
+        {
+            return Remove(item.Key);
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        ///     The add core.
+        /// </summary>
+        /// <param name="key">
+        ///     The key.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        private void AddCore(TKey key, TValue value)
+        {
+            int index = Count;
+            Count++;
+            EnsureCapatcity(Count);
+
+            _entrys[index] = new Entry {Key = key, Value = value};
+            OnCollectionAdd(Entry.Construct(key, value), index);
+        }
+
+        /// <summary>The block collection.</summary>
+        /// <returns>
+        ///     The <see cref="IDisposable" />.
+        /// </returns>
+        private IDisposable BlockCollection()
+        {
+            _helper.Enter();
+            return _helper;
+        }
+
+        /// <summary>
+        ///     The ensure capatcity.
+        /// </summary>
+        /// <param name="min">
+        ///     The min.
+        /// </param>
+        private void EnsureCapatcity(int min)
+        {
+            if (_entrys.Length < min) Array.Resize(ref _entrys, Convert.ToInt32(_entrys.Length*2));
+        }
+
+        /// <summary>
+        ///     The find entry.
+        /// </summary>
+        /// <param name="key">
+        ///     The key.
+        /// </param>
+        /// <param name="index">
+        ///     The index.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="ObservableDictionary" />.
+        /// </returns>
+        [ContractVerification(false)]
+        private Entry FindEntry(TKey key, out int index)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                Entry ent = _entrys[i];
+                if (_keyEquals.Equals(ent.Key, key))
+                {
+                    index = i;
+                    return ent;
+                }
+            }
+
+            index = -1;
+            return null;
+        }
+
+        /// <summary>
+        ///     The invoke collection changed.
+        /// </summary>
+        /// <param name="e">
+        ///     The e.
+        /// </param>
+        private void InvokeCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            _version++;
+
+            InvokeEvent("NotifyCollectionChangedEventHandler", this, e);
+        }
+
+        /// <summary>The invoke property changed.</summary>
+        private void InvokePropertyChanged()
+        {
+            OnPropertyChanged("Item[]");
+            OnPropertyChanged("Count");
+            OnPropertyChanged("Keys");
+            OnPropertyChanged("Values");
+        }
+
+        [ContractInvariantMethod]
+        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic",
+            Justification = "Required for code contracts.")]
+        private void ObjectInvariant()
+        {
+            Contract.Invariant(_entrys != null);
+            Contract.Invariant(_helper != null);
+            Contract.Invariant(_keyEquals != null);
+            Contract.Invariant(_keys != null);
+            Contract.Invariant(_values != null);
+        }
+
+        /// <summary>
+        ///     The on collection add.
+        /// </summary>
+        /// <param name="changed">
+        ///     The changed.
+        /// </param>
+        /// <param name="index">
+        ///     The index.
+        /// </param>
+        private void OnCollectionAdd(KeyValuePair<TKey, TValue> changed, int index)
+        {
+            using (BlockCollection())
+            {
+                InvokeCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, changed,
+                                                         index));
+                _keys.OnCollectionAdd(changed.Key, index);
+                _values.OnCollectionAdd(changed.Value, index);
+                InvokePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        ///     The on collection remove.
+        /// </summary>
+        /// <param name="changed">
+        ///     The changed.
+        /// </param>
+        /// <param name="index">
+        ///     The index.
+        /// </param>
+        private void OnCollectionRemove(KeyValuePair<TKey, TValue> changed, int index)
+        {
+            using (BlockCollection())
+            {
+                InvokeCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
+                                                         changed, index));
+                _keys.OnCollectionRemove(changed.Key, index);
+                _values.OnCollectionRemove(changed.Value, index);
+                InvokePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        ///     The on collection replace.
+        /// </summary>
+        /// <param name="newItem">
+        ///     The new item.
+        /// </param>
+        /// <param name="oldItem">
+        ///     The old item.
+        /// </param>
+        /// <param name="index">
+        ///     The index.
+        /// </param>
+        private void OnCollectionReplace(
+            KeyValuePair<TKey, TValue> newItem,
+            KeyValuePair<TKey, TValue> oldItem,
+            int index)
+        {
+            using (BlockCollection())
+            {
+                InvokeCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace,
+                                                         newItem, oldItem, index));
+                _values.OnCollectionReplace(newItem.Value, oldItem.Value, index);
+                InvokePropertyChanged();
+            }
+        }
+
+        /// <summary>The on collection reset.</summary>
+        private void OnCollectionReset()
+        {
+            using (BlockCollection())
+            {
+                InvokeCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                _keys.OnCollectionReset();
+                _values.OnCollectionReset();
+                InvokePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        ///     The on deserialized.
+        /// </summary>
+        /// <param name="context">
+        ///     The context.
+        /// </param>
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context)
+        {
+            _helper = new BlockHelper();
+            _version = 1;
+            _keyEquals = EqualityComparer<TKey>.Default;
+            _keys = new KeyCollection(this);
+            _values = new ValueCollection(this);
+        }
+
+        #endregion
+
+        /// <summary>The block helper.</summary>
+        private class BlockHelper : IDisposable
+        {
+            #region Public Methods and Operators
+
+            /// <summary>The dispose.</summary>
+            public void Dispose()
+            {
+                Monitor.Exit(this);
+            }
+
+            /// <summary>The enter.</summary>
+            public void Enter()
+            {
+                Monitor.Enter(this);
+            }
+
+            #endregion
+        }
+
+        /// <summary>The entry.</summary>
+        [Serializable]
+        private class Entry
+        {
+            #region Fields
+
+            /// <summary>The key.</summary>
+            public TKey Key;
+
+            /// <summary>The value.</summary>
+            public TValue Value;
+
+            #endregion
+
+            #region Public Methods and Operators
+
+            /// <summary>
+            ///     The construct.
+            /// </summary>
+            /// <param name="key">
+            ///     The key.
+            /// </param>
+            /// <param name="value">
+            ///     The value.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="KeyValuePair" />.
+            /// </returns>
+            public static KeyValuePair<TKey, TValue> Construct(TKey key, TValue value)
+            {
+                return new KeyValuePair<TKey, TValue>(key, value);
+            }
+
+            /// <summary>
+            ///     The construct.
+            /// </summary>
+            /// <param name="entry">
+            ///     The entry.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="KeyValuePair" />.
+            /// </returns>
+            public static KeyValuePair<TKey, TValue> Construct(Entry entry)
+            {
+                Contract.Requires<ArgumentNullException>(entry != null, "entry");
+
+                return new KeyValuePair<TKey, TValue>(entry.Key, entry.Value);
+            }
+
+            #endregion
+        }
+
+        /// <summary>The key collection.</summary>
+        [Serializable]
+        private class KeyCollection : NotifyCollectionChangedBase<TKey>
+        {
+            #region Constructors and Destructors
+
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="KeyCollection" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="KeyCollection" /> Klasse.
+            ///     Initializes a new instance of the <see cref="KeyCollection" /> class.
+            /// </summary>
+            /// <param name="collection">
+            ///     The collection.
+            /// </param>
+            public KeyCollection(ObservableDictionary<TKey, TValue> collection)
+                : base(collection)
+            {
+                Contract.Requires<ArgumentNullException>(collection != null, "collection");
+            }
+
+            #endregion
+
+            #region Methods
+
+            /// <summary>
+            ///     The contains.
+            /// </summary>
+            /// <param name="entry">
+            ///     The entry.
+            /// </param>
+            /// <param name="target">
+            ///     The target.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="bool" />.
+            /// </returns>
+            [SuppressMessage("Microsoft.Design", "CA1062:Argumente von öffentlichen Methoden validieren",
+                MessageId = "0")]
+            protected override bool Contains(Entry entry, TKey target)
+            {
+                return Dictionary._keyEquals.Equals(entry.Key, target);
+            }
+
+            /// <summary>
+            ///     The select.
+            /// </summary>
+            /// <param name="entry">
+            ///     The entry.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="TKey" />.
+            /// </returns>
+            [SuppressMessage("Microsoft.Design", "CA1062:Argumente von öffentlichen Methoden validieren",
+                MessageId = "0")]
+            protected override TKey Select(Entry entry)
+            {
+                return entry.Key;
+            }
+
+            #endregion
+        }
+
+        /// <summary>
+        ///     The notify collection changed base.
+        /// </summary>
+        /// <typeparam name="TTarget">
+        /// </typeparam>
+        [Serializable]
+        [ContractClass(typeof (NotifyCollectionChangedBaseContracts<>))]
+        private abstract class NotifyCollectionChangedBase<TTarget> : ObservableObject,
+            ICollection<TTarget>,
+            INotifyCollectionChanged
+        {
+            #region Fields
+
+            /// <summary>The dictionary.</summary>
+            protected readonly ObservableDictionary<TKey, TValue> Dictionary;
+
+            #endregion
+
+            #region Constructors and Destructors
+
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="NotifyCollectionChangedBase{TTarget}" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="NotifyCollectionChangedBase{TTarget}" /> Klasse.
+            ///     Initializes a new instance of the <see cref="NotifyCollectionChangedBase{TTarget}" /> class.
+            /// </summary>
+            /// <param name="dictionary">
+            ///     The dictionary.
+            /// </param>
+            protected NotifyCollectionChangedBase(ObservableDictionary<TKey, TValue> dictionary)
+            {
+                Contract.Requires<ArgumentNullException>(dictionary != null, "dictionary");
+
+                Dictionary = dictionary;
+            }
+
+            #endregion
+
+            #region Public Events
+
+            /// <summary>The collection changed.</summary>
+            public event NotifyCollectionChangedEventHandler CollectionChanged
+            {
+                add { AddEvent("NotifyCollectionChangedEventHandler", value); }
+
+                remove { RemoveEvent("NotifyCollectionChangedEventHandler", value); }
+            }
+
+            #endregion
+
+            #region Public Properties
+
+            /// <summary>Gets the count.</summary>
+            /// <value>The count.</value>
+            public int Count
+            {
+                get
+                {
+                    Contract.Ensures(Contract.Result<int>() >= 0);
+
+                    return Dictionary.Count;
+                }
+            }
+
+            /// <summary>Gets a value indicating whether is read only.</summary>
+            /// <value>The is read only.</value>
+            public bool IsReadOnly
+            {
+                get { return true; }
+            }
+
+            #endregion
+
+            #region Public Methods and Operators
+
+            /// <summary>
+            ///     The add.
+            /// </summary>
+            /// <param name="item">
+            ///     The item.
+            /// </param>
+            /// <exception cref="NotSupportedException">
+            /// </exception>
+            public void Add(TTarget item)
+            {
+                throw new NotSupportedException();
+            }
+
+            /// <summary>The clear.</summary>
+            /// <exception cref="NotSupportedException"></exception>
+            public void Clear()
+            {
+                throw new NotSupportedException();
+            }
+
+            /// <summary>
+            ///     The contains.
+            /// </summary>
+            /// <param name="item">
+            ///     The item.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="bool" />.
+            /// </returns>
+            public bool Contains(TTarget item)
+            {
+                return Dictionary._entrys.Any(ent => Contains(ent, item));
+            }
+
+            /// <summary>
+            ///     The copy to.
+            /// </summary>
+            /// <param name="array">
+            ///     The array.
+            /// </param>
+            /// <param name="arrayIndex">
+            ///     The array index.
+            /// </param>
+            [ContractVerification(false)]
+            public void CopyTo(TTarget[] array, int arrayIndex)
+            {
+                if (Dictionary.Count >= 0) return;
+
+                int index = 0;
+                for (int i = 0; i < array.Length; i++)
+                {
+                    array[i] = Select(Dictionary._entrys[index]);
+                    index++;
+                    if (index == Dictionary.Count) break;
+                }
+            }
+
+            /// <summary>The get enumerator.</summary>
+            /// <returns>
+            ///     The <see cref="IEnumerator" />.
+            /// </returns>
+            /// <exception cref="InvalidOperationException"></exception>
+            public IEnumerator<TTarget> GetEnumerator()
+            {
+                Contract.Ensures(Contract.Result<IEnumerator<TTarget>>() != null);
+
+                int ver = Dictionary._version;
+                int count = 0;
+                foreach (Entry entry in Dictionary._entrys)
+                {
+                    count++;
+                    if (count > Dictionary.Count) break;
+
+                    yield return Select(entry);
+                    if (ver != Dictionary._version) throw new InvalidOperationException();
+                }
+            }
+
+            /// <summary>
+            ///     The remove.
+            /// </summary>
+            /// <param name="item">
+            ///     The item.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="bool" />.
+            /// </returns>
+            /// <exception cref="NotSupportedException">
+            /// </exception>
+            public bool Remove(TTarget item)
+            {
+                throw new NotSupportedException();
+            }
+
+            /// <summary>
+            ///     The on collection add.
+            /// </summary>
+            /// <param name="target">
+            ///     The target.
+            /// </param>
+            /// <param name="index">
+            ///     The index.
+            /// </param>
+            public void OnCollectionAdd(TTarget target, int index)
+            {
+                InvokeCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, target,
+                                                         index));
+            }
+
+            /// <summary>
+            ///     The on collection remove.
+            /// </summary>
+            /// <param name="target">
+            ///     The target.
+            /// </param>
+            /// <param name="index">
+            ///     The index.
+            /// </param>
+            public void OnCollectionRemove(TTarget target, int index)
+            {
+                InvokeCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
+                                                         target, index));
+            }
+
+            /// <summary>
+            ///     The on collection replace.
+            /// </summary>
+            /// <param name="newItem">
+            ///     The new item.
+            /// </param>
+            /// <param name="oldItem">
+            ///     The old item.
+            /// </param>
+            /// <param name="index">
+            ///     The index.
+            /// </param>
+            public void OnCollectionReplace(TTarget newItem, TTarget oldItem, int index)
+            {
+                InvokeCollectionChanged(
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace,
+                                                         newItem, oldItem, index));
+            }
+
+            /// <summary>The on collection reset.</summary>
+            public void OnCollectionReset()
+            {
+                InvokeCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            }
+
+            #endregion
+
+            #region Explicit Interface Methods
+
+            /// <summary>The get enumerator.</summary>
+            /// <returns>
+            ///     The <see cref="IEnumerator" />.
+            /// </returns>
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                Contract.Ensures(Contract.Result<IEnumerator>() != null);
+
+                return GetEnumerator();
+            }
+
+            #endregion
+
+            #region Methods
+
+            /// <summary>
+            ///     The contains.
+            /// </summary>
+            /// <param name="entry">
+            ///     The entry.
+            /// </param>
+            /// <param name="target">
+            ///     The target.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="bool" />.
+            /// </returns>
+            protected abstract bool Contains(Entry entry, TTarget target);
+
+            /// <summary>
+            ///     The select.
+            /// </summary>
+            /// <param name="entry">
+            ///     The entry.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="TTarget" />.
+            /// </returns>
+            protected abstract TTarget Select(Entry entry);
+
+            /// <summary>
+            ///     The invoke collection changed.
+            /// </summary>
+            /// <param name="e">
+            ///     The e.
+            /// </param>
+            private void InvokeCollectionChanged(NotifyCollectionChangedEventArgs e)
+            {
+                InvokePropertyChanged();
+                InvokeEvent("NotifyCollectionChangedEventHandler", this, e);
+            }
+
+            /// <summary>The invoke property changed.</summary>
+            private void InvokePropertyChanged()
+            {
+                OnPropertyChanged("Item[]");
+                OnPropertyChanged("Count");
+                OnPropertyChanged("Keys");
+                OnPropertyChanged("Values");
+            }
+
+            #endregion
+        }
+
+        [ContractClassFor(typeof (NotifyCollectionChangedBase<>))]
+        private abstract class NotifyCollectionChangedBaseContracts<TTarget> : NotifyCollectionChangedBase<TTarget>
+        {
+            #region Constructors and Destructors
+
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="NotifyCollectionChangedBaseContracts{TTarget}" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="NotifyCollectionChangedBaseContracts{TTarget}" /> Klasse.
+            /// </summary>
+            /// <param name="dictionary">
+            ///     The dictionary.
+            /// </param>
+            public NotifyCollectionChangedBaseContracts(ObservableDictionary<TKey, TValue> dictionary)
+                : base(dictionary)
+            {
+            }
+
+            #endregion
+
+            #region Methods
+
+            /// <summary>
+            ///     The contains.
+            /// </summary>
+            /// <param name="entry">
+            ///     The entry.
+            /// </param>
+            /// <param name="target">
+            ///     The target.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="bool" />.
+            /// </returns>
+            protected override bool Contains(Entry entry, TTarget target)
+            {
+                Contract.Requires<ArgumentNullException>(entry != null, "entry");
+                return false;
+            }
+
+            /// <summary>
+            ///     The select.
+            /// </summary>
+            /// <param name="entry">
+            ///     The entry.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="TTarget" />.
+            /// </returns>
+            protected override TTarget Select(Entry entry)
+            {
+                Contract.Requires<ArgumentNullException>(entry != null, "entry");
+                return default(TTarget);
+            }
+
+            #endregion
+        }
+
+        /// <summary>The value collection.</summary>
+        [Serializable]
+        private class ValueCollection : NotifyCollectionChangedBase<TValue>
+        {
+            #region Constructors and Destructors
+
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="ValueCollection" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="ValueCollection" /> Klasse.
+            ///     Initializes a new instance of the <see cref="ValueCollection" /> class.
+            /// </summary>
+            /// <param name="collection">
+            ///     The collection.
+            /// </param>
+            public ValueCollection(ObservableDictionary<TKey, TValue> collection)
+                : base(collection)
+            {
+                Contract.Requires<ArgumentNullException>(collection != null, "collection");
+            }
+
+            #endregion
+
+            #region Methods
+
+            /// <summary>
+            ///     The contains.
+            /// </summary>
+            /// <param name="entry">
+            ///     The entry.
+            /// </param>
+            /// <param name="target">
+            ///     The target.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="bool" />.
+            /// </returns>
+            [SuppressMessage("Microsoft.Design", "CA1062:Argumente von öffentlichen Methoden validieren",
+                MessageId = "0")]
+            protected override bool Contains(Entry entry, TValue target)
+            {
+                return EqualityComparer<TValue>.Default.Equals(entry.Value, target);
+            }
+
+            /// <summary>
+            ///     The select.
+            /// </summary>
+            /// <param name="entry">
+            ///     The entry.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="TValue" />.
+            /// </returns>
+            [SuppressMessage("Microsoft.Design", "CA1062:Argumente von öffentlichen Methoden validieren",
+                MessageId = "0")]
+            protected override TValue Select(Entry entry)
+            {
+                return entry.Value;
+            }
+
+            #endregion
+        }
+    }
+}
