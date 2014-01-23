@@ -40,7 +40,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip">
-      <HintPath>..\packages\DotNetZip.1.9.1.8\lib\net20\Ionic.Zip.dll</HintPath>
+      <HintPath>..\packages\DotNetZip.1.9.2\lib\net20\Ionic.Zip.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="System" />
