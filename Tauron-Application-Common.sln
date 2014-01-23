@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common", "Tauron.Application.Common\Tauron.Application.Common.csproj", "{0D50EE98-A718-41B2-A1B6-57D23FDF5223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JetBrains.Annotations", "JetBrains.Annotations\JetBrains.Annotations.csproj", "{DF97133F-565A-4D1A-AFE3-4155B31A89E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common.Wpf", "Tauron.Application.Common.Wpf\Tauron.Application.Common.Wpf.csproj", "{03F1490A-9173-4E75-9D6E-FBE5A37AA649}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common.Wpf.Controls", "Tauron.Application.Common.Wpf.Controls\Tauron.Application.Common.Wpf.Controls.csproj", "{2CC827C8-5084-4334-8A68-0515DA46465E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D50EE98-A718-41B2-A1B6-57D23FDF5223}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D50EE98-A718-41B2-A1B6-57D23FDF5223}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D50EE98-A718-41B2-A1B6-57D23FDF5223}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D50EE98-A718-41B2-A1B6-57D23FDF5223}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF97133F-565A-4D1A-AFE3-4155B31A89E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF97133F-565A-4D1A-AFE3-4155B31A89E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF97133F-565A-4D1A-AFE3-4155B31A89E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF97133F-565A-4D1A-AFE3-4155B31A89E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03F1490A-9173-4E75-9D6E-FBE5A37AA649}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03F1490A-9173-4E75-9D6E-FBE5A37AA649}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03F1490A-9173-4E75-9D6E-FBE5A37AA649}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03F1490A-9173-4E75-9D6E-FBE5A37AA649}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CC827C8-5084-4334-8A68-0515DA46465E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CC827C8-5084-4334-8A68-0515DA46465E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CC827C8-5084-4334-8A68-0515DA46465E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CC827C8-5084-4334-8A68-0515DA46465E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.ExceptionHandling.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Logging.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.ExceptionHandling.Logging.6.0.1304.0\lib\NET45
+	EndGlobalSection
+EndGlobal
