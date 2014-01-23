@@ -86,6 +86,12 @@ namespace Tauron.Application
         [CanBeNull]
         public string ThemeDictionary { get; set; }
 
+        [NotNull]
+        public System.Windows.Application CurrentWpfApplication
+        {
+            get { return System.Windows.Application.Current; }
+        }
+
         #endregion
 
         #region Public Methods and Operators
@@ -198,8 +204,8 @@ namespace Tauron.Application
             path.GetFullPath().CreateDirectoryIfNotExis();
 
             listener.ToFile(path)
-                    .WhenRollFileExists(RollFileExistsBehavior.Overwrite)
-                    .CleanUpArchivedFilesWhenMoreThan(2)
+                    .WhenRollFileExists(RollFileExistsBehavior.Increment)
+                    .CleanUpArchivedFilesWhenMoreThan(4)
                     .FormatWith(new InternalLoggerDefaultFormatter(DefaultFormatterPattern));
         }
 

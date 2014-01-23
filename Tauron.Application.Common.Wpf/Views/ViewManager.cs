@@ -17,14 +17,16 @@ namespace Tauron.Application.Views
     public sealed class ViewManager
     {
         #region ExportView
-        private class ExportNameHelper : INameExportMetadata
+        private class ExportNameHelper : ISortableViewExportMetadata
         {
             private readonly DependencyObject _dependencyObject;
+            private readonly int _order;
 
             public ExportNameHelper([NotNull] string name, [NotNull] DependencyObject dependencyObject)
             {
                 _dependencyObject = dependencyObject;
                 Name = name;
+                _order = GetSortOrder(dependencyObject);
             }
 
             public string Name { get; private set; }
@@ -39,6 +41,11 @@ namespace Tauron.Application.Views
             public object GetValue()
             {
                 return _dependencyObject;
+            }
+
+            public int Order
+            {
+                get { return _order; }
             }
         }
 
@@ -68,7 +75,7 @@ namespace Tauron.Application.Views
                 manager._windows.Add(new InstanceResolver<Window, INameExportMetadata>(helper.GetValue, helper.GetMeta,
                                                                                             dependencyObject.GetType()));
             else 
-                manager._views.Add(new InstanceResolver<Control, INameExportMetadata>(helper.GetValue, helper.GetMeta,
+                manager._views.Add(new InstanceResolver<Control, ISortableViewExportMetadata>(helper.GetValue, helper.GetMeta,
                                                                                        dependencyObject.GetType()));
         }
 
@@ -102,6 +109,14 @@ namespace Tauron.Application.Views
             {
                 panel.Children.Clear();
                 foreach (Control control in Manager.GetAllViews(viewName)) panel.Children.Add(control);
+                return;
+            }
+
+            var itemsCon = dependencyObject as ItemsControl;
+            if (itemsCon != null)
+            {
+                itemsCon.Items.Clear();
+                foreach (var control in Manager.GetAllViews(viewName)) itemsCon.Items.Add(control);
                 return;
             }
 
@@ -161,8 +176,27 @@ namespace Tauron.Application.Views
 
         #endregion
 
+        #region SortOrder
+
+        public static readonly DependencyProperty SortOrderProperty =
+            DependencyProperty.RegisterAttached("SortOrder", typeof (int), typeof (ViewManager),
+                                                new PropertyMetadata(int.MaxValue));
+
+        public static void SetSortOrder([NotNull] DependencyObject element, int value)
+        {
+            element.SetValue(SortOrderProperty, value);
+        }
+
+        public static int GetSortOrder([NotNull] DependencyObject element)
+        {
+            return (int) element.GetValue(SortOrderProperty);
+        }
+
+        #endregion
+
+
         [Inject] 
-        private List<InstanceResolver<Control, INameExportMetadata>> _views;
+        private List<InstanceResolver<Control, ISortableViewExportMetadata>> _views;
 
         [Inject] 
         private List<InstanceResolver<Window, INameExportMetadata>> _windows; 
@@ -187,7 +221,11 @@ namespace Tauron.Application.Views
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
 
-            return new WpfWindow(_windows.First(vi => vi.Metadata.Name == name).Resolve(true));
+            var win = _windows.First(vi => vi.Metadata.Name == name).Resolve(true);
+
+            UiSynchronize.Synchronize.Invoke(() => win.Name = name);
+
+            return new WpfWindow(win);
         }
 
         [NotNull]
@@ -221,7 +259,14 @@ namespace Tauron.Application.Views
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
 
-            return _views.Where(res => res.Metadata.Name == name).Select(res => res.Resolve()).ToArray();
+            return _views.Where(res => res.Metadata.Name == name).OrderBy(res => res.Metadata.Order).Select(res => res.Resolve()).ToArray();
+        }
+
+        [CanBeNull]
+        public IWindow GetWindow([NotNull] string windowName)
+        {
+            var wind = System.Windows.Application.Current.Windows.Cast<Window>().FirstOrDefault(w => w.Name == windowName);
+            return wind == null ? null : new WpfWindow(wind);
         }
     }
 }

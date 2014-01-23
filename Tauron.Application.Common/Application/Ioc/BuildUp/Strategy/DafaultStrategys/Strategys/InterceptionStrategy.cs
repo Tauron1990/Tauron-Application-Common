@@ -165,6 +165,20 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             context.Policys.Add(contextPolicy);
 
             var attr = context.Metadata.Metadata.TryGetAndCast<InterceptAttribute>(AopConstants.InterceptMetadataName);
+
+            object meta;
+            if (context.Metadata.Metadata.TryGetValue("IgnoreIntercepion", out meta))
+            {
+                try
+                {
+                    if((bool)meta)
+                        return;
+                }
+                catch (InvalidCastException)
+                {
+                }
+            }
+
             if (attr == null) return;
 
             var policy = new InterceptionPolicy {InterceptAttribute = attr};

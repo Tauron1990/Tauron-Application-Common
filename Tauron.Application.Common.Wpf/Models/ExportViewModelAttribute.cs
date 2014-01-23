@@ -14,9 +14,12 @@ namespace Tauron.Application.Models
             Contract.Requires<ArgumentNullException>(name != null, "name");
 
             ContractName = name;
+            IgnoreIntercepion = true;
         }
 
         public string Name { get { return ContractName; } }
+
+        public bool IgnoreIntercepion { get; set; }
 
         protected override bool HasMetadata
         {

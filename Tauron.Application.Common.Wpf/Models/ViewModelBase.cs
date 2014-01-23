@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows.Threading;
+using Microsoft.Practices.EnterpriseLibrary.Logging;
 using Tauron.Application.Ioc;
 using Tauron.Application.Views;
 using Tauron.JetBrains.Annotations;
@@ -45,5 +47,23 @@ namespace Tauron.Application.Models
 
         [NotNull, Inject]
         public IDialogFactory Dialogs { get; protected set; }
+
+        [NotNull]
+        public System.Windows.Application CurrentApplication
+        {
+            get
+            {
+                return System.Windows.Application.Current;
+            }
+        }
+
+        [NotNull]
+        public Dispatcher SystemDispatcher
+        {
+            get
+            {
+                return CurrentApplication.Dispatcher;
+            }
+        }
     }
 }

@@ -45,9 +45,9 @@ namespace Tauron.Application
 
         private double _height = 236;
 
-        private string _mainLabelForeground = "Black";
+        private object _mainLabelForeground = "Black";
 
-        private string _mainLabelbackground = "White";
+        private object _mainLabelBackground = "White";
 
         private double _widht = 414;
 
@@ -90,7 +90,7 @@ namespace Tauron.Application
         ///     Gets or sets the main label foreground.
         /// </summary>
         [NotNull]
-        public string MainLabelForeground
+        public object MainLabelForeground
         {
             get { return _mainLabelForeground; }
 
@@ -105,13 +105,13 @@ namespace Tauron.Application
         ///     Gets or sets the main labelbackground.
         /// </summary>
         [NotNull]
-        public string MainLabelbackground
+        public object MainLabelBackground
         {
-            get { return _mainLabelbackground; }
+            get { return _mainLabelBackground; }
 
             set
             {
-                _mainLabelbackground = value;
+                _mainLabelBackground = value;
                 OnPropertyChanged();
             }
         }

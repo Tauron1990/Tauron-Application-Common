@@ -8,7 +8,7 @@
     Title="Loading..." MaxHeight="{Binding Height}" MaxWidth="{Binding Widht}" WindowStartupLocation="CenterScreen"
     WindowStyle="None" AllowsTransparency="True"
     BorderThickness="3" ResizeMode="NoResize" BorderBrush="Black"
-    Background="{Binding MainLabelbackground, Converter={conv:BrushValueConverter}}">
+    Background="{Binding MainLabelBackground, Converter={conv:BrushValueConverter}}">
     <Grid>
         <ContentControl Margin="19,22,17,80" Content="{Binding SplashContent}" FontSize="48"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="Black">

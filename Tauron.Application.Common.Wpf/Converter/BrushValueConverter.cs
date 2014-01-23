@@ -26,6 +26,7 @@
 
 using System.Windows.Data;
 using System.Windows.Media;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -55,7 +56,7 @@ namespace Tauron.Application.Converter
         {
             #region Static Fields
 
-            private static readonly BrushConverter converterImpl = new BrushConverter();
+            private static readonly BrushConverter ConverterImpl = new BrushConverter();
 
             #endregion
 
@@ -70,9 +71,10 @@ namespace Tauron.Application.Converter
             /// <returns>
             ///     The <see cref="Brush" />.
             /// </returns>
-            protected override Brush Convert(string value)
+            [CanBeNull]
+            protected override Brush Convert([NotNull] string value)
             {
-                return converterImpl.ConvertFrom(value) as Brush;
+                return ConverterImpl.ConvertFrom(value) as Brush;
             }
 
             #endregion

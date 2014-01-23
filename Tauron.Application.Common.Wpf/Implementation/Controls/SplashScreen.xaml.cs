@@ -5,7 +5,7 @@ namespace Tauron.Application.Implementation.Controls
     /// <summary>
     /// Interaktionslogik für SplashScreen.xaml
     /// </summary>
-    public partial class SplashScreen : Window
+    public partial class SplashScreen
     {
         public SplashScreen()
         {

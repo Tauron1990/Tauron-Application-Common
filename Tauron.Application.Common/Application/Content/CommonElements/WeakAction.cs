@@ -241,7 +241,7 @@ namespace Tauron.Application
                           .Select(weakAction => weakAction.TargetObject != null ? weakAction.TargetObject.Target : null)
                           .Any(weakTarget => weakTarget == handler.Target)) return this;
 
-            Contract.Assume(parameters.Length < 0);
+            Contract.Assume(parameters.Length > 0);
 
             Type parameterType = parameters[0].ParameterType;
 
