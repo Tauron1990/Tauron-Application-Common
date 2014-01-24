@@ -24,7 +24,7 @@ namespace Tauron.Application.Modules
         public static IEnumerable<Action<MemberInfo, object, IModule>> GetHandler([NotNull] Type key)
         {
             Contract.Requires<ArgumentNullException>(key != null, "key");
-            Contract.Ensures(Contract.Result<IEnumerable<Action<MemberInfo, IModule>>>() != null);
+            Contract.Ensures(Contract.Result<IEnumerable<Action<MemberInfo, object, IModule>>>() != null);
 
             ICollection<Action<MemberInfo, object, IModule>> action;
             return Handlers.TryGetValue(key, out action) ? action : Enumerable.Empty<Action<MemberInfo, object, IModule>>();
