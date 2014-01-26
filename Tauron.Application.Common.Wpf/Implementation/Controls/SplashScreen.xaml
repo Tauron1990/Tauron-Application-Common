@@ -18,8 +18,8 @@
                 </ControlTemplate>
             </ContentControl.Template>
         </ContentControl>
-        <Label Height="28" Margin="19,0,17,15" VerticalAlignment="Bottom"
-               Content="{Binding Message}"
+        <TextBlock Height="28" Margin="19,0,17,15" VerticalAlignment="Bottom"
+               Text="{Binding Message}"
                Foreground="{Binding MainLabelForeground, Converter={conv:BrushValueConverter}}" />
     </Grid>
 </Window>

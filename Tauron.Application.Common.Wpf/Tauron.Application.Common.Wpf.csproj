@@ -145,6 +145,8 @@
     <Compile Include="ControlHelper.cs" />
     <Compile Include="Converter\BoolToVisibilityConverter.cs" />
     <Compile Include="Converter\BrushValueConverter.cs" />
+    <Compile Include="Converter\NullableToBoolConverter.cs" />
+    <Compile Include="Converter\TextInputToVisibilityConverter.cs" />
     <Compile Include="Converter\ImageProviderExtension.cs" />
     <Compile Include="Converter\ImageSourceHelper.cs" />
     <Compile Include="Converter\ImageSourceProviderExtension.cs" />

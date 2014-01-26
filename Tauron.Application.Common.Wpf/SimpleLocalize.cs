@@ -15,15 +15,6 @@
 
 #region
 
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SimpleLocalize.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The simple localize.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
