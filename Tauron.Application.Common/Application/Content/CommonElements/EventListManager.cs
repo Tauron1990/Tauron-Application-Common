@@ -48,6 +48,8 @@ namespace Tauron.Application
 
         #region Properties
 
+        public bool UseDispatcher { get; set; }
+
         /// <summary>Gets the handlers.</summary>
         /// <value>The handlers.</value>
         [NotNull]
@@ -94,7 +96,10 @@ namespace Tauron.Application
 
             if (!Handlers.ContainsKey(name)) return;
 
-            Handlers[name].DynamicInvoke(args);
+            if(UseDispatcher)
+                UiSynchronize.Synchronize.Invoke(() => Handlers[name].DynamicInvoke(args));
+            else
+                Handlers[name].DynamicInvoke(args);
         }
 
         /// <summary>

@@ -262,8 +262,8 @@ namespace Tauron.Application
             IlligalCharCheck(key);
             Contract.Requires<ArgumentNullException>(value != null, "value");
 
-            OnPropertyChanged(key);
             _settings[key] = value.ToString();
+            OnPropertyChangedExplicit(key);
         }
 
         [ContractAbbreviator]

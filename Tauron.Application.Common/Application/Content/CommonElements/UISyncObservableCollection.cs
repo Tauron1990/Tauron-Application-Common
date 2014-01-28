@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using Tauron.JetBrains.Annotations;
 
 #endregion
@@ -39,6 +40,7 @@ namespace Tauron.Application
     /// </summary>
     /// <typeparam name="TType">
     /// </typeparam>
+    [DebuggerNonUserCode, PublicAPI]
     public class UISyncObservableCollection<TType> : ObservableCollection<TType>
     {
         public UISyncObservableCollection()
@@ -69,7 +71,7 @@ namespace Tauron.Application
         /// <param name="e">
         ///     The e.
         /// </param>
-        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        protected override void OnPropertyChanged([NotNull] PropertyChangedEventArgs e)
         {
             UiSynchronize.Synchronize.Invoke(() => base.OnPropertyChanged(e));
         }

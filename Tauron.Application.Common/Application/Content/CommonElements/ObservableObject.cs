@@ -62,7 +62,7 @@ namespace Tauron.Application
     }
 
     /// <summary>The observable object.</summary>
-    [Serializable]
+    [Serializable, DebuggerNonUserCode]
     [PublicAPI]
     [Intercept]
     public abstract class ObservableObject : EventListManager, INotifyPropertyChangedMethod

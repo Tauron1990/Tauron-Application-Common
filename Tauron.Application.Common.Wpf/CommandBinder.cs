@@ -27,6 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -41,7 +42,7 @@ using Tauron.JetBrains.Annotations;
 namespace Tauron.Application
 {
     /// <summary>The command binder.</summary>
-    [PublicAPI]
+    [PublicAPI, DebuggerNonUserCode]
     public static class CommandBinder
     {
         #region Static Fields
@@ -368,7 +369,7 @@ namespace Tauron.Application
 
         #endregion
 
-        // [DebuggerNonUserCode]
+        [DebuggerNonUserCode]
         private class CommandLinker : PipelineBase
         {
             #region Fields
@@ -482,6 +483,7 @@ namespace Tauron.Application
 
             #endregion
 
+            [DebuggerNonUserCode]
             private class CommandFactory
             {
                 #region Fields
@@ -723,6 +725,7 @@ namespace Tauron.Application
 
                 #endregion
 
+                [DebuggerNonUserCode]
                 private class ParameterMapper
                 {
                     #region Fields
@@ -801,6 +804,7 @@ namespace Tauron.Application
                     #endregion
                 }
 
+                [DebuggerNonUserCode]
                 private class TaskFactory
                 {
                     #region Fields
@@ -860,6 +864,7 @@ namespace Tauron.Application
                 }
             }
 
+            [DebuggerNonUserCode]
             private class PropertySearcher
             {
                 #region Fields

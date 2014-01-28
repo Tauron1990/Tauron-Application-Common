@@ -28,11 +28,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -45,7 +47,7 @@ namespace Tauron.Application
     /// </typeparam>
     /// <typeparam name="TValue">
     /// </typeparam>
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable"), DebuggerNonUserCode]
     [Serializable]
     public sealed class ObservableDictionary<TKey, TValue> : ObservableObject,
         IDictionary<TKey, TValue>,
@@ -88,6 +90,7 @@ namespace Tauron.Application
             _keyEquals = EqualityComparer<TKey>.Default;
             _keys = new KeyCollection(this);
             _values = new ValueCollection(this);
+            UseDispatcher = true;
         }
 
         #endregion
@@ -244,10 +247,8 @@ namespace Tauron.Application
             Contract.Ensures(Contract.Result<IEnumerator<KeyValuePair<TKey, TValue>>>() != null);
 
             int currver = _version;
-            foreach (Entry t in _entrys)
+            foreach (Entry t in _entrys.TakeWhile(t => t != null))
             {
-                if (t == null) break;
-
                 if (currver != _version) throw new InvalidOperationException();
 
                 yield return Entry.Construct(t);
@@ -418,6 +419,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="IDisposable" />.
         /// </returns>
+        [NotNull]
         private IDisposable BlockCollection()
         {
             _helper.Enter();
@@ -445,19 +447,20 @@ namespace Tauron.Application
         ///     The index.
         /// </param>
         /// <returns>
-        ///     The <see cref="ObservableDictionary" />.
+        ///     The <see>
+        ///         <cref>ObservableDictionary</cref>
+        ///     </see>
+        ///     .
         /// </returns>
-        [ContractVerification(false)]
+        [CanBeNull,ContractVerification(false)]
         private Entry FindEntry(TKey key, out int index)
         {
             for (int i = 0; i < Count; i++)
             {
                 Entry ent = _entrys[i];
-                if (_keyEquals.Equals(ent.Key, key))
-                {
-                    index = i;
-                    return ent;
-                }
+                if (!_keyEquals.Equals(ent.Key, key)) continue;
+                index = i;
+                return ent;
             }
 
             index = -1;
@@ -470,7 +473,7 @@ namespace Tauron.Application
         /// <param name="e">
         ///     The e.
         /// </param>
-        private void InvokeCollectionChanged(NotifyCollectionChangedEventArgs e)
+        private void InvokeCollectionChanged([NotNull] NotifyCollectionChangedEventArgs e)
         {
             _version++;
 
@@ -480,10 +483,10 @@ namespace Tauron.Application
         /// <summary>The invoke property changed.</summary>
         private void InvokePropertyChanged()
         {
-            OnPropertyChanged("Item[]");
-            OnPropertyChanged("Count");
-            OnPropertyChanged("Keys");
-            OnPropertyChanged("Values");
+            OnPropertyChangedExplicit("Item[]");
+            OnPropertyChangedExplicit("Count");
+            OnPropertyChangedExplicit("Keys");
+            OnPropertyChangedExplicit("Values");
         }
 
         [ContractInvariantMethod]
@@ -600,6 +603,7 @@ namespace Tauron.Application
         #endregion
 
         /// <summary>The block helper.</summary>
+        [DebuggerNonUserCode]
         private class BlockHelper : IDisposable
         {
             #region Public Methods and Operators
@@ -620,7 +624,7 @@ namespace Tauron.Application
         }
 
         /// <summary>The entry.</summary>
-        [Serializable]
+        [Serializable, DebuggerNonUserCode]
         private class Entry
         {
             #region Fields
@@ -645,7 +649,10 @@ namespace Tauron.Application
             ///     The value.
             /// </param>
             /// <returns>
-            ///     The <see cref="KeyValuePair" />.
+            ///     The <see>
+            ///         <cref>KeyValuePair</cref>
+            ///     </see>
+            ///     .
             /// </returns>
             public static KeyValuePair<TKey, TValue> Construct(TKey key, TValue value)
             {
@@ -659,9 +666,12 @@ namespace Tauron.Application
             ///     The entry.
             /// </param>
             /// <returns>
-            ///     The <see cref="KeyValuePair" />.
+            ///     The <see>
+            ///         <cref>KeyValuePair</cref>
+            ///     </see>
+            ///     .
             /// </returns>
-            public static KeyValuePair<TKey, TValue> Construct(Entry entry)
+            public static KeyValuePair<TKey, TValue> Construct([NotNull] Entry entry)
             {
                 Contract.Requires<ArgumentNullException>(entry != null, "entry");
 
@@ -672,7 +682,7 @@ namespace Tauron.Application
         }
 
         /// <summary>The key collection.</summary>
-        [Serializable]
+        [Serializable, DebuggerNonUserCode]
         private class KeyCollection : NotifyCollectionChangedBase<TKey>
         {
             #region Constructors and Destructors
@@ -685,7 +695,7 @@ namespace Tauron.Application
             /// <param name="collection">
             ///     The collection.
             /// </param>
-            public KeyCollection(ObservableDictionary<TKey, TValue> collection)
+            public KeyCollection([NotNull] ObservableDictionary<TKey, TValue> collection)
                 : base(collection)
             {
                 Contract.Requires<ArgumentNullException>(collection != null, "collection");
@@ -738,7 +748,7 @@ namespace Tauron.Application
         /// </summary>
         /// <typeparam name="TTarget">
         /// </typeparam>
-        [Serializable]
+        [Serializable, DebuggerNonUserCode]
         [ContractClass(typeof (NotifyCollectionChangedBaseContracts<>))]
         private abstract class NotifyCollectionChangedBase<TTarget> : ObservableObject,
             ICollection<TTarget>,
@@ -761,10 +771,11 @@ namespace Tauron.Application
             /// <param name="dictionary">
             ///     The dictionary.
             /// </param>
-            protected NotifyCollectionChangedBase(ObservableDictionary<TKey, TValue> dictionary)
+            protected NotifyCollectionChangedBase([NotNull] ObservableDictionary<TKey, TValue> dictionary)
             {
                 Contract.Requires<ArgumentNullException>(dictionary != null, "dictionary");
 
+                UseDispatcher = true;
                 Dictionary = dictionary;
             }
 
@@ -989,7 +1000,7 @@ namespace Tauron.Application
             /// <returns>
             ///     The <see cref="bool" />.
             /// </returns>
-            protected abstract bool Contains(Entry entry, TTarget target);
+            protected abstract bool Contains([NotNull] Entry entry, TTarget target);
 
             /// <summary>
             ///     The select.
@@ -1000,7 +1011,7 @@ namespace Tauron.Application
             /// <returns>
             ///     The <see cref="TTarget" />.
             /// </returns>
-            protected abstract TTarget Select(Entry entry);
+            protected abstract TTarget Select([NotNull] Entry entry);
 
             /// <summary>
             ///     The invoke collection changed.
@@ -1008,7 +1019,7 @@ namespace Tauron.Application
             /// <param name="e">
             ///     The e.
             /// </param>
-            private void InvokeCollectionChanged(NotifyCollectionChangedEventArgs e)
+            private void InvokeCollectionChanged([NotNull] NotifyCollectionChangedEventArgs e)
             {
                 InvokePropertyChanged();
                 InvokeEvent("NotifyCollectionChangedEventHandler", this, e);
@@ -1017,10 +1028,10 @@ namespace Tauron.Application
             /// <summary>The invoke property changed.</summary>
             private void InvokePropertyChanged()
             {
-                OnPropertyChanged("Item[]");
-                OnPropertyChanged("Count");
-                OnPropertyChanged("Keys");
-                OnPropertyChanged("Values");
+                OnPropertyChangedExplicit("Item[]");
+                OnPropertyChangedExplicit("Count");
+                OnPropertyChangedExplicit("Keys");
+                OnPropertyChangedExplicit("Values");
             }
 
             #endregion
@@ -1038,7 +1049,7 @@ namespace Tauron.Application
             /// <param name="dictionary">
             ///     The dictionary.
             /// </param>
-            public NotifyCollectionChangedBaseContracts(ObservableDictionary<TKey, TValue> dictionary)
+            protected NotifyCollectionChangedBaseContracts([NotNull] ObservableDictionary<TKey, TValue> dictionary)
                 : base(dictionary)
             {
             }
@@ -1084,7 +1095,7 @@ namespace Tauron.Application
         }
 
         /// <summary>The value collection.</summary>
-        [Serializable]
+        [Serializable, DebuggerNonUserCode]
         private class ValueCollection : NotifyCollectionChangedBase<TValue>
         {
             #region Constructors and Destructors
@@ -1097,7 +1108,7 @@ namespace Tauron.Application
             /// <param name="collection">
             ///     The collection.
             /// </param>
-            public ValueCollection(ObservableDictionary<TKey, TValue> collection)
+            public ValueCollection([NotNull] ObservableDictionary<TKey, TValue> collection)
                 : base(collection)
             {
                 Contract.Requires<ArgumentNullException>(collection != null, "collection");

@@ -15,15 +15,6 @@
 
 #region
 
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="UiSynchronize.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The UISynchronize interface.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
 using System;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
@@ -31,6 +22,7 @@ using Tauron.JetBrains.Annotations;
 
 #endregion
 
+// ReSharper disable once CheckNamespace
 namespace Tauron.Application
 {
     /// <summary>The UISynchronize interface.</summary>
@@ -49,7 +41,8 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="Task" />.
         /// </returns>
-        Task BeginInvoke(Action action);
+        [NotNull]
+        Task BeginInvoke([NotNull] Action action);
 
         /// <summary>
         ///     The invoke.
@@ -57,7 +50,7 @@ namespace Tauron.Application
         /// <param name="action">
         ///     The action.
         /// </param>
-        void Invoke(Action action);
+        void Invoke([NotNull] Action action);
 
         /// <summary>
         ///     The invoke.
@@ -68,7 +61,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="TReturn" />.
         /// </returns>
-        TReturn Invoke<TReturn>(Func<TReturn> action);
+        TReturn Invoke<TReturn>([NotNull] Func<TReturn> action);
 
         #endregion
     }
@@ -134,6 +127,7 @@ namespace Tauron.Application
         #region Public Properties
 
         /// <summary>Gets or sets the synchronize.</summary>
+        [NotNull]
         public static IUISynchronize Synchronize { get; set; }
 
         #endregion

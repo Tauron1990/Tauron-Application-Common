@@ -15,16 +15,8 @@
 
 #region
 
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="WPFSynchronize.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The wpf synchronize.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
 using System;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -35,12 +27,12 @@ using Tauron.JetBrains.Annotations;
 namespace Tauron.Application.Implementation
 {
     /// <summary>The wpf synchronize.</summary>
-    [PublicAPI]
+    [PublicAPI, DebuggerNonUserCode]
     public class WPFSynchronize : IUISynchronize
     {
         #region Fields
 
-        private readonly Dispatcher dispatcher;
+        private readonly Dispatcher _dispatcher;
 
         #endregion
 
@@ -53,11 +45,11 @@ namespace Tauron.Application.Implementation
         /// <param name="dispatcher">
         ///     The dispatcher.
         /// </param>
-        public WPFSynchronize(Dispatcher dispatcher)
+        public WPFSynchronize([NotNull] Dispatcher dispatcher)
         {
             Contract.Requires<ArgumentNullException>(dispatcher != null, "dispatcher");
 
-            this.dispatcher = dispatcher;
+            _dispatcher = dispatcher;
         }
 
         #endregion
@@ -73,9 +65,10 @@ namespace Tauron.Application.Implementation
         /// <returns>
         ///     The <see cref="Task" />.
         /// </returns>
-        public Task BeginInvoke(Action action)
+        [NotNull]
+        public Task BeginInvoke([NotNull] Action action)
         {
-            return dispatcher.BeginInvoke(action).Task;
+            return _dispatcher.BeginInvoke(action).Task;
         }
 
         /// <summary>
@@ -84,9 +77,9 @@ namespace Tauron.Application.Implementation
         /// <param name="action">
         ///     The action.
         /// </param>
-        public void Invoke(Action action)
+        public void Invoke([NotNull] Action action)
         {
-            dispatcher.Invoke(action);
+            _dispatcher.Invoke(action);
         }
 
         /// <summary>
@@ -100,9 +93,9 @@ namespace Tauron.Application.Implementation
         /// <returns>
         ///     The <see cref="TReturn" />.
         /// </returns>
-        public TReturn Invoke<TReturn>(Func<TReturn> action)
+        public TReturn Invoke<TReturn>([NotNull] Func<TReturn> action)
         {
-            return dispatcher.Invoke(action);
+            return _dispatcher.Invoke(action);
         }
 
         #endregion
