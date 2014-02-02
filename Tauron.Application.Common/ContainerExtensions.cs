@@ -79,7 +79,8 @@ namespace Tauron
         ///     Wird geworfen wenn ein Export nicht gefunden wurde.
         ///     Weiter informationen stehen dann in der Inner Exceptionzur verfügung.
         /// </exception>
-        public static TType Resolve<TType>(this IContainer con) where TType : class
+        [NotNull]
+        public static TType Resolve<TType>([NotNull] this IContainer con) where TType : class
         {
             Contract.Requires<ArgumentNullException>(con != null, "con");
 

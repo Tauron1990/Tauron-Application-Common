@@ -320,22 +320,28 @@ namespace Tauron
         ///     The <see cref="TType" />.
         /// </returns>
         public static TType GetInvokeMember<TType>(this MemberInfo info, object instance, params object[] parameter)
-            where TType : class
         {
             Contract.Requires<ArgumentNullException>(info != null, "info");
             Contract.Requires<ArgumentNullException>(parameter != null, "parameter");
 
-            if (info is PropertyInfo)
+            try
             {
-                var property = info.CastObj<PropertyInfo>();
-                if (parameter.Length == 0) parameter = null;
+                if (info is PropertyInfo)
+                {
+                    var property = info.CastObj<PropertyInfo>();
+                    if (parameter.Length == 0) parameter = null;
 
-                return property.GetValue(instance, parameter) as TType;
+                    return (TType)property.GetValue(instance, parameter);
+                }
+
+                if (info is FieldInfo) return (TType)info.CastObj<FieldInfo>().GetValue(instance);
+
+                if (info is MethodBase) return (TType)info.As<MethodBase>().Invoke(instance, parameter);
             }
-
-            if (info is FieldInfo) return info.CastObj<FieldInfo>().GetValue(instance) as TType;
-
-            if (info is MethodBase) return info.As<MethodBase>().Invoke(instance, parameter) as TType;
+            catch (InvalidCastException)
+            {
+                
+            }
 
             return default(TType);
         }

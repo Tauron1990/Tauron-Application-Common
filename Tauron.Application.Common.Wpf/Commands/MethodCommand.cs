@@ -28,6 +28,7 @@ using System;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -56,11 +57,13 @@ namespace Tauron.Application.Commands
         /// <summary>
         ///     Die Ereignis Daten
         /// </summary>
+        [NotNull]
         public EventArgs EventArgs { get; private set; }
 
         /// <summary>
         ///     Das Objekt, an das der Ereignishandler angefügt wird.
         /// </summary>
+        [NotNull]
         public object Sender { get; private set; }
 
         #endregion

@@ -1,6 +1,8 @@
-﻿namespace Tauron.Application.Models
+﻿using System.ComponentModel;
+
+namespace Tauron.Application.Models
 {
-    public interface IModel
+    public interface IModel : INotifyPropertyChanged
     {
     }
 }

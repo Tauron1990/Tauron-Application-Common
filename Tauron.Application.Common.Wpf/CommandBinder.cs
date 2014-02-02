@@ -586,7 +586,7 @@ namespace Tauron.Application
                     LastCommand = command;
 
                     bool ok;
-                    Tuple<MethodInfo, MethodInfo> pair = FindCommandPair(targetType, out ok);
+                    Tuple<MethodInfo, MemberInfo> pair = FindCommandPair(targetType, out ok);
 
                     var temp = command as RoutedCommand;
                     CommandBinding binding = SetCommandBinding(targetObject, temp);
@@ -605,10 +605,19 @@ namespace Tauron.Application
                     CanExecuteRoutedEventHandler del2 = null;
                     if (pair.Item2 != null)
                     {
+                        var method = pair.Item2 as MethodInfo;
+                        var localTarget = target;
+
+                        if (method == null)
+                        {
+                            method = MemberInfoHelper.CanExecuteMethod;
+                            localTarget = new MemberInfoHelper(pair.Item2, target);
+                        }
+
                         del2 =
-                            Delegate.CreateDelegate(typeof (CanExecuteRoutedEventHandler), target, pair.Item2, false)
+                            Delegate.CreateDelegate(typeof (CanExecuteRoutedEventHandler), localTarget, method, false)
                                     .As<CanExecuteRoutedEventHandler>()
-                            ?? new ParameterMapper(pair.Item2, target).CanExecute;
+                            ?? new ParameterMapper(method, localTarget).CanExecute;
                     }
 
                     if (del != null) binding.Executed += new TaskFactory(del, scheduler, _isSync).Handler;
@@ -661,7 +670,7 @@ namespace Tauron.Application
                 }
 
                 [CanBeNull]
-                private Tuple<MethodInfo, MethodInfo> FindCommandPair([NotNull] IReflect targetType, out bool finded)
+                private Tuple<MethodInfo, MemberInfo> FindCommandPair([NotNull] IReflect targetType, out bool finded)
                 {
                     finded = false;
                     MethodInfo[] methods =
@@ -681,8 +690,8 @@ namespace Tauron.Application
                     _isSync = main.IsSync;
 
                     var mainAttr = main.Method.GetCustomAttribute<CommandTargetAttribute>();
-                    MethodInfo second = null;
-                    foreach (MethodInfo m in methods)
+                    MemberInfo second = null;
+                    foreach (MemberInfo m in targetType.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                     {
                         var attr = m.GetCustomAttribute<CommandTargetAttribute>();
                         if (attr == null) continue;
@@ -862,6 +871,28 @@ namespace Tauron.Application
 
                     #endregion
                 }
+
+                private class MemberInfoHelper
+                {
+                    public static readonly MethodInfo CanExecuteMethod =
+                        typeof (MemberInfoHelper).GetMethod("CanExecute",
+                                                            new[] {typeof (object), typeof (CanExecuteRoutedEventArgs)});
+
+                    private readonly MemberInfo _info;
+                    private readonly object _target;
+
+                    public MemberInfoHelper([NotNull] MemberInfo info, [NotNull] object target)
+                    {
+                        _info = info;
+                        _target = target;
+                    }
+
+                    [UsedImplicitly]
+                    public void CanExecute([NotNull] object sender, [NotNull] CanExecuteRoutedEventArgs e)
+                    {
+                        e.CanExecute = _info.GetInvokeMember<bool>(_target);
+                    }
+                }
             }
 
             [DebuggerNonUserCode]
@@ -982,18 +1013,22 @@ namespace Tauron.Application
 
                         if (customNameChanged)
                         {
-                            Type tarType = Target.TypedTarget().GetType();
-                            _prop = tarType.GetProperty(CustomName);
-                            if (_prop != null
-                                && (!_prop.CanWrite || !typeof (ICommand).IsAssignableFrom(_prop.PropertyType)))
+                            var dependencyObject = Target.TypedTarget();
+                            if (dependencyObject != null)
                             {
-                                string typeName = tarType.ToString();
-                                string propName = _prop == null ? CustomName + "(Not Found)" : _prop.Name;
+                                Type tarType = dependencyObject.GetType();
+                                _prop = tarType.GetProperty(CustomName);
+                                if (_prop != null
+                                    && (!_prop.CanWrite || !typeof (ICommand).IsAssignableFrom(_prop.PropertyType)))
+                                {
+                                    string typeName = tarType.ToString();
+                                    string propName = _prop == null ? CustomName + "(Not Found)" : _prop.Name;
 
-                                CommonWpfConstans.LogCommon(false, "CommandBinder: FoundetProperty Incompatible: {0}:{1}", typeName, propName);
-                                _prop = null;
+                                    CommonWpfConstans.LogCommon(false, "CommandBinder: FoundetProperty Incompatible: {0}:{1}", typeName, propName);
+                                    _prop = null;
+                                }
+                                else commandChanged = true;
                             }
-                            else commandChanged = true;
                         }
 
                         if (commandChanged && _prop != null) _prop.SetValue(Target.TypedTarget(), Command, null);

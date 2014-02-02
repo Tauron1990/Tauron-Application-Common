@@ -24,11 +24,13 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Tauron.JetBrains.Annotations;
 
 #endregion
@@ -43,6 +45,27 @@ namespace Tauron.Application
     [DebuggerNonUserCode, PublicAPI]
     public class UISyncObservableCollection<TType> : ObservableCollection<TType>
     {
+        private class DummySync : IUISynchronize
+        {
+            public Task BeginInvoke(Action action)
+            {
+                action();
+                return null;
+            }
+
+            public void Invoke(Action action)
+            {
+                action();
+            }
+
+            public TReturn Invoke<TReturn>(Func<TReturn> action)
+            {
+                return action();
+            }
+        }
+
+        private IUISynchronize _synchronize;
+
         public UISyncObservableCollection()
         {
         }
@@ -50,6 +73,18 @@ namespace Tauron.Application
         public UISyncObservableCollection([NotNull] IEnumerable<TType> enumerable)
             : base(enumerable)
         {
+        }
+
+        [NotNull]
+        private IUISynchronize InternalUISynchronize
+        {
+            get
+            {
+                if (_synchronize != null) return _synchronize;
+                _synchronize = UiSynchronize.Synchronize ?? new DummySync();
+
+                return _synchronize;
+            }
         }
 
         #region Methods
@@ -62,7 +97,7 @@ namespace Tauron.Application
         /// </param>
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            UiSynchronize.Synchronize.Invoke(() => base.OnCollectionChanged(e));
+            InternalUISynchronize.Invoke(() => base.OnCollectionChanged(e));
         }
 
         /// <summary>
@@ -73,7 +108,7 @@ namespace Tauron.Application
         /// </param>
         protected override void OnPropertyChanged([NotNull] PropertyChangedEventArgs e)
         {
-            UiSynchronize.Synchronize.Invoke(() => base.OnPropertyChanged(e));
+            InternalUISynchronize.Invoke(() => base.OnPropertyChanged(e));
         }
 
         #endregion

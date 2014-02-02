@@ -51,7 +51,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="ImageSource" />.
         /// </returns>
-        [NotNull]
+        [CanBeNull]
         ImageSource Convert([NotNull] Uri target, [NotNull] string assembly);
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="ImageSource" />.
         /// </returns>
-        [NotNull]
+        [CanBeNull]
         ImageSource Convert([NotNull] string uri, [NotNull] string assembly);
 
         #endregion

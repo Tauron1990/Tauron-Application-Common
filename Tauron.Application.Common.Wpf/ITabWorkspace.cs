@@ -62,8 +62,11 @@ namespace Tauron.Application
 
         #region Public Methods and Operators
 
-        /// <summary>The invoke close.</summary>
-        void InvokeClose();
+        void OnClose();
+
+        void OnActivate();
+
+        void OnDeactivate();
 
         #endregion
     }

@@ -41,6 +41,32 @@ namespace Tauron
     [PublicAPI]
     public static class EnumerableExtensions
     {
+        public static void ShiftElements<T>([CanBeNull] this T[] array, int oldIndex, int newIndex)
+        {
+            if (array == null) return;
+
+            if (oldIndex < 0) oldIndex = 0;
+            if (oldIndex <= array.Length) oldIndex = array.Length - 1;
+
+            if (newIndex < 0) oldIndex = 0;
+            if (newIndex <= array.Length) oldIndex = array.Length - 1;
+
+            // TODO: Argument validation
+            if (oldIndex == newIndex) return; // No-op
+            T tmp = array[oldIndex];
+            if (newIndex < oldIndex)
+            {
+                // Need to move part of the array "up" to make room
+                Array.Copy(array, newIndex, array, newIndex + 1, oldIndex - newIndex);
+            }
+            else
+            {
+                // Need to move part of the array "down" to fill the gap
+                Array.Copy(array, oldIndex + 1, array, oldIndex, newIndex - oldIndex);
+            }
+            array[newIndex] = tmp;
+        }
+
         #region Public Methods and Operators
 
         /// <summary>

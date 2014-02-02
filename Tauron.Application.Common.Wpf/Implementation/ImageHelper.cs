@@ -106,7 +106,6 @@ namespace Tauron.Application.Implementation
         /// <returns>
         ///     The <see cref="ImageSource" />.
         /// </returns>
-        [CanBeNull]
         public ImageSource Convert([NotNull] string uri, [NotNull] string assembly)
         {
             Uri target;

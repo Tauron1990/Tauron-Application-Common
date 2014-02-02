@@ -39,6 +39,19 @@ namespace Tauron.Application
     [PublicAPI]
     public sealed class WeakAction
     {
+        private bool Equals(WeakAction other)
+        {
+            return Equals(_method, other._method) && Equals(TargetObject.Target, other.TargetObject.Target);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((_method != null ? _method.GetHashCode() : 0)*397) ^ (TargetObject.Target != null ? TargetObject.Target.GetHashCode() : 0);
+            }
+        }
+
         #region Fields
 
         /// <summary>The _delegate type.</summary>
@@ -189,6 +202,13 @@ namespace Tauron.Application
         }
 
         #endregion
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is WeakAction && Equals((WeakAction) obj);
+        }
     }
 
     /// <summary>
