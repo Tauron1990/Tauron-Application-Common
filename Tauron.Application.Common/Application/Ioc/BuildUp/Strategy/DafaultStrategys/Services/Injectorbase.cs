@@ -64,6 +64,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         private readonly IMetadataFactory _metadataFactory;
 
+        private int _injectLevel;
+
         #endregion
 
         #region Constructors and Destructors
@@ -141,6 +143,20 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
                 if (interceptor != null)
                     callback = new ImportInterceptorHelper(interceptor, Member, metadata, target).Intercept;
+
+                object val;
+                if (metadata.Metadata.TryGetValue(LevelSpecificInject.LevelMetadata, out val))
+                {
+                    try
+                    {
+                        _injectLevel = (int) val;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        _injectLevel = int.MaxValue;
+                    }
+                }
+                else _injectLevel = int.MaxValue;
 
                 IResolver resolver;
 
@@ -249,7 +265,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         protected abstract void Inject([NotNull] object target, [CanBeNull] object value);
 
         [NotNull]
-        private static SimpleResolver CreateSimple([NotNull] IContainer container, [NotNull] ImportMetadata metadata,
+        private SimpleResolver CreateSimple([NotNull] IContainer container, [NotNull] ImportMetadata metadata,
                                                    [NotNull] Type memberType, bool generic, bool isExportFac,
                                                    [CanBeNull] Type exportMetadata, [CanBeNull] object metadataInstance,
                                                    [CanBeNull] InterceptorCallback callback,
@@ -290,7 +306,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
 
         [NotNull]
-        private static ListResolver CreateSimpleListGeneric([NotNull] IContainer container,
+        private ListResolver CreateSimpleListGeneric([NotNull] IContainer container,
                                                             [NotNull] ImportMetadata metadata, [NotNull] Type memberType,
                                                             [NotNull] Type content,
                                                             [NotNull] IMetadataFactory metadataFactoryfactory,
@@ -311,7 +327,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         }
 
         [NotNull]
-        private static IResolver CreateSimpleArray([NotNull] IContainer container, [NotNull] ImportMetadata metadata,
+        private IResolver CreateSimpleArray([NotNull] IContainer container, [NotNull] ImportMetadata metadata,
                                                    [NotNull] Type content, [NotNull] IMetadataFactory metadataFactory,
                                                    [CanBeNull] InterceptorCallback callback, 
                                                    [NotNull] ErrorTracer errorTracer)
@@ -330,20 +346,21 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         }
 
         [NotNull]
-        private static IEnumerable<ExportMetadata> FindAllExports([NotNull] IContainer container,
-                                                                  [NotNull] ImportMetadata metadata,
-                                                                  [NotNull] Type memberType,
-                                                                  [NotNull] ErrorTracer errorTracer)
+        private IEnumerable<ExportMetadata> FindAllExports([NotNull] IContainer container,
+                                                           [NotNull] ImportMetadata metadata,
+                                                           [NotNull] Type memberType,
+                                                           [NotNull] ErrorTracer errorTracer)
         {
             Contract.Requires<ArgumentNullException>(container != null, "container");
             Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
             Contract.Requires<ArgumentNullException>(memberType != null, "memberType");
 
-            return container.FindExports(metadata.InterfaceType ?? ExtractRealType(memberType), metadata.ContractName, errorTracer);
+            return container.FindExports(metadata.InterfaceType ?? ExtractRealType(memberType), metadata.ContractName,
+                                         errorTracer, _injectLevel);
         }
 
         [NotNull]
-        private static ExportMetadata FindExport([NotNull] IContainer container, [NotNull] ImportMetadata metadata,
+        private ExportMetadata FindExport([NotNull] IContainer container, [NotNull] ImportMetadata metadata,
                                                  [NotNull] Type memberType, [NotNull] ErrorTracer errorTracer)
         {
             Contract.Requires<ArgumentNullException>(container != null, "container");
@@ -351,7 +368,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             Contract.Requires<ArgumentNullException>(memberType != null, "memberType");
 
             return container.FindExport(metadata.InterfaceType ?? ExtractRealType(memberType), metadata.ContractName,
-                                        errorTracer, metadata.Optional);
+                                        errorTracer, metadata.Optional, _injectLevel);
         }
 
         [NotNull]

@@ -265,15 +265,28 @@ namespace Tauron.Application.Ioc
             return null;
         }
 
+        public ExportMetadata FindExport(Type interfaceType, string name, ErrorTracer errorTracer, bool isOptional, int level)
+        {
+            return isOptional
+                       ? _exports.FindOptional(interfaceType, name, errorTracer, level)
+                       : _exports.FindSingle(interfaceType, name, errorTracer, level);
+        }
+
+        public IEnumerable<ExportMetadata> FindExports(Type interfaceType, string name, ErrorTracer errorTracer, int level)
+        {
+            return _exports.FindAll(interfaceType, name, errorTracer, level);
+        }
+
         /// <summary>
         ///     The register.
         /// </summary>
         /// <param name="exportType">
         ///     The export.
         /// </param>
-        public void Register(IExport exportType)
+        /// <param name="level"></param>
+        public void Register(IExport exportType, int level)
         {
-            _exports.Register(exportType);
+            _exports.Register(exportType, level);
         }
 
         /// <summary>
@@ -319,7 +332,11 @@ namespace Tauron.Application.Ioc
             foreach (
                 ExportMetadata exportMetadata in e.Added.Where(exportMetadata => !temp.Contains(exportMetadata.Export)))
             {
-                _exports.Register(exportMetadata.Export);
+                var attr = exportMetadata.Export.ImplementType.GetCustomAttribute<ExportLevelAttribute>();
+                if(attr == null)
+                    attr = exportMetadata.Export.ImplementType.Assembly.GetCustomAttribute<ExportLevelAttribute>();
+
+                _exports.Register(exportMetadata.Export, attr == null ? 0 : attr.Level);
                 temp.Add(exportMetadata.Export);
             }
         }

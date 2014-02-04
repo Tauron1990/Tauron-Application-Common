@@ -210,7 +210,8 @@ namespace Tauron.Application.Ioc
 
             foreach (ExportProvider exportProvider in _providers)
             {
-                foreach (IExport export in exportProvider.CreateExports(factorys[exportProvider.Technology])) exportRegistry.Register(export);
+                foreach (Tuple<IExport, int> export in exportProvider.CreateExports(factorys[exportProvider.Technology])) 
+                    exportRegistry.Register(export.Item1, export.Item2);
 
                 if (exportProvider.BroadcastChanges) exportProviderRegistry.Add(exportProvider);
             }
@@ -306,7 +307,7 @@ namespace Tauron.Application.Ioc
             /// <returns>
             ///     The <see cref="IEnumerable" />.
             /// </returns>
-            public override IEnumerable<IExport> CreateExports(IExportFactory factory)
+            public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
             {
                 if (_provider == null) _provider = new TypeExportProvider(Asm.GetTypes());
 
@@ -452,7 +453,7 @@ namespace Tauron.Application.Ioc
             /// <returns>
             ///     The <see cref="IEnumerable" />.
             /// </returns>
-            public override IEnumerable<IExport> CreateExports(IExportFactory factory)
+            public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
             {
                 _factory = factory;
 
@@ -509,7 +510,7 @@ namespace Tauron.Application.Ioc
             /// <param name="e">
             ///     The e.
             /// </param>
-            private void Created(object sender, FileSystemEventArgs e)
+            private void Created([NotNull] object sender, [NotNull] FileSystemEventArgs e)
             {
                 if (!Path.HasExtension(e.FullPath) || _providers == null) return;
 
@@ -523,7 +524,7 @@ namespace Tauron.Application.Ioc
 
                     OnExportsChanged(
                         new ExportChangedEventArgs(
-                            pro.CreateExports(_factory).SelectMany(exp => exp.ExportMetadata),
+                            pro.CreateExports(_factory).SelectMany(exp => exp.Item1.ExportMetadata),
                             new ExportMetadata[0]));
                 }
                 catch (BadImageFormatException)
@@ -561,7 +562,7 @@ namespace Tauron.Application.Ioc
                     OnExportsChanged(
                         new ExportChangedEventArgs(
                             new ExportMetadata[0],
-                            pro.CreateExports(_factory).SelectMany(exp => exp.ExportMetadata)));
+                            pro.CreateExports(_factory).SelectMany(exp => exp.Item1.ExportMetadata)));
                 }
                 catch (BadImageFormatException)
                 {
@@ -580,10 +581,12 @@ namespace Tauron.Application.Ioc
             #region Fields
 
             /// <summary>The _types.</summary>
-            private readonly IEnumerable<Type> types;
+            private readonly IEnumerable<Type> _types;
 
             /// <summary>The _exports.</summary>
-            private IExport[] exports;
+            private Tuple<IExport, int>[] _exports;
+
+            private int _level;
 
             #endregion
 
@@ -597,11 +600,20 @@ namespace Tauron.Application.Ioc
             /// <param name="types">
             ///     The types.
             /// </param>
-            public TypeExportProvider(IEnumerable<Type> types)
+            public TypeExportProvider([NotNull] IEnumerable<Type> types)
             {
                 Contract.Requires<ArgumentNullException>(types != null, "types");
 
-                this.types = types;
+                _types = types;
+                _level = 0;
+            }
+
+            public TypeExportProvider([NotNull] IEnumerable<Type> types, int level)
+            {
+                Contract.Requires<ArgumentNullException>(types != null, "types");
+
+                _types = types;
+                _level = level;
             }
 
             #endregion
@@ -628,27 +640,30 @@ namespace Tauron.Application.Ioc
             /// <returns>
             ///     The <see cref="IEnumerable" />.
             /// </returns>
-            public override IEnumerable<IExport> CreateExports(IExportFactory factory)
+            public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
             {
                 var fac = (DefaultExportFactory) factory;
 
-                if (this.exports != null) return this.exports;
+                if (_exports != null) return _exports;
 
-                var exports = new List<IExport>(types.Count());
+                var exports = new List<Tuple<IExport, int>>(_types.Count());
 
-                foreach (Type type in types)
+                foreach (Type type in _types)
                 {
-                    IExport ex1 = fac.Create(type);
-                    if (ex1 != null) exports.Add(ex1);
+                    int currentLevel = _level;
+
+                    IExport ex1 = fac.Create(type, ref currentLevel);
+                    if (ex1 != null) exports.Add(Tuple.Create(ex1, currentLevel));
 
                     exports.AddRange(
                         type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
-                            .Select(methodInfo => fac.CreateMethodExport(methodInfo))
-                            .Where(ex2 => ex2 != null));
+                            .Select(methodInfo => fac.CreateMethodExport(methodInfo, ref currentLevel))
+                            .Where(ex2 => ex2 != null)
+                            .Select(exp => Tuple.Create(exp, currentLevel)));
                 }
 
-                this.exports = exports.ToArray();
-                return this.exports;
+                this._exports = exports.ToArray();
+                return this._exports;
             }
 
             #endregion

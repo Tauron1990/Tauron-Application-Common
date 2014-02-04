@@ -39,31 +39,82 @@ namespace Tauron.Application.Ioc.Components
     [PublicAPI]
     public sealed class ExportRegistry
     {
+        private class ExportEntry : GroupDictionary<Type, IExport>
+        {
+            public ExportEntry()
+                : base(true)
+            {
+                
+            }
+        }
+
+        private class ExportList : SortedList<int, ExportEntry>
+        {
+            private class DescendingComparer : IComparer<int>
+            {
+                public int Compare(int x, int y)
+                {
+                    if (x < y)
+                    {
+                        return 1;
+                    }
+                    if (x > y)
+                    {
+                        return -1;
+                    }
+                    return 0;
+                }
+            }
+
+            public ExportList()
+                : base(new DescendingComparer())
+            {
+                
+            }
+
+            public void Add(int location, [NotNull] Type type, [NotNull] IExport export)
+            {
+                ExportEntry entry;
+                if (TryGetValue(location, out entry)) entry[type].Add(export);
+                else
+                {
+                    entry = new ExportEntry();
+                    entry[type].Add(export);
+                    Add(location, entry);
+                }
+            }
+
+            [CanBeNull]
+            public IEnumerable<IExport> Lookup([NotNull] Type type, int at)
+            {
+                foreach (var pair in this.Where(p => p.Key <= at))
+                {
+                    ICollection<IExport> exports;
+                    if (pair.Value.TryGetValue(type, out exports)) return exports;
+                }
+                return null;
+            }
+
+            public void RemoveValue([NotNull] IExport export)
+            {
+                foreach (var value in Values.ToArray()) value.RemoveValue(export);
+            }
+        }
+
         #region Fields
 
         /// <summary>The _registrations.</summary>
-        private readonly GroupDictionary<Type, IExport> _registrations = new GroupDictionary<Type, IExport>(true);
+        private readonly ExportList _registrations = new ExportList();
 
         #endregion
 
         #region Public Methods and Operators
 
-        /// <summary>
-        ///     The find all.
-        /// </summary>
-        /// <param name="type">
-        ///     The type.
-        /// </param>
-        /// <param name="contractName">
-        ///     The contract name.
-        /// </param>
-        /// <param name="errorTracer"></param>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
-        public IEnumerable<ExportMetadata> FindAll(Type type, string contractName, ErrorTracer errorTracer)
+        [NotNull]
+        public IEnumerable<ExportMetadata> FindAll([NotNull] Type type, [CanBeNull] string contractName, [NotNull] ErrorTracer errorTracer, int limit = int.MaxValue)
         {
             Contract.Requires<ArgumentNullException>(type != null, "type");
+            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
             Contract.Ensures(Contract.Result<IEnumerable<ExportMetadata>>() != null);
 
             try
@@ -71,7 +122,10 @@ namespace Tauron.Application.Ioc.Components
                 lock (this)
                 {
                     errorTracer.Phase = "Getting Exports by Type (" + type + ")";
-                    IEnumerable<IExport> regs = _registrations[type];
+                    IEnumerable<IExport> regs = _registrations.Lookup(type, limit);
+
+                    if(regs == null)
+                        throw new KeyNotFoundException();
 
                     errorTracer.Phase = "Filtering Exports by Contract Name (" + contractName + ")";
                     return regs.SelectMany(ex => ex.SelectContractName(contractName)).Where(exp => exp != null);
@@ -100,25 +154,25 @@ namespace Tauron.Application.Ioc.Components
         /// <returns>
         ///     The <see cref="ExportMetadata" />.
         /// </returns>
-        public ExportMetadata FindOptional(Type type, string contractName, ErrorTracer errorTracer)
+        [CanBeNull]
+        public ExportMetadata FindOptional([NotNull] Type type, [CanBeNull] string contractName, [NotNull] ErrorTracer errorTracer, int level = int.MaxValue)
         {
             Contract.Requires<ArgumentNullException>(type != null, "type");
+            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
 
             lock (this)
             {
                 ExportMetadata[] arr = FindAll(type, contractName, errorTracer).ToArray();
 
-                if (errorTracer.Exceptional)
-                    return null;
+                if (errorTracer.Exceptional) return null;
 
                 errorTracer.Phase = "Getting Single Instance";
 
-                if (arr.Length > 1)
-                {
-                    errorTracer.Exceptional = true;
-                    errorTracer.Exception = new InvalidOperationException("More then One Export Found");
-                    errorTracer.Export = ErrorTracer.FormatExport(type, contractName);
-                }
+                if (arr.Length <= 1) return arr.Length == 0 ? null : arr[0];
+
+                errorTracer.Exceptional = true;
+                errorTracer.Exception = new InvalidOperationException("More then One Export Found");
+                errorTracer.Export = ErrorTracer.FormatExport(type, contractName);
 
                 return arr.Length == 0 ? null : arr[0];
             }
@@ -137,46 +191,34 @@ namespace Tauron.Application.Ioc.Components
         /// <returns>
         ///     The <see cref="ExportMetadata" />.
         /// </returns>
-        public ExportMetadata FindSingle(Type type, string contractName, ErrorTracer errorTracer)
+        [CanBeNull]
+        public ExportMetadata FindSingle([NotNull] Type type, [NotNull] string contractName, [NotNull] ErrorTracer errorTracer, int level = int.MaxValue)
         {
             Contract.Requires<ArgumentNullException>(type != null, "type");
             Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
 
-            var temp = FindOptional(type, contractName, errorTracer);
+            var temp = FindOptional(type, contractName, errorTracer, level);
             if (errorTracer.Exceptional) return null;
-            if (temp == null)
-            {
-                errorTracer.Exceptional = true;
-                errorTracer.Exception = new InvalidOperationException("No Export Found");
-                errorTracer.Export = ErrorTracer.FormatExport(type, contractName);
-            }
+            if (temp != null) return temp;
 
-            return temp;
+            errorTracer.Exceptional = true;
+            errorTracer.Exception = new InvalidOperationException("No Export Found");
+            errorTracer.Export = ErrorTracer.FormatExport(type, contractName);
+
+            return null;
         }
 
-        /// <summary>
-        ///     The register.
-        /// </summary>
-        /// <param name="export">
-        ///     The export.
-        /// </param>
-        public void Register(IExport export)
+        public void Register([NotNull] IExport export, int level)
         {
             Contract.Requires<ArgumentNullException>(export != null, "export");
 
             lock (this)
             {
-                foreach (Type type in export.Exports) _registrations.Add(type, export);
+                foreach (Type type in export.Exports) _registrations.Add(level, type, export);
             }
         }
 
-        /// <summary>
-        ///     The remove.
-        /// </summary>
-        /// <param name="export">
-        ///     The export.
-        /// </param>
-        public void Remove(IExport export)
+        public void Remove([NotNull] IExport export)
         {
             Contract.Requires<ArgumentNullException>(export != null, "export");
 

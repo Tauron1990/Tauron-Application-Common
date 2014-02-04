@@ -39,7 +39,7 @@ namespace Tauron.Application
     /// </typeparam>
     [Serializable]
     [PublicAPI]
-    public sealed class GroupDictionary<TKey, TValue> : Dictionary<TKey, ICollection<TValue>>
+    public class GroupDictionary<TKey, TValue> : Dictionary<TKey, ICollection<TValue>>
         where TKey : class where TValue : class
     {
         #region Serializable
@@ -377,13 +377,12 @@ namespace Tauron.Application
             else
             {
                 ok = ContainsKey(key);
-                if (ok)
-                {
-                    ICollection<TValue> col = base[key];
-                    Contract.Assume(col != null);
-                    ok |= RemoveList(col, val);
-                    if (removeEmpty) if (col.Count == 0) ok |= Remove(key);
-                }
+                if (!ok) return ok;
+                ICollection<TValue> col = base[key];
+                Contract.Assume(col != null);
+                ok |= RemoveList(col, val);
+                if (!removeEmpty) return ok;
+                if (col.Count == 0) ok |= Remove(key);
             }
 
             #endregion Single

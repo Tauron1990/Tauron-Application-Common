@@ -24,6 +24,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -78,7 +79,7 @@ namespace Tauron.Application.Ioc
             {
                 OnExportsChanged(
                     new ExportChangedEventArgs(
-                        export.CreateExports(factory).SelectMany(ex => ex.ExportMetadata),
+                        export.CreateExports(factory).SelectMany(ex => ex.Item1.ExportMetadata),
                         Enumerable.Empty<ExportMetadata>()));
             }
         }
@@ -102,7 +103,7 @@ namespace Tauron.Application.Ioc
                 OnExportsChanged(
                     new ExportChangedEventArgs(
                         temp.SelectMany(prov => prov.CreateExports(factory))
-                            .SelectMany(ex => ex.ExportMetadata),
+                            .SelectMany(ex => ex.Item1.ExportMetadata),
                         Enumerable.Empty<ExportMetadata>()));
             }
         }
@@ -116,7 +117,7 @@ namespace Tauron.Application.Ioc
         /// <returns>
         ///     The <see cref="IEnumerable" />.
         /// </returns>
-        public override IEnumerable<IExport> CreateExports(IExportFactory factory)
+        public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
         {
             this.factory = factory;
             return assemblys.SelectMany(prov => prov.CreateExports(factory));
@@ -145,7 +146,7 @@ namespace Tauron.Application.Ioc
                 OnExportsChanged(
                     new ExportChangedEventArgs(
                         Enumerable.Empty<ExportMetadata>(),
-                        export.CreateExports(factory).SelectMany(ex => ex.ExportMetadata)));
+                        export.CreateExports(factory).SelectMany(ex => ex.Item1.ExportMetadata)));
             }
         }
 
@@ -157,10 +158,11 @@ namespace Tauron.Application.Ioc
         /// </param>
         public void RemoveRange(IEnumerable<Assembly> removeAssemblys)
         {
-            if (removeAssemblys.Count() == 0) return;
+            IEnumerable<Assembly> assemblies = removeAssemblys as Assembly[] ?? removeAssemblys.ToArray();
+            if (!assemblies.Any()) return;
 
             List<ExportResolver.AssemblyExportProvider> temp =
-                removeAssemblys.Select(asm => new ExportResolver.AssemblyExportProvider(asm)).ToList();
+                assemblies.Select(asm => new ExportResolver.AssemblyExportProvider(asm)).ToList();
             List<int> indiexes =
                 temp.Select(provider => assemblys.IndexOf(provider)).Where(index => index != -1).ToList();
             temp.Clear();
@@ -177,7 +179,7 @@ namespace Tauron.Application.Ioc
                     new ExportChangedEventArgs(
                         Enumerable.Empty<ExportMetadata>(),
                         temp.SelectMany(prov => prov.CreateExports(factory))
-                            .SelectMany(ex => ex.ExportMetadata)));
+                            .SelectMany(ex => ex.Item1.ExportMetadata)));
             }
         }
 

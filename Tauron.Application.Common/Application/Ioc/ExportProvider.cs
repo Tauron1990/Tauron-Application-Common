@@ -72,7 +72,7 @@ namespace Tauron.Application.Ioc
         /// <returns>
         ///     The <see cref="IEnumerable" />.
         /// </returns>
-        public abstract IEnumerable<IExport> CreateExports(IExportFactory factory);
+        public abstract IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory);
 
         #endregion
 
@@ -128,9 +128,9 @@ namespace Tauron.Application.Ioc
         /// </returns>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public override IEnumerable<IExport> CreateExports(IExportFactory factory)
+        public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
         {
-            Contract.Ensures(Contract.Result<IEnumerable<IExport>>() != null);
+            Contract.Ensures(Contract.Result<IEnumerable<Tuple<IExport, int>>>() != null);
 
             throw new NotImplementedException();
         }

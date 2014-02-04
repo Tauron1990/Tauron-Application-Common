@@ -120,7 +120,26 @@ namespace Tauron.Application.Ioc
         /// <returns>
         ///     The <see cref="IEnumerable" />.
         /// </returns>
-        IEnumerable<ExportMetadata> FindExports(Type interfaceType, string name, ErrorTracer errorTracer);
+        [NotNull]
+        IEnumerable<ExportMetadata> FindExports([NotNull] Type interfaceType, [NotNull] string name, [NotNull] ErrorTracer errorTracer);
+
+        [NotNull]
+        ExportMetadata FindExport([NotNull] Type interfaceType, [NotNull] string name, [NotNull] ErrorTracer errorTracer, bool isOptional, int level);
+
+        /// <summary>
+        ///     The find exports.
+        /// </summary>
+        /// <param name="interfaceType">
+        ///     The interface.
+        /// </param>
+        /// <param name="name">
+        ///     The name.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="IEnumerable" />.
+        /// </returns>
+        [NotNull]
+        IEnumerable<ExportMetadata> FindExports([NotNull] Type interfaceType, [NotNull] string name, [NotNull] ErrorTracer errorTracer, int level);
 
         /// <summary>
         ///     The register.
@@ -128,7 +147,8 @@ namespace Tauron.Application.Ioc
         /// <param name="exportType">
         ///     The export.
         /// </param>
-        void Register(IExport exportType);
+        /// <param name="level"></param>
+        void Register(IExport exportType, int level);
 
         /// <summary>
         ///     The register.
@@ -290,15 +310,32 @@ namespace Tauron.Application.Ioc
             throw new NotImplementedException();
         }
 
+        public ExportMetadata FindExport(Type interfaceType, string name, ErrorTracer errorTracer, bool isOptional, int level)
+        {
+            Contract.Requires<ArgumentNullException>(interfaceType != null, "interfaceType");
+            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
+
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<ExportMetadata> FindExports(Type interfaceType, string name, ErrorTracer errorTracer, int level)
+        {
+            Contract.Requires<ArgumentNullException>(interfaceType != null, "interfaceType");
+            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
+
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         ///     The register.
         /// </summary>
         /// <param name="exportType">
         ///     The export type.
         /// </param>
+        /// <param name="level"></param>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public void Register(IExport exportType)
+        public void Register(IExport exportType, int level)
         {
             Contract.Requires<ArgumentNullException>(exportType != null, "exportType");
 

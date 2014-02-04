@@ -76,7 +76,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns>
         ///     The <see cref="IExport" />.
         /// </returns>
-        public IExport Create(Type type)
+        public IExport Create(Type type, ref int level)
         {
             Contract.Requires<ArgumentNullException>(type != null, "type");
 
@@ -86,6 +86,11 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
                 type,
                 new ExternalExportInfo(false, false, true, true, null, string.Empty),
                 false);
+
+            var attr = type.GetCustomAttribute<ExportLevelAttribute>();
+            if (attr != null) level = attr.Level;
+
+
             export.ImportMetadata = _chain.SelectImport(export);
 
             return export;
@@ -160,11 +165,14 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns>
         ///     The <see cref="IExport" />.
         /// </returns>
-        public IExport CreateMethodExport(MethodInfo info)
+        public IExport CreateMethodExport(MethodInfo info, ref int currentLevel)
         {
             Contract.Requires<ArgumentNullException>(info != null, "info");
 
             if (!info.IsStatic || !DefaultExport.IsExport(info)) return null;
+
+            var attr = info.GetCustomAttribute<ExportLevelAttribute>();
+            if (attr != null) currentLevel = attr.Level;
 
             return new DefaultExport(
                 info,

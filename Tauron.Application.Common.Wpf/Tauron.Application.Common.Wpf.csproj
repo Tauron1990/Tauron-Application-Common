@@ -184,6 +184,7 @@
     <Compile Include="INameExportMetadata.cs" />
     <Compile Include="Views\ExportViewAttribute.cs" />
     <Compile Include="Views\ISortableView.cs" />
+    <Compile Include="Views\IViewLocator.cs" />
     <Compile Include="Views\ViewManager.cs" />
     <Compile Include="Views\ExportWindowAttribute.cs" />
     <Compile Include="Window.cs" />
