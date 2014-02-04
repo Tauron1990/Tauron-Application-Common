@@ -1,4 +1,4 @@
-﻿namespace Tauron.Application.Views
+﻿namespace Tauron.Application.Views.Core
 {
     public interface ISortableViewExportMetadata : INameExportMetadata
     {

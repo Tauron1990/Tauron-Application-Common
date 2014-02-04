@@ -3,6 +3,7 @@ using System.Diagnostics.Contracts;
 using System.Windows.Controls;
 using Tauron.Application.Ioc;
 using Tauron.Application.Ioc.LifeTime;
+using Tauron.Application.Views.Core;
 using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Views

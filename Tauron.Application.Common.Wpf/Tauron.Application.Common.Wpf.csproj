@@ -182,9 +182,11 @@
     <Compile Include="ValueConverterFactoryBase.cs" />
     <Compile Include="Models\ViewModelBase.cs" />
     <Compile Include="INameExportMetadata.cs" />
+    <Compile Include="Views\Core\AttributeBasedLocator.cs" />
+    <Compile Include="Views\Core\NamingHelper.cs" />
     <Compile Include="Views\ExportViewAttribute.cs" />
-    <Compile Include="Views\ISortableView.cs" />
-    <Compile Include="Views\IViewLocator.cs" />
+    <Compile Include="Views\Core\ISortableView.cs" />
+    <Compile Include="Views\Core\IViewLocator.cs" />
     <Compile Include="Views\ViewManager.cs" />
     <Compile Include="Views\ExportWindowAttribute.cs" />
     <Compile Include="Window.cs" />

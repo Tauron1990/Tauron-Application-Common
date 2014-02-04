@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using Tauron.Application.Composition;
 using Tauron.Application.Ioc;
+using Tauron.Application.Views.Core;
 using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Views
