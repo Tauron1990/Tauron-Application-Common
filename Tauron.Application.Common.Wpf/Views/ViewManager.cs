@@ -15,41 +15,10 @@ namespace Tauron.Application.Views
 {
     [Export(typeof (ViewManager))]
     [PublicAPI]
-    public sealed class ViewManager
+    public sealed class ViewManager : IViewLocator
     {
         #region ExportView
-        private class ExportNameHelper : ISortableViewExportMetadata
-        {
-            private readonly DependencyObject _dependencyObject;
-            private readonly int _order;
-
-            public ExportNameHelper([NotNull] string name, [NotNull] DependencyObject dependencyObject)
-            {
-                _dependencyObject = dependencyObject;
-                Name = name;
-                _order = GetSortOrder(dependencyObject);
-            }
-
-            public string Name { get; private set; }
-
-            [NotNull]
-            public object GetMeta()
-            {
-                return this;
-            }
-
-            [NotNull]
-            public object GetValue()
-            {
-                return _dependencyObject;
-            }
-
-            public int Order
-            {
-                get { return _order; }
-            }
-        }
-
+        
         public static readonly DependencyProperty ExportViewProperty =
             DependencyProperty.RegisterAttached("ExportView", typeof (string), typeof (ViewManager),
                                                 new FrameworkPropertyMetadata(string.Empty,
@@ -195,15 +164,18 @@ namespace Tauron.Application.Views
 
         #endregion
 
+        [NotNull]
+        public IViewLocator ViewLocator { get; private set; }
 
-        [Inject] 
-        private List<InstanceResolver<Control, ISortableViewExportMetadata>> _views;
-
-        [Inject] 
-        private List<InstanceResolver<Window, INameExportMetadata>> _windows; 
-
-        internal ViewManager()
+        public ViewManager()
         {
+            ViewLocator = Factory.Object<AttributeBasedLocator>();
+        }
+
+        public ViewManager([NotNull] IViewLocator locator)
+        {
+            Contract.Requires<ArgumentNullException>(locator != null, "locator");
+            ViewLocator = locator;
         }
 
         [NotNull]
@@ -217,25 +189,14 @@ namespace Tauron.Application.Views
             }
         }
 
-        [NotNull]
-        public IWindow CreateWindow([NotNull] string name)
+        public IWindow CreateWindow(string name)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-
-            var win = _windows.First(vi => vi.Metadata.Name == name).Resolve(true);
-
-            UiSynchronize.Synchronize.Invoke(() => win.Name = name);
-
-            return new WpfWindow(win);
+            return ViewLocator.CreateWindow(name);
         }
 
-        [NotNull]
-        public Type GetViewType([NotNull] string name)
+        public Type GetViewType(string name)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-
-            var temp = _views.FirstOrDefault(vi => vi.Metadata.Name == name);
-            return temp != null ? temp.RealType : _windows.First(vi => vi.Metadata.Name == name).RealType;
+            return ViewLocator.GetViewType(name);
         }
 
         [CanBeNull]
@@ -247,20 +208,14 @@ namespace Tauron.Application.Views
             return CreateView(name) as TType;
         }
 
-        [NotNull]
-        public Control CreateView([NotNull] string name)
+        public DependencyObject CreateView(string name)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-
-            return _views.First(view => view.Metadata.Name == name).Resolve(true);
+            return ViewLocator.CreateView(name);
         }
 
-        [NotNull]
-        public IEnumerable<Control> GetAllViews([NotNull] string name)
+        public IEnumerable<DependencyObject> GetAllViews(string name)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-
-            return _views.Where(res => res.Metadata.Name == name).OrderBy(res => res.Metadata.Order).Select(res => res.Resolve()).ToArray();
+            return ViewLocator.GetAllViews(name);
         }
 
         [CanBeNull]
@@ -269,5 +224,21 @@ namespace Tauron.Application.Views
             var wind = System.Windows.Application.Current.Windows.Cast<Window>().FirstOrDefault(w => w.Name == windowName);
             return wind == null ? null : new WpfWindow(wind);
         }
+
+        public void Register(ExportNameHelper export)
+        {
+            ViewLocator.Register(export);
+        }
+
+        public DependencyObject CreateViewForModel(object model)
+        {
+            return ViewLocator.CreateViewForModel(model);
+        }
+
+        public DependencyObject CreateViewForModel(Type model)
+        {
+            return ViewLocator.CreateViewForModel(model);
+        }
+
     }
 }

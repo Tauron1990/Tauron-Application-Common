@@ -183,7 +183,9 @@
     <Compile Include="Models\ViewModelBase.cs" />
     <Compile Include="INameExportMetadata.cs" />
     <Compile Include="Views\Core\AttributeBasedLocator.cs" />
+    <Compile Include="Views\Core\CommonLocatorBase.cs" />
     <Compile Include="Views\Core\NamingHelper.cs" />
+    <Compile Include="Views\ExportNameHelper.cs" />
     <Compile Include="Views\ExportViewAttribute.cs" />
     <Compile Include="Views\Core\ISortableView.cs" />
     <Compile Include="Views\Core\IViewLocator.cs" />
