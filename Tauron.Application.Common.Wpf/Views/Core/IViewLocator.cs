@@ -43,7 +43,7 @@ namespace Tauron.Application.Views.Core
         public DependencyObject CreateViewForModel(object model)
         {
             Contract.Requires<ArgumentNullException>(model != null, "model");
-            Contract.EnsuresOnThrow<KeyNotFoundException>(Contract.Result<DependencyObject>() != null);
+            Contract.Ensures(Contract.Result<DependencyObject>() != null);
 
             return null;
         }
@@ -51,7 +51,7 @@ namespace Tauron.Application.Views.Core
         public DependencyObject CreateViewForModel(Type model)
         {
             Contract.Requires<ArgumentNullException>(model != null, "model");
-            Contract.EnsuresOnThrow<KeyNotFoundException>(Contract.Result<DependencyObject>() != null);
+            Contract.Ensures(Contract.Result<DependencyObject>() != null);
 
             return null;
         }
@@ -59,28 +59,28 @@ namespace Tauron.Application.Views.Core
         public DependencyObject CreateView(string name)
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.EnsuresOnThrow<KeyNotFoundException>(Contract.Result<DependencyObject>() != null);
+            Contract.Ensures(Contract.Result<DependencyObject>() != null);
             return null;
         }
 
         public IWindow CreateWindow(string name)
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.EnsuresOnThrow<KeyNotFoundException>(Contract.Result<IWindow>() != null);
+            Contract.Ensures(Contract.Result<IWindow>() != null);
             return null;
         }
 
         public Type GetViewType(string name)
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.EnsuresOnThrow<KeyNotFoundException>(Contract.Result<Type>() != null);
+            Contract.Ensures(Contract.Result<Type>() != null);
             return null;
         }
 
         public IEnumerable<DependencyObject> GetAllViews(string name)
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.EnsuresOnThrow<KeyNotFoundException>(Contract.Result<IEnumerable<Control>>() != null);
+            Contract.Ensures(Contract.Result<IEnumerable<DependencyObject>>() != null);
             return null;
 
         }

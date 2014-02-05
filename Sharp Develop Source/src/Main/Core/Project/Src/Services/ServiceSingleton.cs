@@ -21,53 +21,46 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Design;
 using ICSharpCode.Core.Implementation;
-using Tauron.JetBrains.Annotations;
 
 namespace ICSharpCode.Core
 {
-    /// <summary>
-    /// The singleton holding the main service provider for SharpDevelop.
-    /// </summary>
-    [PublicAPI]
-    public static class ServiceSingleton
-    {
-        [NotNull]
-        private static readonly IServiceProvider _fallbackServiceProvider = new FallbackServiceProvider();
-
-        private static volatile IServiceProvider _instance = _fallbackServiceProvider;
-
-        /// <summary>
-        /// Gets the service provider that provides the fallback services.
-        /// </summary>
-        [NotNull]
-        public static IServiceProvider FallbackServiceProvider
-        {
-            get { return _fallbackServiceProvider; }
-        }
-
-        /// <summary>
-        /// Gets the static ServiceManager instance.
-        /// </summary>
-        [NotNull]
-        public static IServiceProvider ServiceProvider
-        {
-            get { return _instance; }
-            set
-            {
-                if (value == null) throw new ArgumentNullException();
-                _instance = value;
-            }
-        }
-
-        /// <summary>
-        /// Retrieves the service of type <typeparamref name="T"/> from the provider.
-        /// If the service cannot be found, a <see cref="ServiceNotFoundException"/> will be thrown.
-        /// </summary>
-        public static T GetRequiredService<T>()
-        {
-            object service = _instance.GetService(typeof (T));
-            if (service == null) throw new ServiceNotFoundException(typeof (T));
-            return (T) service;
-        }
-    }
+	/// <summary>
+	/// The singleton holding the main service provider for SharpDevelop.
+	/// </summary>
+	public static class ServiceSingleton
+	{
+		static readonly IServiceProvider fallbackServiceProvider = new FallbackServiceProvider();
+		volatile static IServiceProvider instance = fallbackServiceProvider;
+		
+		/// <summary>
+		/// Gets the service provider that provides the fallback services.
+		/// </summary>
+		public static IServiceProvider FallbackServiceProvider {
+			get { return fallbackServiceProvider; }
+		}
+		
+		/// <summary>
+		/// Gets the static ServiceManager instance.
+		/// </summary>
+		public static IServiceProvider ServiceProvider {
+			get { return instance; }
+			set {
+				if (value == null)
+					throw new ArgumentNullException();
+				instance = value;
+			}
+		}
+		
+		/// <summary>
+		/// Retrieves the service of type <typeparamref name="T"/> from the provider.
+		/// If the service cannot be found, a <see cref="ServiceNotFoundException"/> will be thrown.
+		/// </summary>
+		public static T GetRequiredService<T>()
+		{
+			object service = instance.GetService(typeof(T));
+			if (service == null)
+				throw new ServiceNotFoundException(typeof(T));
+			return (T)service;
+		}
+	}
 }

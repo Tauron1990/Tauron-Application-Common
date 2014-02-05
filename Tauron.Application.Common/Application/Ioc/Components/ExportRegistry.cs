@@ -85,14 +85,17 @@ namespace Tauron.Application.Ioc.Components
             }
 
             [CanBeNull]
-            public IEnumerable<IExport> Lookup([NotNull] Type type, int at)
+            public IEnumerable<ExportMetadata> Lookup([NotNull] Type type, [NotNull] string contractName, int at)
             {
+                var realExports = new HashSet<ExportMetadata>();
+
                 foreach (var pair in this.Where(p => p.Key <= at))
                 {
                     ICollection<IExport> exports;
-                    if (pair.Value.TryGetValue(type, out exports)) return exports;
+                    if (pair.Value.TryGetValue(type, out exports)) 
+                        exports.SelectMany(ep => ep.SelectContractName(contractName)).Foreach(ex => realExports.Add(ex));
                 }
-                return null;
+                return realExports.Count == 0 ? null : realExports;
             }
 
             public void RemoveValue([NotNull] IExport export)
@@ -122,13 +125,13 @@ namespace Tauron.Application.Ioc.Components
                 lock (this)
                 {
                     errorTracer.Phase = "Getting Exports by Type (" + type + ")";
-                    IEnumerable<IExport> regs = _registrations.Lookup(type, limit);
+                    IEnumerable<ExportMetadata> regs = _registrations.Lookup(type, contractName, limit);
 
                     if(regs == null)
                         throw new KeyNotFoundException();
 
                     errorTracer.Phase = "Filtering Exports by Contract Name (" + contractName + ")";
-                    return regs.SelectMany(ex => ex.SelectContractName(contractName)).Where(exp => exp != null);
+                    return regs.Where(exp => exp != null);
                 }
             }
             catch (Exception e)

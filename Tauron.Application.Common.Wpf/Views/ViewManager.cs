@@ -38,15 +38,7 @@ namespace Tauron.Application.Views
 
             if (string.IsNullOrWhiteSpace(name) || (dependencyObject as Control) == null) return;
 
-            // ReSharper disable once AssignNullToNotNullAttribute
-            var helper = new ExportNameHelper(name, dependencyObject);
-
-            if (dependencyObject is Window)
-                manager._windows.Add(new InstanceResolver<Window, INameExportMetadata>(helper.GetValue, helper.GetMeta,
-                                                                                            dependencyObject.GetType()));
-            else 
-                manager._views.Add(new InstanceResolver<Control, ISortableViewExportMetadata>(helper.GetValue, helper.GetMeta,
-                                                                                       dependencyObject.GetType()));
+            manager.Register( new ExportNameHelper(name, dependencyObject));
         }
 
         public static void SetExportView([NotNull] DependencyObject dependencyObject, [NotNull] string name)

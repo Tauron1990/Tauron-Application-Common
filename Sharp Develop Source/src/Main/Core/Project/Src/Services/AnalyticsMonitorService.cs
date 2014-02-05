@@ -17,7 +17,6 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using Tauron.JetBrains.Annotations;
 
 namespace ICSharpCode.Core
 {	
@@ -25,13 +24,13 @@ namespace ICSharpCode.Core
 	/// Interface for AnalyticsMonitorService.
 	/// </summary>
 	/// <remarks>Implementations of this interface must be thread-safe.</remarks>
-	[SDService("SD.AnalyticsMonitor", FallbackImplementation = typeof(AnalyticsMonitorFallback)), PublicAPI]
+	[SDService("SD.AnalyticsMonitor", FallbackImplementation = typeof(AnalyticsMonitorFallback))]
 	public interface IAnalyticsMonitor
 	{
 		/// <summary>
 		/// Tracks an exception that has occurred.
 		/// </summary>
-		void TrackException([NotNull] Exception exception);
+		void TrackException(Exception exception);
 		
 		/// <summary>
 		/// Tracks a feature use.
@@ -39,8 +38,7 @@ namespace ICSharpCode.Core
 		/// <param name="featureName">Name of the feature</param>
 		/// <param name="activationMethod">Method used to 'activate' the feature (e.g. Menu, Toolbar, Shortcut, etc.)</param>
 		/// <returns>Object that can be used to 'end' the feature use, if measuring time spans is desired.</returns>
-		[NotNull]
-		IAnalyticsMonitorTrackedFeature TrackFeature([NotNull] string featureName, [NotNull] string activationMethod = null);
+		IAnalyticsMonitorTrackedFeature TrackFeature(string featureName, string activationMethod = null);
 		
 		/// <summary>
 		/// Tracks a feature use.
@@ -49,21 +47,19 @@ namespace ICSharpCode.Core
 		/// <param name="featureName">Name of the feature</param>
 		/// <param name="activationMethod">Method used to 'activate' the feature (e.g. Menu, Toolbar, Shortcut, etc.)</param>
 		/// <returns>Object that can be used to 'end' the feature use, if measuring time spans is desired.</returns>
-		[NotNull]
-		IAnalyticsMonitorTrackedFeature TrackFeature([NotNull] Type featureClass, [NotNull] string featureName = null, [NotNull] string activationMethod = null);
+		IAnalyticsMonitorTrackedFeature TrackFeature(Type featureClass, string featureName = null, string activationMethod = null);
 	}
 	
 	/// <summary>
 	/// Allows marking the end-time of feature uses.
 	/// </summary>
 	/// <remarks>Implementations of this interface must be thread-safe.</remarks>
-	[PublicAPI]
 	public interface IAnalyticsMonitorTrackedFeature
 	{
 		void EndTracking();
 	}
 	
-	internal sealed class AnalyticsMonitorFallback : IAnalyticsMonitor, IAnalyticsMonitorTrackedFeature
+	sealed class AnalyticsMonitorFallback : IAnalyticsMonitor, IAnalyticsMonitorTrackedFeature
 	{
 		public void TrackException(Exception exception)
 		{

@@ -16,8 +16,6 @@ namespace Tauron.Application.Views.Core
         [Inject]
         private List<InstanceResolver<Window, INameExportMetadata>> _windows;
 
-
-
         protected override string GetName(Type model)
         {
             var attr = model.GetCustomAttribute<ExportModelAttribute>();
@@ -27,33 +25,27 @@ namespace Tauron.Application.Views.Core
         protected override DependencyObject Match(string name)
         {
             var temp = _views.FirstOrDefault(rs => rs.Metadata.Name == name);
-            
+
             return temp == null ? null : temp.Resolve(true);
         }
 
-        public override DependencyObject CreateView(string name)
+        protected override IEnumerable<ISortableViewExportMetadata> GetAllViewsImpl(string name)
         {
-            return _views.First(view => view.Metadata.Name == name).Resolve(true);
+            return _views.Select(v => v.Metadata);
         }
 
-        public override IWindow CreateWindow(string name)
+        public override IWindow CreateWindowImpl(string name)
         {
-            var win = _windows.First(vi => vi.Metadata.Name == name).Resolve(true);
+            Window window = _windows.First(win => win.Metadata.Name == name).Resolve(true);
 
-            UiSynchronize.Synchronize.Invoke(() => win.Name = name);
+            UiSynchronize.Synchronize.Invoke(() => window.Name = name);
 
-            return new WpfWindow(win);
+            return new WpfWindow(window);
         }
 
         public override Type GetViewType(string name)
         {
-            var temp = _views.FirstOrDefault(vi => vi.Metadata.Name == name);
-            return temp != null ? temp.RealType : _windows.First(vi => vi.Metadata.Name == name).RealType;
-        }
-
-        public override IEnumerable<Control> GetAllViews(string name)
-        {
-            return _views.Where(res => res.Metadata.Name == name).OrderBy(res => res.Metadata.Order).Select(res => res.Resolve()).ToArray();
+            return _views.First(vi => vi.Metadata.Name == name).RealType;
         }
     }
 }

@@ -40,13 +40,13 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
     {
         #region Fields
 
-        private readonly ICustomAttributeProvider attributeProvider;
+        private readonly ICustomAttributeProvider _attributeProvider;
 
         /// <summary>The _exportet type.</summary>
-        private readonly Type exportetType;
+        private readonly Type _exportetType;
 
         /// <summary>The _exports.</summary>
-        private ExportMetadata[] exports;
+        private ExportMetadata[] _exports;
 
         #endregion
 
@@ -72,8 +72,8 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
             Contract.Requires<ArgumentNullException>(externalInfo != null, "externalInfo");
 
             Globalmetadata = new Dictionary<string, object>();
-            this.exportetType = exportetType;
-            attributeProvider = exportetType;
+            _exportetType = exportetType;
+            _attributeProvider = exportetType;
             ExternalInfo = externalInfo;
             Initialize(asAnonym);
         }
@@ -98,7 +98,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
             Contract.Requires<ArgumentNullException>(externalInfo != null, "externalInfo");
 
             Globalmetadata = new Dictionary<string, object>();
-            attributeProvider = info;
+            _attributeProvider = info;
             ExternalInfo = externalInfo;
             Initialize(asAnonym);
         }
@@ -111,14 +111,14 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <value>The export metadata.</value>
         public IEnumerable<ExportMetadata> ExportMetadata
         {
-            get { return exports; }
+            get { return _exports; }
         }
 
         /// <summary>Gets the exports.</summary>
         /// <value>The exports.</value>
         public IEnumerable<Type> Exports
         {
-            get { return exports.Select(ex => ex.InterfaceType); }
+            get { return _exports.Select(ex => ex.InterfaceType); }
         }
 
         /// <summary>Gets the external info.</summary>
@@ -133,7 +133,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <value>The implement type.</value>
         public Type ImplementType
         {
-            get { return exportetType; }
+            get { return _exportetType; }
         }
 
         /// <summary>Gets the import metadata.</summary>
@@ -178,7 +178,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         [ContractVerification(false)]
         public ExportMetadata GetNamedExportMetadata(string contractName)
         {
-            return exports.Single(exm => exm.ContractName == contractName);
+            return _exports.Single(exm => exm.ContractName == contractName);
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </returns>
         public IEnumerable<ExportMetadata> SelectContractName(string contractName)
         {
-            return exports.Where(meta => meta.ContractName == contractName);
+            return _exports.Where(meta => meta.ContractName == contractName);
         }
 
         /// <summary>
@@ -250,7 +250,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
             if (ReferenceEquals(this, obj)) return true;
 
-            return obj is DefaultExport && Equals(obj);
+            return obj is DefaultExport && Equals((DefaultExport)obj);
         }
 
         /// <summary>The get hash code.</summary>
@@ -259,7 +259,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </returns>
         public override int GetHashCode()
         {
-            return attributeProvider.GetHashCode();
+            return _attributeProvider.GetHashCode();
         }
 
         /// <summary>The to string.</summary>
@@ -283,12 +283,12 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </param>
         private void Initialize(bool anonym)
         {
-            Contract.Requires(attributeProvider != null);
+            Contract.Requires(_attributeProvider != null);
 
             Globalmetadata = new Dictionary<string, object>();
 
             IEnumerable<ExportMetadataBaseAttribute> metadata =
-                attributeProvider.GetAllCustomAttributes<ExportMetadataBaseAttribute>();
+                _attributeProvider.GetAllCustomAttributes<ExportMetadataBaseAttribute>();
             foreach (ExportMetadataBaseAttribute exportMetadataAttribute in metadata) Globalmetadata[exportMetadataAttribute.InternalKey] = exportMetadataAttribute.InternalValue;
 
             var attr = Globalmetadata.TryGetAndCast<LifetimeContextAttribute>(AopConstants.LiftimeMetadataName);
@@ -297,10 +297,10 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
             if (anonym)
             {
-                exports = new[]
+                _exports = new[]
                 {
                     new ExportMetadata(
-                        exportetType,
+                        _exportetType,
                         ExternalInfo.ExtenalComponentName,
                         typeof (NotSharedLifetime),
                         new Dictionary<string, object>(Globalmetadata),
@@ -309,7 +309,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
                 return;
             }
 
-            exports = attributeProvider.GetAllCustomAttributes<ExportAttribute>().Select(
+            _exports = _attributeProvider.GetAllCustomAttributes<ExportAttribute>().Select(
                 attribute =>
                 {
                     var temp = new Dictionary<string, object>(Globalmetadata);

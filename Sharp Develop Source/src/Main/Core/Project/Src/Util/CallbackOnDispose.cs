@@ -19,33 +19,32 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
-using Tauron.JetBrains.Annotations;
 
 namespace ICSharpCode.Core
 {
 	/// <summary>
 	/// Invokes a callback when this class is disposed.
 	/// </summary>
-    [PublicAPI]
 	sealed class CallbackOnDispose : IDisposable
 	{
-		private Action _callback;
+		Action callback;
 		
 		public CallbackOnDispose(Action callback)
 		{
 			if (callback == null)
 				throw new ArgumentNullException("callback");
-			_callback = callback;
+			this.callback = callback;
 		}
 		
 		public void Dispose()
 		{
-			Action action = Interlocked.Exchange(ref _callback, null);
-		    if (action == null) return;
-		    action();
-#if DEBUG
-		    GC.SuppressFinalize(this);
-#endif
+			Action action = Interlocked.Exchange(ref callback, null);
+			if (action != null) {
+				action();
+				#if DEBUG
+				GC.SuppressFinalize(this);
+				#endif
+			}
 		}
 		
 		#if DEBUG

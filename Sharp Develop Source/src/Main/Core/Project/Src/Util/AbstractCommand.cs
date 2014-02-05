@@ -50,66 +50,66 @@ namespace ICSharpCode.Core
 		}
 	}
 	
-    ///// <summary>
-    ///// For compatibility with SD 4.x.
-    ///// New code should use SimpleCommand instead.
-    ///// 
-    ///// TODO: make obsolete
-    ///// </summary>
-    //public abstract class AbstractMenuCommand : ICommand
-    //{
-    //    bool isEnabled = true;
+	/// <summary>
+	/// For compatibility with SD 4.x.
+	/// New code should use SimpleCommand instead.
+	/// 
+	/// TODO: make obsolete
+	/// </summary>
+	public abstract class AbstractMenuCommand : ICommand
+	{
+		bool isEnabled = true;
 		
-    //    public virtual bool IsEnabled {
-    //        get { return isEnabled; }
-    //        set { isEnabled = value; }
-    //    }
+		public virtual bool IsEnabled {
+			get { return isEnabled; }
+			set { isEnabled = value; }
+		}
 		
-    //    public object Owner { get; set; }
+		public object Owner { get; set; }
 		
-    //    public abstract void Run();
+		public abstract void Run();
 		
-    //    void ICommand.Execute(object parameter)
-    //    {
-    //        this.Owner = parameter;
-    //        Run();
-    //    }
+		void ICommand.Execute(object parameter)
+		{
+			this.Owner = parameter;
+			Run();
+		}
 		
-    //    event EventHandler ICommand.CanExecuteChanged {
-    //        add { CommandWrapper.RegisterConditionRequerySuggestedHandler(value); }
-    //        remove { CommandWrapper.UnregisterConditionRequerySuggestedHandler(value); }
-    //    }
+		event EventHandler ICommand.CanExecuteChanged {
+			add { CommandWrapper.RegisterConditionRequerySuggestedHandler(value); }
+			remove { CommandWrapper.UnregisterConditionRequerySuggestedHandler(value); }
+		}
 		
-    //    bool ICommand.CanExecute(object parameter)
-    //    {
-    //        return this.IsEnabled;
-    //    }
-    //}
+		bool ICommand.CanExecute(object parameter)
+		{
+			return this.IsEnabled;
+		}
+	}
 	
 	
-    ///// <summary>
-    ///// For compatibility with SD 4.x.
-    ///// 
-    ///// TODO: make obsolete
-    ///// </summary>
-    //public abstract class AbstractCheckableMenuCommand : AbstractMenuCommand, ICheckableMenuCommand
-    //{
-    //    public virtual bool IsChecked { get; set; }
+	/// <summary>
+	/// For compatibility with SD 4.x.
+	/// 
+	/// TODO: make obsolete
+	/// </summary>
+	public abstract class AbstractCheckableMenuCommand : AbstractMenuCommand, ICheckableMenuCommand
+	{
+		public virtual bool IsChecked { get; set; }
 		
-    //    public override void Run()
-    //    {
-    //        IsChecked = !IsChecked;
-    //    }
+		public override void Run()
+		{
+			IsChecked = !IsChecked;
+		}
 		
-    //    event EventHandler ICheckableMenuCommand.IsCheckedChanged { 
-    //        add { CommandWrapper.RegisterConditionRequerySuggestedHandler(value); }
-    //        remove { CommandWrapper.UnregisterConditionRequerySuggestedHandler(value); }
-    //    }
+		event EventHandler ICheckableMenuCommand.IsCheckedChanged { 
+			add { CommandWrapper.RegisterConditionRequerySuggestedHandler(value); }
+			remove { CommandWrapper.UnregisterConditionRequerySuggestedHandler(value); }
+		}
 		
-    //    bool ICheckableMenuCommand.IsChecked(object parameter)
-    //    {
-    //        this.Owner = parameter;
-    //        return this.IsChecked;
-    //    }
-    //}
+		bool ICheckableMenuCommand.IsChecked(object parameter)
+		{
+			this.Owner = parameter;
+			return this.IsChecked;
+		}
+	}
 }

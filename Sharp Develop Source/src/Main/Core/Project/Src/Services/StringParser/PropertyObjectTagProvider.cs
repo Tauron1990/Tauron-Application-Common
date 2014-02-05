@@ -18,7 +18,6 @@
 
 using System;
 using System.Reflection;
-using Tauron.JetBrains.Annotations;
 
 namespace ICSharpCode.Core
 {
@@ -27,22 +26,27 @@ namespace ICSharpCode.Core
 	/// </summary>
 	public sealed class PropertyObjectTagProvider : IStringTagProvider
 	{
-		readonly object _obj;
+		readonly object obj;
 		
-		public PropertyObjectTagProvider([NotNull] object obj)
+		public PropertyObjectTagProvider(object obj)
 		{
-		    if (obj == null) throw new ArgumentNullException("obj");
-		    _obj = obj;
+			if (obj == null)
+				throw new ArgumentNullException("obj");
+			this.obj = obj;
 		}
-
-	    [CanBeNull]
-	    public string ProvideString([NotNull] string tag, [NotNull] StringTagPair[] customTags)
-	    {
-	        Type type = _obj.GetType();
-	        PropertyInfo prop = type.GetProperty(tag);
-	        if (prop != null) return prop.GetValue(_obj, null).ToString();
-	        FieldInfo field = type.GetField(tag);
-	        return field != null ? field.GetValue(_obj).ToString() : null;
-	    }
+		
+		public string ProvideString(string tag, StringTagPair[] customTags)
+		{
+			Type type = obj.GetType();
+			PropertyInfo prop = type.GetProperty(tag);
+			if (prop != null) {
+				return prop.GetValue(obj, null).ToString();
+			}
+			FieldInfo field = type.GetField(tag);
+			if (field != null) {
+				return field.GetValue(obj).ToString();
+			}
+			return null;
+		}
 	}
 }

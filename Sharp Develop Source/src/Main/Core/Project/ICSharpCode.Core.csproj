@@ -65,6 +65,36 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\AssemblyInfo.cs" />
+    <Compile Include="Src\AddInTree\AddIn\AddIn.cs" />
+    <Compile Include="Src\AddInTree\AddIn\AddInLoadException.cs" />
+    <Compile Include="Src\AddInTree\AddIn\AssemblyLocator.cs" />
+    <Compile Include="Src\AddInTree\AddIn\BuildItemArgs.cs" />
+    <Compile Include="Src\AddInTree\AddIn\Codon.cs" />
+    <Compile Include="Src\AddInTree\AddIn\ComplexCondition.cs" />
+    <Compile Include="Src\AddInTree\AddIn\Condition.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\MenuItem\ICheckableMenuCommand.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\MenuItem\IMenuItemBuilder.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\ServiceDoozer.cs" />
+    <Compile Include="Src\AddInTree\AddIn\ExtensionPath.cs" />
+    <Compile Include="Src\AddInTree\AddIn\IConditionEvaluator.cs" />
+    <Compile Include="Src\AddInTree\AddIn\ICondition.cs" />
+    <Compile Include="Src\AddInTree\AddIn\IDoozer.cs" />
+    <Compile Include="Src\AddInTree\AddIn\Runtime.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultConditionEvaluators\CompareConditionEvaluator.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultConditionEvaluators\LazyConditionEvaluator.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultConditionEvaluators\OwnerStateConditionEvaluator.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\ClassDoozer.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\FileFilterDoozer.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\Icon\IconDescriptor.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\Icon\IconDoozer.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\LazyDoozer.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\MenuItem\MenuItemDoozer.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\ToolBarItem\ToolBarItemDoozer.cs" />
+    <Compile Include="Src\AddInTree\AddInTree.cs" />
+    <Compile Include="Src\AddInTree\AddInTreeNode.cs" />
+    <Compile Include="Src\AddInTree\IAddInTree.cs" />
+    <Compile Include="Src\AddInTree\TopologicalSort.cs" />
+    <Compile Include="Src\AddInTree\TreePathNotFoundException.cs" />
     <Compile Include="Src\CoreException.cs" />
     <Compile Include="Src\ExtensionMethods.cs" />
     <Compile Include="Src\Services\AnalyticsMonitorService.cs" />
@@ -95,16 +125,27 @@
     <Compile Include="Src\Services\StringParser\StringParser.cs" />
     <Compile Include="Src\Util\AbstractCommand.cs" />
     <Compile Include="Src\Util\CallbackOnDispose.cs" />
+    <Compile Include="Src\Util\CommandWrapper.cs" />
+    <Compile Include="Src\Util\TraceTextWriter.cs" />
+    <Compile Include="Src\AddInTree\AddIn\IBuildItemsModifier.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\IncludeDoozer.cs" />
     <Compile Include="Src\Services\LoggingService\LoggingService.cs" />
+    <Compile Include="Src\AddInTree\AddIn\Manifest.cs" />
+    <Compile Include="Src\AddInTree\AddIn\AddInReference.cs" />
+    <Compile Include="Src\AddInTree\CoreStartup.cs" />
+    <Compile Include="Src\AddInTree\AddInManager.cs" />
+    <Compile Include="Src\AddInTree\AddIn\DefaultDoozers\StringDoozer.cs" />
     <Compile Include="..\..\GlobalAssemblyInfo.cs">
       <Link>Configuration\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Src\Util\WeakCollection.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\Tauron-Application-Common\JetBrains.Annotations\JetBrains.Annotations.csproj">
-      <Project>{df97133f-565a-4d1a-afe3-4155b31a89e5}</Project>
-      <Name>JetBrains.Annotations</Name>
-    </ProjectReference>
+    <Folder Include="Src\Services\LoggingService" />
+    <Folder Include="Src\Services\ResourceService" />
+    <Content Include="..\..\..\..\data\schemas\AddIn.xsd">
+      <Link>Src\AddInTree\AddIn\AddIn.xsd</Link>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
