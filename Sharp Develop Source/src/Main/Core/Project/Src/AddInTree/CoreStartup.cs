@@ -100,8 +100,8 @@ namespace ICSharpCode.Core
 		public void ConfigureExternalAddIns(string addInConfigurationFile)
 		{
 			externalAddInsConfigured = true;
-			AddInManager.ConfigurationFileName = addInConfigurationFile;
-			AddInManager.LoadAddInConfiguration(addInFiles, disabledAddIns);
+			AddINManager.ConfigurationFileName = addInConfigurationFile;
+			AddINManager.LoadAddInConfiguration(addInFiles, disabledAddIns);
 		}
 		
 		/// <summary>
@@ -121,10 +121,10 @@ namespace ICSharpCode.Core
 			if (!externalAddInsConfigured) {
 				throw new InvalidOperationException("ConfigureExternalAddIns must be called before ConfigureUserAddIns");
 			}
-			AddInManager.AddInInstallTemp = addInInstallTemp;
-			AddInManager.UserAddInPath = userAddInPath;
+			AddINManager.AddInInstallTemp = addInInstallTemp;
+			AddINManager.UserAddInPath = userAddInPath;
 			if (Directory.Exists(addInInstallTemp)) {
-				AddInManager.InstallAddIns(disabledAddIns);
+				AddINManager.InstallAddIns(disabledAddIns);
 			}
 			if (Directory.Exists(userAddInPath)) {
 				AddAddInsFromDirectory(userAddInPath);

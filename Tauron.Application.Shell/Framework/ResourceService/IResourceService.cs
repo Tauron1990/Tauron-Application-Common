@@ -19,18 +19,20 @@
 using System;
 using System.Reflection;
 using System.Resources;
+using Tauron.JetBrains.Annotations;
 
-namespace ICSharpCode.Core
+namespace Tauron.Application.Shell.Framework.ResourceService
 {
 	/// <summary>
 	/// Provides string and bitmap resources.
 	/// </summary>
-	[SDService("SD.ResourceService", FallbackImplementation = typeof(FallbackResourceService))]
+	[PublicAPI]
 	public interface IResourceService
 	{
 		/// <summary>
 		/// Gets/Sets the current UI language.
 		/// </summary>
+		[NotNull]
 		string Language { get; set; }
 		
 		event EventHandler LanguageChanged;
@@ -48,9 +50,11 @@ namespace ICSharpCode.Core
 		/// <exception cref="ResourceNotFoundException">
 		/// Is thrown when the GlobalResource manager can't find a requested resource.
 		/// </exception>
-		string GetString(string name);
-		
-		object GetImageResource(string name);
+		[NotNull]
+		string GetString([NotNull] string name);
+
+	    [NotNull]
+	    object GetImageResource([NotNull] string name);
 		
 				
 		/// <summary>
@@ -59,9 +63,9 @@ namespace ICSharpCode.Core
 		/// <param name="baseResourceName">The base name of the resource file embedded in the assembly.</param>
 		/// <param name="assembly">The assembly which contains the resource file.</param>
 		/// <example><c>ResourceService.RegisterStrings("TestAddin.Resources.StringResources", GetType().Assembly);</c></example>
-		void RegisterStrings(string baseResourceName, Assembly assembly);
+		void RegisterStrings([NotNull] string baseResourceName, [NotNull] Assembly assembly);
 		
-		void RegisterNeutralStrings(ResourceManager stringManager);
+		void RegisterNeutralStrings([NotNull] ResourceManager stringManager);
 		
 		/// <summary>
 		/// Registers image resources in the resource service.
@@ -69,50 +73,8 @@ namespace ICSharpCode.Core
 		/// <param name="baseResourceName">The base name of the resource file embedded in the assembly.</param>
 		/// <param name="assembly">The assembly which contains the resource file.</param>
 		/// <example><c>ResourceService.RegisterImages("TestAddin.Resources.BitmapResources", GetType().Assembly);</c></example>
-		void RegisterImages(string baseResourceName, Assembly assembly);
+		void RegisterImages([NotNull] string baseResourceName, [NotNull] Assembly assembly);
 		
-		void RegisterNeutralImages(ResourceManager imageManager);
-	}
-	
-	sealed class FallbackResourceService : IResourceService
-	{
-		event EventHandler IResourceService.LanguageChanged { add {} remove {} }
-		
-		string IResourceService.Language {
-			get { return "en"; }
-			set {
-				throw new NotImplementedException();
-			}
-		}
-		
-		string IResourceService.GetString(string name)
-		{
-			return null;
-		}
-		
-		object IResourceService.GetImageResource(string name)
-		{
-			return null;
-		}
-		
-		void IResourceService.RegisterStrings(string baseResourceName, Assembly assembly)
-		{
-			throw new NotImplementedException();
-		}
-		
-		void IResourceService.RegisterNeutralStrings(ResourceManager stringManager)
-		{
-			throw new NotImplementedException();
-		}
-		
-		void IResourceService.RegisterImages(string baseResourceName, Assembly assembly)
-		{
-			throw new NotImplementedException();
-		}
-		
-		void IResourceService.RegisterNeutralImages(ResourceManager imageManager)
-		{
-			throw new NotImplementedException();
-		}
+		void RegisterNeutralImages([NotNull] ResourceManager imageManager);
 	}
 }

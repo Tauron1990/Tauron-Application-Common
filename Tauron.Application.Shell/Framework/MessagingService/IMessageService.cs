@@ -19,7 +19,7 @@
 using System;
 using ICSharpCode.Core.Implementation;
 
-namespace ICSharpCode.Core
+namespace Tauron.Application.Shell.Framework.MessagingService
 {
 	/// <summary>
 	/// Interface for the MessageService.

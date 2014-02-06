@@ -18,35 +18,33 @@
 
 using System;
 using System.Reflection;
+using Tauron.JetBrains.Annotations;
 
-namespace ICSharpCode.Core
+namespace Tauron.Application.Shell.Framework.StringParser
 {
-	/// <summary>
-	/// Provides properties by using Reflection on an object.
-	/// </summary>
-	public sealed class PropertyObjectTagProvider : IStringTagProvider
-	{
-		readonly object obj;
-		
-		public PropertyObjectTagProvider(object obj)
-		{
-			if (obj == null)
-				throw new ArgumentNullException("obj");
-			this.obj = obj;
-		}
-		
-		public string ProvideString(string tag, StringTagPair[] customTags)
-		{
-			Type type = obj.GetType();
-			PropertyInfo prop = type.GetProperty(tag);
-			if (prop != null) {
-				return prop.GetValue(obj, null).ToString();
-			}
-			FieldInfo field = type.GetField(tag);
-			if (field != null) {
-				return field.GetValue(obj).ToString();
-			}
-			return null;
-		}
-	}
+    /// <summary>
+    /// Provides properties by using Reflection on an object.
+    /// </summary>
+    public sealed class PropertyObjectTagProvider : IStringTagProvider
+    {
+        private readonly object _obj;
+
+        public PropertyObjectTagProvider([NotNull] object obj)
+        {
+            if (obj == null) throw new ArgumentNullException("obj");
+            _obj = obj;
+        }
+
+        public string ProvideString(string tag, StringTagPair[] customTags)
+        {
+            Type type = _obj.GetType();
+            PropertyInfo prop = type.GetProperty(tag);
+            if (prop != null)
+            {
+                return prop.GetValue(_obj, null).ToString();
+            }
+            FieldInfo field = type.GetField(tag);
+            return field != null ? field.GetValue(_obj).ToString() : null;
+        }
+    }
 }

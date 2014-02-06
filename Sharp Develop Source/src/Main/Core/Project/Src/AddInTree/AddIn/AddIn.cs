@@ -24,8 +24,8 @@ using System.Xml;
 
 namespace ICSharpCode.Core
 {
-	public sealed class AddIn
-	{
+    public sealed class AddIn
+    {
 		IAddInTree addInTree;
 		Properties    properties = new Properties();
 		List<Runtime> runtimes   = new List<Runtime>();

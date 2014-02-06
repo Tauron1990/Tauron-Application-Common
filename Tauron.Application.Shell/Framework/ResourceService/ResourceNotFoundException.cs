@@ -18,35 +18,37 @@
 
 using System;
 using System.Runtime.Serialization;
+using Tauron.JetBrains.Annotations;
 
-namespace ICSharpCode.Core
+namespace Tauron.Application.Shell.Framework.ResourceService
 {
 	/// <summary>
 	/// Is thrown when the GlobalResource manager can't find a requested
 	/// resource.
 	/// </summary>
-	[Serializable()]
+	[Serializable]
 	public class ResourceNotFoundException : CoreException
 	{
-		string resourceName;
-		public string ResourceName { get { return resourceName; } }
+		string _resourceName;
+	    [NotNull]
+	    public string ResourceName { get { return _resourceName; } }
 		
-		public ResourceNotFoundException(string resourceName) : base("Resource not found : " + resourceName)
+		public ResourceNotFoundException([NotNull] string resourceName) : base("Resource not found : " + resourceName)
 		{
-			this.resourceName = resourceName;
+		    _resourceName = resourceName;
+		}
+
+	    public ResourceNotFoundException()
+	    {
 		}
 		
-		public ResourceNotFoundException() : base()
+		public ResourceNotFoundException([NotNull] string resourceName, [NotNull] Exception innerException) : base("Resource not found : " + resourceName, innerException)
 		{
+		    _resourceName = resourceName;
 		}
-		
-		public ResourceNotFoundException(string resourceName, Exception innerException) : base("Resource not found : " + resourceName, innerException)
-		{
-			this.resourceName = resourceName;
-		}
-		
-		protected ResourceNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
-		{
-		}
+
+	    protected ResourceNotFoundException([NotNull] SerializationInfo info, StreamingContext context) : base(info, context)
+	    {
+	    }
 	}
 }

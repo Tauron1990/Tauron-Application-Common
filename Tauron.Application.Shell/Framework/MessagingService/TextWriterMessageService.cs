@@ -18,6 +18,8 @@
 
 using System;
 using System.IO;
+using Tauron.Application.Shell.Framework.MessagingService;
+using Tauron.Application.Shell.Framework.StringParser;
 
 namespace ICSharpCode.Core.Implementation
 {

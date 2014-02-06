@@ -18,7 +18,6 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
-using ICSharpCode.Core;
 using Tauron.Application.Files.VirtualFiles;
 using Tauron.JetBrains.Annotations;
 
@@ -63,12 +62,12 @@ namespace Tauron.Application.Shell.Framework
 		
 		/// <inheritdoc cref="PropertiesContainer.Set{T}(string, T)"/>
 		void Set<T>([NotNull] string key, T value);
-		
-		/// <inheritdoc cref="Properties.GetList"/>
+
+        /// <inheritdoc cref="PropertiesContainer.GetList{T}"/>
 		[NotNull]
 		IReadOnlyList<T> GetList<T>([NotNull] string key);
-		
-		/// <inheritdoc cref="Properties.SetList"/>
+
+        /// <inheritdoc cref="PropertiesContainer.SetList{T}"/>
 		void SetList<T>([NotNull] string key, [NotNull] IEnumerable<T> value);
 		
 		/// <inheritdoc cref="PropertiesContainer.Remove"/>

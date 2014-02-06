@@ -39,6 +39,15 @@
     <Reference Include="ICSharpCode.NRefactory.Xml">
       <HintPath>..\packages\ICSharpCode.NRefactory.5.3.0\lib\Net40\ICSharpCode.NRefactory.Xml.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.Common">
+      <HintPath>..\packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45\Microsoft.Practices.EnterpriseLibrary.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling">
+      <HintPath>..\packages\EnterpriseLibrary.ExceptionHandling.6.0.1304.0\lib\NET45\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.Logging">
+      <HintPath>..\packages\EnterpriseLibrary.Logging.6.0.1304.0\lib\NET45\Microsoft.Practices.EnterpriseLibrary.Logging.dll</HintPath>
+    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\packages\Mono.Cecil.0.9.5.2\lib\net40\Mono.Cecil.dll</HintPath>
     </Reference>
@@ -80,21 +89,31 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommonShellConstans.cs" />
     <Compile Include="ExportServiceAttribute.cs" />
+    <Compile Include="Framework\Addins\IAddIn.cs" />
+    <Compile Include="Framework\Addins\IAddInManager.cs" />
     <Compile Include="Framework\AnalyticsMonitorService.cs" />
     <Compile Include="Framework\ApplicationStateInfoService.cs" />
+    <Compile Include="Framework\CoreException.cs" />
     <Compile Include="Framework\Files\FileUtility.Minimal.cs" />
     <Compile Include="Framework\IApplicationStateInfoService.cs" />
+    <Compile Include="Framework\MessagingService\IMessageService.cs" />
+    <Compile Include="Framework\MessagingService\TextWriterMessageService.cs" />
     <Compile Include="Framework\PropertyService\IPropertyService.cs" />
     <Compile Include="Framework\PropertyService\PropertiesContainer.cs" />
-    <Compile Include="Framework\PropertyService\PropertyService.cs" />
     <Compile Include="Framework\PropertyService\PropertyServiceImpl.cs" />
+    <Compile Include="Framework\ResourceService\IResourceService.cs" />
+    <Compile Include="Framework\ResourceService\ResourceNotFoundException.cs" />
+    <Compile Include="Framework\ResourceService\ResourceService.cs" />
+    <Compile Include="Framework\StringParser\IStringTagProvider.cs" />
+    <Compile Include="Framework\StringParser\PropertyObjectTagProvider.cs" />
+    <Compile Include="Framework\StringParser\StringParser.cs" />
     <Compile Include="InjectServiceAttribute.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceConststants.cs" />
     <Compile Include="ShellApplication.cs" />
-    <Compile Include="ShellConstants.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Catalogs.xaml">

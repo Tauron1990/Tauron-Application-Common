@@ -22,8 +22,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+using Tauron.JetBrains.Annotations;
 
-namespace ICSharpCode.Core
+namespace Tauron.Application.Shell.Framework.StringParser
 {
 	/// <summary>
 	/// This class parses internal ${xyz} tags of #Develop.
@@ -31,39 +32,41 @@ namespace ICSharpCode.Core
 	/// where [NAME] represents the string under which it is avaiable in
 	/// the environment.
 	/// </summary>
+	[PublicAPI]
 	public static class StringParser
 	{
-		readonly static ConcurrentDictionary<string, IStringTagProvider> prefixedStringTagProviders
+		readonly static ConcurrentDictionary<string, IStringTagProvider> PrefixedStringTagProviders
 			= InitializePrefixedStringTagProviders();
 		
 		// not really a stack - we only use Add and GetEnumerator
-		readonly static ConcurrentStack<IStringTagProvider> stringTagProviders = new ConcurrentStack<IStringTagProvider>();
-		
-		static ConcurrentDictionary<string, IStringTagProvider> InitializePrefixedStringTagProviders()
-		{
-			var dict = new ConcurrentDictionary<string, IStringTagProvider>(StringComparer.OrdinalIgnoreCase);
-			
-			// entryAssembly == null might happen in unit test mode
-			Assembly entryAssembly = Assembly.GetEntryAssembly();
-			if (entryAssembly != null) {
-				string exeName = entryAssembly.Location;
-				dict["exe"] = new PropertyObjectTagProvider(FileVersionInfo.GetVersionInfo(exeName));
-			}
-			
-			return dict;
-		}
-		
-		/// <summary>
+		readonly static ConcurrentStack<IStringTagProvider> StringTagProviders = new ConcurrentStack<IStringTagProvider>();
+
+	    [NotNull]
+	    static ConcurrentDictionary<string, IStringTagProvider> InitializePrefixedStringTagProviders()
+	    {
+	        var dict = new ConcurrentDictionary<string, IStringTagProvider>(StringComparer.OrdinalIgnoreCase);
+
+	        // entryAssembly == null might happen in unit test mode
+	        Assembly entryAssembly = Assembly.GetEntryAssembly();
+	        if (entryAssembly == null) return dict;
+
+	        string exeName = entryAssembly.Location;
+	        dict["exe"] = new PropertyObjectTagProvider(FileVersionInfo.GetVersionInfo(exeName));
+
+	        return dict;
+	    }
+
+	    /// <summary>
 		/// Escapes all occurrences of '${' to '${$}{'.
 		/// </summary>
-		public static string Escape(string input)
-		{
-			if (input == null)
-				throw new ArgumentNullException("input");
-			return input.Replace("${", "${$}{");
-		}
-		
-		/// <summary>
+	    [NotNull]
+	    public static string Escape([NotNull] string input)
+	    {
+	        if (input == null) throw new ArgumentNullException("input");
+	        return input.Replace("${", "${$}{");
+	    }
+
+	    /// <summary>
 		/// Expands ${xyz} style property values.
 		/// </summary>
 		public static string Parse(string input)
@@ -75,7 +78,7 @@ namespace ICSharpCode.Core
 		{
 			if (tagProvider == null)
 				throw new ArgumentNullException("tagProvider");
-			stringTagProviders.Push(tagProvider);
+			StringTagProviders.Push(tagProvider);
 		}
 		
 		public static void RegisterStringTagProvider(string prefix, IStringTagProvider tagProvider)
@@ -84,7 +87,7 @@ namespace ICSharpCode.Core
 				throw new ArgumentNullException("prefix");
 			if (tagProvider == null)
 				throw new ArgumentNullException("tagProvider");
-			prefixedStringTagProviders[prefix] = tagProvider;
+			PrefixedStringTagProviders[prefix] = tagProvider;
 		}
 		
 		//readonly static Regex pattern = new Regex(@"\$\{([^\}]*)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -180,7 +183,7 @@ namespace ICSharpCode.Core
 				if (propertyName.Equals("CONFIGDIRECTORY", StringComparison.OrdinalIgnoreCase))
 					return ServiceSingleton.GetRequiredService<IPropertyService>().ConfigDirectory;
 				
-				foreach (IStringTagProvider provider in stringTagProviders) {
+				foreach (IStringTagProvider provider in StringTagProviders) {
 					string result = provider.ProvideString(propertyName, customTags);
 					if (result != null)
 						return result;
@@ -229,7 +232,7 @@ namespace ICSharpCode.Core
 						return GetProperty(propertyName);
 					default:
 						IStringTagProvider provider;
-						if (prefixedStringTagProviders.TryGetValue(prefix, out provider))
+						if (PrefixedStringTagProviders.TryGetValue(prefix, out provider))
 							return provider.ProvideString(propertyName, customTags);
 						else
 							return null;

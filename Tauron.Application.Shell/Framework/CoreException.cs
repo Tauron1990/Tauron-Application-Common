@@ -18,29 +18,30 @@
 
 using System;
 using System.Runtime.Serialization;
+using Tauron.JetBrains.Annotations;
 
-namespace ICSharpCode.Core
+namespace Tauron.Application.Shell.Framework
 {
 	/// <summary>
 	/// Base class for exceptions thrown by the SharpDevelop core.
 	/// </summary>
-	[Serializable()]
+	[Serializable, PublicAPI]
 	public class CoreException : Exception
 	{
-		public CoreException() : base()
+		public CoreException()
 		{
 		}
 		
-		public CoreException(string message) : base(message)
+		public CoreException([NotNull] string message) : base(message)
 		{
 		}
-		
-		public CoreException(string message, Exception innerException) : base(message, innerException)
-		{
-		}
-		
-		protected CoreException(SerializationInfo info, StreamingContext context) : base(info, context)
-		{
-		}
+
+	    public CoreException([NotNull] string message, [NotNull] Exception innerException) : base(message, innerException)
+	    {
+	    }
+
+	    protected CoreException([NotNull] SerializationInfo info, StreamingContext context) : base(info, context)
+	    {
+	    }
 	}
 }
