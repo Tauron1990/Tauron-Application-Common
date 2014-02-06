@@ -16,57 +16,63 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using ICSharpCode.Core;
+using Tauron.Application.Files.VirtualFiles;
+using Tauron.JetBrains.Annotations;
 
-namespace ICSharpCode.Core
+namespace Tauron.Application.Shell.Framework
 {
 	/// <summary>
 	/// The property service.
 	/// </summary>
-	[SDService("SD.PropertyService")]
+	[PublicAPI]
 	public interface IPropertyService : INotifyPropertyChanged
 	{
 		/// <summary>
 		/// Gets the configuration directory. (usually "%ApplicationData%\%ApplicationName%")
 		/// </summary>
-		DirectoryName ConfigDirectory { get; }
+		[NotNull]
+		IDirectory ConfigDirectory { get; }
 		
 		/// <summary>
 		/// Gets the data directory (usually "ApplicationRootPath\data")
 		/// </summary>
-		DirectoryName DataDirectory { get; }
+		[NotNull]
+		IDirectory DataDirectory { get; }
 		
 		/// <summary>
 		/// Gets the main properties container for this property service.
 		/// </summary>
-		Properties MainPropertiesContainer { get; }
+		[NotNull]
+		PropertiesContainer MainPropertiesContainer { get; }
 		
-		/// <inheritdoc cref="Properties.Get{T}(string, T)"/>
-		T Get<T>(string key, T defaultValue);
+		/// <inheritdoc cref="PropertiesContainer.Get{T}(string, T)"/>
+		T Get<T>([NotNull] string key, T defaultValue);
 		
-		/// <inheritdoc cref="Properties.NestedProperties"/>
-		Properties NestedProperties(string key);
+		/// <inheritdoc cref="PropertiesContainer.NestedProperties"/>
+		[NotNull]
+		PropertiesContainer NestedProperties([NotNull] string key);
 		
-		/// <inheritdoc cref="Properties.SetNestedProperties"/>
-		void SetNestedProperties(string key, Properties nestedProperties);
+		/// <inheritdoc cref="PropertiesContainer.SetNestedProperties"/>
+		void SetNestedProperties([NotNull] string key, [NotNull] PropertiesContainer nestedProperties);
 		
-		/// <inheritdoc cref="Properties.Contains"/>
-		bool Contains(string key);
+		/// <inheritdoc cref="PropertiesContainer.Contains"/>
+		bool Contains([NotNull] string key);
 		
-		/// <inheritdoc cref="Properties.Set{T}(string, T)"/>
-		void Set<T>(string key, T value);
+		/// <inheritdoc cref="PropertiesContainer.Set{T}(string, T)"/>
+		void Set<T>([NotNull] string key, T value);
 		
 		/// <inheritdoc cref="Properties.GetList"/>
-		IReadOnlyList<T> GetList<T>(string key);
+		[NotNull]
+		IReadOnlyList<T> GetList<T>([NotNull] string key);
 		
 		/// <inheritdoc cref="Properties.SetList"/>
-		void SetList<T>(string key, IEnumerable<T> value);
+		void SetList<T>([NotNull] string key, [NotNull] IEnumerable<T> value);
 		
-		/// <inheritdoc cref="Properties.Remove"/>
-		void Remove(string key);
+		/// <inheritdoc cref="PropertiesContainer.Remove"/>
+		void Remove([NotNull] string key);
 		
 		/// <summary>
 		/// Saves the main properties to disk.
@@ -81,11 +87,12 @@ namespace ICSharpCode.Core
 		/// </summary>
 		/// <returns>Properties container that was loaded; or an empty properties container
 		/// if no container with the specified key exists.</returns>
-		Properties LoadExtraProperties(string key);
+		[NotNull]
+		PropertiesContainer LoadExtraProperties([NotNull] string key);
 		
 		/// <summary>
 		/// Saves extra properties that are not part of the main properties container.
 		/// </summary>
-		void SaveExtraProperties(string key, Properties p);
+		void SaveExtraProperties([NotNull] string key, [NotNull] PropertiesContainer p);
 	}
 }

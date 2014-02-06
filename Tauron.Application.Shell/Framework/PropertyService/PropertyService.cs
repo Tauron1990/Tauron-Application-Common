@@ -24,6 +24,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Xml;
+using Tauron.Application.Shell.Framework;
 
 namespace ICSharpCode.Core
 {
@@ -37,7 +38,7 @@ namespace ICSharpCode.Core
 			get { return ServiceSingleton.GetRequiredService<IPropertyService>(); }
 		}
 		
-		static Properties properties {
+		static PropertiesContainer properties {
 			get { return Service.MainPropertiesContainer; }
 		}
 		
@@ -49,55 +50,55 @@ namespace ICSharpCode.Core
 			get { return Service.DataDirectory; }
 		}
 		
-		/// <inheritdoc cref="Properties.Get{T}(string, T)"/>
+		/// <inheritdoc cref="PropertiesContainer.Get{T}(string, T)"/>
 		public static T Get<T>(string key, T defaultValue)
 		{
 			return properties.Get(key, defaultValue);
 		}
 		
 		[Obsolete("Use the NestedProperties method instead", true)]
-		public static Properties Get(string key, Properties defaultValue)
+		public static PropertiesContainer Get(string key, PropertiesContainer defaultValue)
 		{
 			return properties.Get(key, defaultValue);
 		}
 		
-		/// <inheritdoc cref="Properties.NestedProperties"/>
-		public static Properties NestedProperties(string key)
+		/// <inheritdoc cref="PropertiesContainer.NestedProperties"/>
+		public static PropertiesContainer NestedProperties(string key)
 		{
 			return properties.NestedProperties(key);
 		}
 		
-		/// <inheritdoc cref="Properties.SetNestedProperties"/>
-		public static void SetNestedProperties(string key, Properties nestedProperties)
+		/// <inheritdoc cref="PropertiesContainer.SetNestedProperties"/>
+		public static void SetNestedProperties(string key, PropertiesContainer nestedProperties)
 		{
 			properties.SetNestedProperties(key, nestedProperties);
 		}
 		
-		/// <inheritdoc cref="Properties.Contains"/>
+		/// <inheritdoc cref="PropertiesContainer.Contains"/>
 		public static bool Contains(string key)
 		{
 			return properties.Contains(key);
 		}
 		
-		/// <inheritdoc cref="Properties.Set{T}(string, T)"/>
+		/// <inheritdoc cref="PropertiesContainer.Set{T}(string, T)"/>
 		public static void Set<T>(string key, T value)
 		{
 			properties.Set(key, value);
 		}
 		
 		[Obsolete("Use the SetNestedProperties method instead", true)]
-		public static void Set(string key, Properties value)
+		public static void Set(string key, PropertiesContainer value)
 		{
 			properties.Set(key, value);
 		}
 		
-		/// <inheritdoc cref="Properties.GetList"/>
+		/// <inheritdoc cref="PropertiesContainer.GetList"/>
 		public static IReadOnlyList<T> GetList<T>(string key)
 		{
 			return properties.GetList<T>(key);
 		}
 		
-		/// <inheritdoc cref="Properties.SetList"/>
+		/// <inheritdoc cref="PropertiesContainer.SetList"/>
 		public static void SetList<T>(string key, IEnumerable<T> value)
 		{
 			properties.SetList(key, value);
@@ -139,7 +140,7 @@ namespace ICSharpCode.Core
 			throw new InvalidOperationException();
 		}
 		
-		/// <inheritdoc cref="Properties.Remove"/>
+		/// <inheritdoc cref="PropertiesContainer.Remove"/>
 		public static void Remove(string key)
 		{
 			properties.Remove(key);

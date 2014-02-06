@@ -32,7 +32,7 @@ namespace ICSharpCode.Core
 {
 	/// <summary>
 	/// This interface flags an object beeing "mementocapable". This means that the
-	/// state of the object could be saved to an <see cref="Properties"/> object
+	/// state of the object could be saved to an <see cref="PropertiesContainer"/> object
 	/// and set from a object from the same class.
 	/// This is used to save and restore the state of GUI objects.
 	/// </summary>
@@ -44,19 +44,19 @@ namespace ICSharpCode.Core
 		/// <summary>
 		/// Creates a new memento from the state.
 		/// </summary>
-		Properties CreateMemento();
+		PropertiesContainer CreateMemento();
 		
 		/// <summary>
 		/// Sets the state to the given memento.
 		/// </summary>
-		void SetMemento(Properties memento);
+		void SetMemento(PropertiesContainer memento);
 	}
 	
 	/// <summary>
 	/// A container for settings - key/value pairs where keys are strings, and values are arbitrary objects.
 	/// Instances of this class are thread-safe.
 	/// </summary>
-	public sealed class Properties : INotifyPropertyChanged, ICloneable
+	public sealed class PropertiesContainer : INotifyPropertyChanged, ICloneable
 	{
 		/// <summary>
 		/// Gets the version number of the XML file format.
@@ -67,7 +67,7 @@ namespace ICSharpCode.Core
 		// All nodes in such a tree share the same syncRoot in order to simplify synchronization.
 		// When an existing node is added to a tree, its syncRoot needs to change.
 		object syncRoot;
-		Properties parent;
+		PropertiesContainer parent;
 		// Objects in the dictionary are one of:
 		// - string: value stored using TypeConverter
 		// - XElement: serialized object
@@ -76,12 +76,12 @@ namespace ICSharpCode.Core
 		Dictionary<string, object> dict = new Dictionary<string, object>();
 		
 		#region Constructor
-		public Properties()
+		public PropertiesContainer()
 		{
 			this.syncRoot = new object();
 		}
 		
-		private Properties(Properties parent)
+		private PropertiesContainer(PropertiesContainer parent)
 		{
 			this.parent = parent;
 			this.syncRoot = parent.syncRoot;
@@ -132,7 +132,7 @@ namespace ICSharpCode.Core
 		{
 			if (isDirty) {
 				isDirty = false;
-				foreach (var properties in dict.Values.OfType<Properties>()) {
+				foreach (var properties in dict.Values.OfType<PropertiesContainer>()) {
 					properties.CleanDirty();
 				}
 			}
@@ -393,7 +393,7 @@ namespace ICSharpCode.Core
 		/// <summary>
 		/// Gets the parent property container.
 		/// </summary>
-		public Properties Parent {
+		public PropertiesContainer Parent {
 			get {
 				lock (syncRoot) {
 					return parent;
@@ -402,13 +402,13 @@ namespace ICSharpCode.Core
 		}
 		
 		[Obsolete("Use the NestedProperties method instead", true)]
-		public Properties Get(string key, Properties defaultValue)
+		public PropertiesContainer Get(string key, PropertiesContainer defaultValue)
 		{
 			throw new InvalidOperationException();
 		}
 		
 		[Obsolete("Use the SetNestedProperties method instead", true)]
-		public void Set(string key, Properties value)
+		public void Set(string key, PropertiesContainer value)
 		{
 			throw new InvalidOperationException();
 		}
@@ -419,16 +419,16 @@ namespace ICSharpCode.Core
 		/// is overwritten by one of the Set-methods).
 		/// Changes performed on the nested container will be persisted together with the parent container.
 		/// </summary>
-		public Properties NestedProperties(string key)
+		public PropertiesContainer NestedProperties(string key)
 		{
 			bool isNewContainer = false;
-			Properties result;
+			PropertiesContainer result;
 			lock (syncRoot) {
 				object oldValue;
 				dict.TryGetValue(key, out oldValue);
-				result = oldValue as Properties;
+				result = oldValue as PropertiesContainer;
 				if (result == null) {
-					result = new Properties(this);
+					result = new PropertiesContainer(this);
 					dict[key] = result;
 					result.MakeDirty();
 				}
@@ -440,7 +440,7 @@ namespace ICSharpCode.Core
 		
 		void HandleOldValue(object oldValue)
 		{
-			Properties p = oldValue as Properties;
+			PropertiesContainer p = oldValue as PropertiesContainer;
 			if (p != null) {
 				Debug.Assert(p.parent == this);
 				p.parent = null;
@@ -453,14 +453,14 @@ namespace ICSharpCode.Core
 		/// This method is intended to be used in conjunction with the <see cref="IMementoCapable"/> pattern
 		/// where a new unattached properties container is created and then later attached to a parent container.
 		/// </summary>
-		public void SetNestedProperties(string key, Properties properties)
+		public void SetNestedProperties(string key, PropertiesContainer properties)
 		{
 			if (properties == null) {
 				Remove(key);
 				return;
 			}
 			lock (syncRoot) {
-				for (Properties ancestor = this; ancestor != null; ancestor = ancestor.parent) {
+				for (PropertiesContainer ancestor = this; ancestor != null; ancestor = ancestor.parent) {
 					if (ancestor == properties)
 						throw new InvalidOperationException("Cannot add a properties container to itself.");
 				}
@@ -486,7 +486,7 @@ namespace ICSharpCode.Core
 		void SetSyncRoot(object newSyncRoot)
 		{
 			this.syncRoot = newSyncRoot;
-			foreach (var properties in dict.Values.OfType<Properties>()) {
+			foreach (var properties in dict.Values.OfType<PropertiesContainer>()) {
 				properties.SetSyncRoot(newSyncRoot);
 			}
 		}
@@ -496,18 +496,18 @@ namespace ICSharpCode.Core
 		/// <summary>
 		/// Creates a deep clone of this Properties container.
 		/// </summary>
-		public Properties Clone()
+		public PropertiesContainer Clone()
 		{
 			lock (syncRoot) {
 				return CloneWithParent(null);
 			}
 		}
 		
-		Properties CloneWithParent(Properties parent)
+		PropertiesContainer CloneWithParent(PropertiesContainer parent)
 		{
-			Properties copy = parent != null ? new Properties(parent) : new Properties();
+			PropertiesContainer copy = parent != null ? new PropertiesContainer(parent) : new PropertiesContainer();
 			foreach (var pair in dict) {
-				Properties child = pair.Value as Properties;
+				PropertiesContainer child = pair.Value as PropertiesContainer;
 				if (child != null)
 					copy.dict.Add(pair.Key, child.CloneWithParent(copy));
 				else
@@ -523,9 +523,9 @@ namespace ICSharpCode.Core
 		#endregion
 		
 		#region ReadFromAttributes
-		internal static Properties ReadFromAttributes(XmlReader reader)
+		internal static PropertiesContainer ReadFromAttributes(XmlReader reader)
 		{
-			Properties properties = new Properties();
+			PropertiesContainer properties = new PropertiesContainer();
 			if (reader.HasAttributes) {
 				for (int i = 0; i < reader.AttributeCount; i++) {
 					reader.MoveToAttribute(i);
@@ -542,14 +542,14 @@ namespace ICSharpCode.Core
 		#endregion
 		
 		#region Load/Save
-		public static Properties Load(FileName fileName)
+		public static PropertiesContainer Load(FileName fileName)
 		{
 			return Load(XDocument.Load(fileName).Root);
 		}
 		
-		public static Properties Load(XElement element)
+		public static PropertiesContainer Load(XElement element)
 		{
-			Properties properties = new Properties();
+			PropertiesContainer properties = new PropertiesContainer();
 			properties.LoadContents(element.Elements());
 			return properties;
 		}
@@ -571,7 +571,7 @@ namespace ICSharpCode.Core
 						dict[key] = new XElement(element);
 						break;
 					case "Properties":
-						Properties child = new Properties(this);
+						PropertiesContainer child = new PropertiesContainer(this);
 						child.LoadContents(element.Elements());
 						dict[key] = child;
 						break;
@@ -615,7 +615,7 @@ namespace ICSharpCode.Core
 			List<XElement> result = new List<XElement>();
 			foreach (var pair in dict) {
 				XAttribute key = new XAttribute("key", pair.Key);
-				Properties child = pair.Value as Properties;
+				PropertiesContainer child = pair.Value as PropertiesContainer;
 				if (child != null) {
 					var contents = child.SaveContents();
 					if (contents.Count > 0)

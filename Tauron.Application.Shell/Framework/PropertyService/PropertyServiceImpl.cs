@@ -25,12 +25,13 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 using ICSharpCode.Core;
+using Tauron.Application.Shell.Framework;
 
 namespace ICSharpCode.Core
 {
 	public class PropertyServiceImpl : IPropertyService
 	{
-		readonly Properties properties;
+		readonly PropertiesContainer properties;
 		
 		/// <summary>
 		/// Initializes the service for unit-testing (reset properties to an empty property container).
@@ -38,10 +39,10 @@ namespace ICSharpCode.Core
 		/// </summary>
 		public PropertyServiceImpl()
 		{
-			properties = new Properties();
+			properties = new PropertiesContainer();
 		}
 		
-		public PropertyServiceImpl(Properties properties)
+		public PropertyServiceImpl(PropertiesContainer properties)
 		{
 			if (properties == null)
 				throw new ArgumentNullException("properties");
@@ -60,55 +61,55 @@ namespace ICSharpCode.Core
 			}
 		}
 		
-		/// <inheritdoc cref="Properties.Get{T}(string, T)"/>
+		/// <inheritdoc cref="PropertiesContainer.Get{T}(string, T)"/>
 		public T Get<T>(string key, T defaultValue)
 		{
 			return properties.Get(key, defaultValue);
 		}
 		
 		[Obsolete("Use the NestedProperties method instead", true)]
-		public Properties Get(string key, Properties defaultValue)
+		public PropertiesContainer Get(string key, PropertiesContainer defaultValue)
 		{
 			return properties.Get(key, defaultValue);
 		}
 		
-		/// <inheritdoc cref="Properties.NestedProperties"/>
-		public Properties NestedProperties(string key)
+		/// <inheritdoc cref="PropertiesContainer.NestedProperties"/>
+		public PropertiesContainer NestedProperties(string key)
 		{
 			return properties.NestedProperties(key);
 		}
 		
-		/// <inheritdoc cref="Properties.SetNestedProperties"/>
-		public void SetNestedProperties(string key, Properties nestedProperties)
+		/// <inheritdoc cref="PropertiesContainer.SetNestedProperties"/>
+		public void SetNestedProperties(string key, PropertiesContainer nestedProperties)
 		{
 			properties.SetNestedProperties(key, nestedProperties);
 		}
 		
-		/// <inheritdoc cref="Properties.Contains"/>
+		/// <inheritdoc cref="PropertiesContainer.Contains"/>
 		public bool Contains(string key)
 		{
 			return properties.Contains(key);
 		}
 		
-		/// <inheritdoc cref="Properties.Set{T}(string, T)"/>
+		/// <inheritdoc cref="PropertiesContainer.Set{T}(string, T)"/>
 		public void Set<T>(string key, T value)
 		{
 			properties.Set(key, value);
 		}
 		
-		/// <inheritdoc cref="Properties.GetList"/>
+		/// <inheritdoc cref="PropertiesContainer.GetList"/>
 		public IReadOnlyList<T> GetList<T>(string key)
 		{
 			return properties.GetList<T>(key);
 		}
 		
-		/// <inheritdoc cref="Properties.SetList"/>
+		/// <inheritdoc cref="PropertiesContainer.SetList"/>
 		public void SetList<T>(string key, IEnumerable<T> value)
 		{
 			properties.SetList(key, value);
 		}
 		
-		/// <inheritdoc cref="Properties.Remove"/>
+		/// <inheritdoc cref="PropertiesContainer.Remove"/>
 		public void Remove(string key)
 		{
 			properties.Remove(key);
@@ -119,7 +120,7 @@ namespace ICSharpCode.Core
 			remove { properties.PropertyChanged -= value; }
 		}
 		
-		public Properties MainPropertiesContainer {
+		public PropertiesContainer MainPropertiesContainer {
 			get { return properties; }
 		}
 		
@@ -127,12 +128,12 @@ namespace ICSharpCode.Core
 		{
 		}
 
-		public virtual Properties LoadExtraProperties(string key)
+		public virtual PropertiesContainer LoadExtraProperties(string key)
 		{
-			return new Properties();
+			return new PropertiesContainer();
 		}
 
-		public virtual void SaveExtraProperties(string key, Properties p)
+		public virtual void SaveExtraProperties(string key, PropertiesContainer p)
 		{
 		}
 	}
