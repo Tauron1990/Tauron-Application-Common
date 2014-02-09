@@ -64,6 +64,7 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
@@ -91,24 +92,38 @@
   <ItemGroup>
     <Compile Include="CommonShellConstans.cs" />
     <Compile Include="ExportServiceAttribute.cs" />
-    <Compile Include="Framework\Addins\IAddIn.cs" />
-    <Compile Include="Framework\Addins\IAddInManager.cs" />
-    <Compile Include="Framework\AnalyticsMonitorService.cs" />
-    <Compile Include="Framework\ApplicationStateInfoService.cs" />
-    <Compile Include="Framework\CoreException.cs" />
-    <Compile Include="Framework\Files\FileUtility.Minimal.cs" />
-    <Compile Include="Framework\IApplicationStateInfoService.cs" />
-    <Compile Include="Framework\MessagingService\IMessageService.cs" />
-    <Compile Include="Framework\MessagingService\TextWriterMessageService.cs" />
-    <Compile Include="Framework\PropertyService\IPropertyService.cs" />
-    <Compile Include="Framework\PropertyService\PropertiesContainer.cs" />
-    <Compile Include="Framework\PropertyService\PropertyServiceImpl.cs" />
-    <Compile Include="Framework\ResourceService\IResourceService.cs" />
-    <Compile Include="Framework\ResourceService\ResourceNotFoundException.cs" />
-    <Compile Include="Framework\ResourceService\ResourceService.cs" />
-    <Compile Include="Framework\StringParser\IStringTagProvider.cs" />
-    <Compile Include="Framework\StringParser\PropertyObjectTagProvider.cs" />
-    <Compile Include="Framework\StringParser\StringParser.cs" />
+    <Compile Include="Framework\Core\AnalyticsMonitorService.cs" />
+    <Compile Include="Framework\Core\ApplicationStateInfoService.cs" />
+    <Compile Include="Framework\Core\CoreException.cs" />
+    <Compile Include="Framework\Core\Files\FileUtility.Minimal.cs" />
+    <Compile Include="Framework\Core\IApplicationStateInfoService.cs" />
+    <Compile Include="Framework\Core\MessagingService\IMessageService.cs" />
+    <Compile Include="Framework\Core\MessagingService\TextWriterMessageService.cs" />
+    <Compile Include="Framework\Core\PropertyService\IPropertyService.cs" />
+    <Compile Include="Framework\Core\PropertyService\PropertiesContainer.cs" />
+    <Compile Include="Framework\Core\PropertyService\PropertyServiceImpl.cs" />
+    <Compile Include="Framework\Core\ResourceService\IResourceService.cs" />
+    <Compile Include="Framework\Core\ResourceService\ResourceNotFoundException.cs" />
+    <Compile Include="Framework\Core\ResourceService\ResourceService.cs" />
+    <Compile Include="Framework\Core\StringParser\IStringTagProvider.cs" />
+    <Compile Include="Framework\Core\StringParser\PropertyObjectTagProvider.cs" />
+    <Compile Include="Framework\Core\StringParser\StringParser.cs" />
+    <Compile Include="Framework\Presentation\ConditionalSeparator.cs" />
+    <Compile Include="Framework\Presentation\DropDownButton.cs" />
+    <Compile Include="Framework\Presentation\ExtensionMethods.cs" />
+    <Compile Include="Framework\Presentation\GetBitmapExtension.cs" />
+    <Compile Include="Framework\Presentation\GlobalStyles.cs" />
+    <Compile Include="Framework\Presentation\IOptionBindingContainer.cs" />
+    <Compile Include="Framework\Presentation\IStatusUpdate.cs" />
+    <Compile Include="Framework\Presentation\LanguageChangeWeakEventManager.cs" />
+    <Compile Include="Framework\Presentation\LocalizeExtension.cs" />
+    <Compile Include="Framework\Presentation\NativeMethods.cs" />
+    <Compile Include="Framework\Presentation\NotBoolConverter.cs" />
+    <Compile Include="Framework\Presentation\OptionBinding.cs" />
+    <Compile Include="Framework\Presentation\PresentationResourceService.cs" />
+    <Compile Include="Framework\Presentation\RestrictDesiredSize.cs" />
+    <Compile Include="Framework\Presentation\StringParseExtension.cs" />
+    <Compile Include="Framework\Presentation\WpfTreeNavigation.cs" />
     <Compile Include="InjectServiceAttribute.cs" />
     <Compile Include="IService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -144,11 +159,20 @@
       <Name>Tauron.Application.Files</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Content Include="NOTICE.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="themes\Aero.NormalColor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="themes\generic.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -243,15 +243,15 @@ namespace ICSharpCode.Core.Presentation
 					throw new NotSupportedException("unsupported menu item type : " + type);
 			}
 		}
-		
-		/// <summary>
-		/// Converts from the Windows-Forms style label format (accessor key marked with '&amp;')
-		/// to a WPF label format (accessor key marked with '_').
-		/// </summary>
-		public static string ConvertLabel(string label)
-		{
-			return label.Replace("_", "__").Replace("&", "_");
-		}
+
+        /// <summary>
+        /// Converts from the Windows-Forms style label format (accessor key marked with '&amp;')
+        /// to a WPF label format (accessor key marked with '_').
+        /// </summary>
+        public static string ConvertLabel(string label)
+        {
+            return label.Replace("_", "__").Replace("&", "_");
+        }
 		
 		/// <summary>
 		/// Creates an KeyGesture for a shortcut.

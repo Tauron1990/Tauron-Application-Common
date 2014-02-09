@@ -128,7 +128,7 @@ namespace Tauron.Application.Ioc.Components
                     IEnumerable<ExportMetadata> regs = _registrations.Lookup(type, contractName, limit);
 
                     if(regs == null)
-                        throw new KeyNotFoundException();
+                        return Enumerable.Empty<ExportMetadata>();
 
                     errorTracer.Phase = "Filtering Exports by Contract Name (" + contractName + ")";
                     return regs.Where(exp => exp != null);
