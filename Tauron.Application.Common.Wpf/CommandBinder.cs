@@ -42,7 +42,7 @@ using Tauron.JetBrains.Annotations;
 namespace Tauron.Application
 {
     /// <summary>The command binder.</summary>
-    [PublicAPI, DebuggerNonUserCode]
+    [PublicAPI]
     public static class CommandBinder
     {
         #region Static Fields
@@ -369,7 +369,7 @@ namespace Tauron.Application
 
         #endregion
 
-        [DebuggerNonUserCode]
+       // [DebuggerNonUserCode]
         private class CommandLinker : PipelineBase
         {
             #region Fields
@@ -483,7 +483,7 @@ namespace Tauron.Application
 
             #endregion
 
-            [DebuggerNonUserCode]
+            //[DebuggerNonUserCode]
             private class CommandFactory
             {
                 #region Fields
@@ -734,7 +734,7 @@ namespace Tauron.Application
 
                 #endregion
 
-                [DebuggerNonUserCode]
+                //[DebuggerNonUserCode]
                 private class ParameterMapper
                 {
                     #region Fields
@@ -813,7 +813,7 @@ namespace Tauron.Application
                     #endregion
                 }
 
-                [DebuggerNonUserCode]
+                //[DebuggerNonUserCode]
                 private class TaskFactory
                 {
                     #region Fields
@@ -895,7 +895,7 @@ namespace Tauron.Application
                 }
             }
 
-            [DebuggerNonUserCode]
+            //[DebuggerNonUserCode]
             private class PropertySearcher
             {
                 #region Fields

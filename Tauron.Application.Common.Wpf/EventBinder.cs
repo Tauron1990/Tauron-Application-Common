@@ -42,7 +42,7 @@ namespace Tauron.Application
 {
     /// <summary>The event target attribute.</summary>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = true)]
-    [DebuggerNonUserCode]
+    //[DebuggerNonUserCode]
     [PublicAPI]
     [MeansImplicitUse(ImplicitUseKindFlags.Access)]
     public sealed class EventTargetAttribute : MemberInfoAttribute
@@ -285,7 +285,7 @@ namespace Tauron.Application
 
             #endregion
 
-            [DebuggerNonUserCode]
+            //[DebuggerNonUserCode]
             internal class CommandMember
             {
                 #region Constructors and Destructors
@@ -328,7 +328,7 @@ namespace Tauron.Application
                 #endregion
             }
 
-            [DebuggerNonUserCode]
+            //[DebuggerNonUserCode]
             private class InternalEventLinker : IDisposable
             {
                 #region Static Fields
