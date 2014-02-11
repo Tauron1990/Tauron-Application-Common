@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ICSharpCode.Core", "Sharp D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ICSharpCode.Core.Presentation", "Sharp Develop Source\src\Main\ICSharpCode.Core.Presentation\ICSharpCode.Core.Presentation.csproj", "{7E4A7172-7FF5-48D0-B719-7CD959DD1AC9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{AE73F6F2-F56A-4772-BAE8-B80FE796E0BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{7E4A7172-7FF5-48D0-B719-7CD959DD1AC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E4A7172-7FF5-48D0-B719-7CD959DD1AC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E4A7172-7FF5-48D0-B719-7CD959DD1AC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE73F6F2-F56A-4772-BAE8-B80FE796E0BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE73F6F2-F56A-4772-BAE8-B80FE796E0BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE73F6F2-F56A-4772-BAE8-B80FE796E0BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE73F6F2-F56A-4772-BAE8-B80FE796E0BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

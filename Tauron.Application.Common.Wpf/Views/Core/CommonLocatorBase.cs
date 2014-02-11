@@ -39,11 +39,15 @@ namespace Tauron.Application.Views.Core
             return temp;
         }
 
+
+        [NotNull]
+        protected abstract DependencyObject Match([NotNull] string name);
+
         [CanBeNull]
         protected abstract string GetName([NotNull] Type model);
 
         [CanBeNull]
-        protected abstract DependencyObject Match([NotNull] string name);
+        protected abstract DependencyObject Match([NotNull] ISortableViewExportMetadata name);
 
         [NotNull]
         protected abstract IEnumerable<ISortableViewExportMetadata> GetAllViewsImpl([NotNull] string name);
@@ -72,7 +76,7 @@ namespace Tauron.Application.Views.Core
 
         public IEnumerable<DependencyObject> GetAllViews(string name)
         {
-            return GetAllViewsImpl(name).OrderBy(meta => meta.Order).Select(meta => meta.Name).Select(Match);
+            return GetAllViewsImpl(name).OrderBy(meta => meta.Order).Select(Match);
         }
     }
 
@@ -85,7 +89,7 @@ namespace Tauron.Application.Views.Core
             return null;
         }
 
-        protected override DependencyObject Match(string name)
+        protected override DependencyObject Match(ISortableViewExportMetadata name)
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
             return null;

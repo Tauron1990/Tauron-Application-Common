@@ -22,16 +22,21 @@ namespace Tauron.Application.Views.Core
             return attr == null ? null : attr.Name;
         }
 
-        protected override DependencyObject Match(string name)
+        protected override DependencyObject Match(ISortableViewExportMetadata name)
         {
-            var temp = _views.FirstOrDefault(rs => rs.Metadata.Name == name);
+            var temp = _views.FirstOrDefault(rs => rs.Metadata == name);
 
             return temp == null ? null : temp.Resolve(true);
         }
 
         protected override IEnumerable<ISortableViewExportMetadata> GetAllViewsImpl(string name)
         {
-            return _views.Select(v => v.Metadata);
+            return _views.Where(v => v.Metadata.Name == name).Select(v => v.Metadata);
+        }
+
+        protected override DependencyObject Match(string name)
+        {
+            return _views.First(v => v.Metadata.Name == name).Resolve();
         }
 
         public override IWindow CreateWindowImpl(string name)

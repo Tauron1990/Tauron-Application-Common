@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Windows;
-using System.Windows.Controls;
 using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Views.Core

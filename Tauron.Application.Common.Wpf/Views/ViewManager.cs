@@ -64,7 +64,7 @@ namespace Tauron.Application.Views
             if (DesignerProperties.GetIsInDesignMode(dependencyObject))
                 return;
 
-            var name = dependencyObject.GetValue(FrameworkElement.NameProperty);
+            //DEBUG var name = dependencyObject.GetValue(FrameworkElement.NameProperty);
             var viewName = (string) dependencyPropertyChangedEventArgs.NewValue;
 
             var panel = dependencyObject as Panel;

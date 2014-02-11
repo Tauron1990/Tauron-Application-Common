@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using Castle.DynamicProxy;
 using Tauron.JetBrains.Annotations;
@@ -87,6 +88,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
     }
 
     /// <summary>The metadata interceptor.</summary>
+    [DebuggerNonUserCode]
     public sealed class MetadataInterceptor : IInterceptor
     {
         #region Public Methods and Operators
