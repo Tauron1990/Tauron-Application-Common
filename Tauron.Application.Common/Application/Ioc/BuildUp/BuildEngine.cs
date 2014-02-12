@@ -134,10 +134,11 @@ namespace Tauron.Application.Ioc.BuildUp
         ///     The contract name.
         /// </param>
         /// <param name="tracer"></param>
+        /// <param name="buildParameters"></param>
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        public object BuildUp(IExport export, string contractName, ErrorTracer tracer)
+        public object BuildUp(IExport export, string contractName, ErrorTracer tracer, BuildParameter[] buildParameters)
         {
             Contract.Requires<ArgumentNullException>(export != null, "export");
 
@@ -146,8 +147,8 @@ namespace Tauron.Application.Ioc.BuildUp
                 try
                 {
                     tracer.Phase = "Begin Building Up";
-                    var context = new DefaultBuildContext(export, BuildMode.Resolve, container, contractName, tracer);
-                    var buildObject = new BuildObject(export.ImportMetadata, context.Metadata);
+                    var context = new DefaultBuildContext(export, BuildMode.Resolve, container, contractName, tracer, buildParameters);
+                    var buildObject = new BuildObject(export.ImportMetadata, context.Metadata, buildParameters);
                     Pipeline.Build(context);
                     if (tracer.Exceptional) return null;
                     buildObject.Instance = context.Target;
@@ -177,7 +178,7 @@ namespace Tauron.Application.Ioc.BuildUp
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        public object BuildUp(object toBuild, ErrorTracer errorTracer)
+        public object BuildUp(object toBuild, ErrorTracer errorTracer, BuildParameter[] buildParameters)
         {
             Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
             Contract.Requires<ArgumentNullException>(toBuild != null, "export");
@@ -191,7 +192,8 @@ namespace Tauron.Application.Ioc.BuildUp
                         _factory.CreateAnonymosWithTarget(toBuild.GetType(), toBuild),
                         BuildMode.BuildUpObject,
                         container,
-                        toBuild.GetType().ToString(), errorTracer);
+                        toBuild.GetType().ToString(), errorTracer,
+                        buildParameters);
                     Pipeline.Build(context);
                     Contract.Assume(context.Target != null);
                     return context.Target;
@@ -221,7 +223,7 @@ namespace Tauron.Application.Ioc.BuildUp
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        internal object BuildUp(Type type, object[] constructorArguments, ErrorTracer errorTracer)
+        internal object BuildUp(Type type, object[] constructorArguments, ErrorTracer errorTracer, BuildParameter[] buildParameters)
         {
             Contract.Requires<ArgumentNullException>(type != null, "type");
 
@@ -232,7 +234,8 @@ namespace Tauron.Application.Ioc.BuildUp
                     _factory.CreateAnonymos(type, constructorArguments),
                     BuildMode.BuildUpObject,
                     container,
-                    type.ToString(), errorTracer);
+                    type.ToString(), errorTracer,
+                    buildParameters);
                 Pipeline.Build(context);
                 Contract.Assume(context.Target != null);
                 return context.Target;
@@ -245,11 +248,11 @@ namespace Tauron.Application.Ioc.BuildUp
             }
         }
 
-        private void BuildUp(BuildObject build, ErrorTracer errorTracer)
+        private void BuildUp(BuildObject build, ErrorTracer errorTracer, BuildParameter[] buildParameters)
         {
             lock (build.Export)
             {
-                var context = new DefaultBuildContext(build, container, errorTracer);
+                var context = new DefaultBuildContext(build, container, errorTracer, buildParameters);
                 build.Instance = context.Target;
                 Pipeline.Build(context);
             }
@@ -275,7 +278,7 @@ namespace Tauron.Application.Ioc.BuildUp
             foreach (BuildObject buildObject in parts)
             {
                 var errorTracer = new ErrorTracer();
-                BuildUp(buildObject, errorTracer);
+                BuildUp(buildObject, errorTracer, buildObject.BuildParameters);
 
                 if(errorTracer.Exceptional)
                     errors.Add(errorTracer);

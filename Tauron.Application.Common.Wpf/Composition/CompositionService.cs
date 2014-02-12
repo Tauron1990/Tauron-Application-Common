@@ -173,7 +173,7 @@ namespace Tauron.Application.Composition
 
             new FrameworkObject(d, false)
             {
-                DataContext = Container.Resolve(typeof (ViewModelBase), name, true)
+                DataContext = Container.Resolve(typeof (ViewModelBase), name, true, null)
             };
         }
 

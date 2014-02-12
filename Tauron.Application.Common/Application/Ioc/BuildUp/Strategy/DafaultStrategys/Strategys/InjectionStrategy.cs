@@ -73,13 +73,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         {
             context.ErrorTracer.Phase = "Injecting Imports for " + context.Metadata;
 
+            if (context.Target != null) return;
+
             foreach (InjectMemberPolicy policy in context.Policys.GetAll<InjectMemberPolicy>())
             {
                 policy.Injector.Inject(context.Target, context.Container, policy.Metadata,
-                    policy.Interceptors == null ? null : new CompositeInterceptor(policy.Interceptors), context.ErrorTracer);
+                    policy.Interceptors == null ? null : new CompositeInterceptor(policy.Interceptors),
+                    context.ErrorTracer, context.Parameters);
 
-                if(context.ErrorTracer.Exceptional) return;
-
+                if (context.ErrorTracer.Exceptional) return;
             }
         }
 

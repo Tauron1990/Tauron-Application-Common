@@ -172,8 +172,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// </param>
         /// <param name="interceptor"></param>
         /// <param name="errorTracer"></param>
+        /// <param name="parameters"></param>
         [ContractVerification(false)]
-        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer)
+        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
         {
             if (metadata.Metadata != null)
             {
@@ -199,7 +200,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             {
                 Contract.Assume(parameterInfo != null);
 
-                new ParameterHelper(_metadataFactory, parameterInfo, args).Inject(target, container, metadata, interceptor, errorTracer);
+                new ParameterHelper(_metadataFactory, parameterInfo, args).Inject(target, container, metadata, interceptor, errorTracer, parameters);
             }
 
             _method.Invoke(target, args.ToArray());

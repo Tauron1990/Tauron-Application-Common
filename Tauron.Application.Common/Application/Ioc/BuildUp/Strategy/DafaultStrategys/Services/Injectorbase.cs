@@ -21,34 +21,13 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using Tauron.Application.Ioc.BuildUp.Exports;
+using Tauron.Application.Ioc.Components;
 using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
-    public class ImportInterceptorHelper
-    {
-        private readonly IImportInterceptor _interceptor;
-        private readonly MemberInfo _member;
-        private readonly ImportMetadata _metadata;
-        private readonly object _target;
-
-        public ImportInterceptorHelper([NotNull] IImportInterceptor interceptor, [NotNull] MemberInfo member,
-                                       [NotNull] ImportMetadata metadata, [NotNull] object target)
-        {
-            _interceptor = interceptor;
-            _member = member;
-            _metadata = metadata;
-            _target = target;
-        }
-
-        public bool Intercept([CanBeNull] ref object value)
-        {
-            return _interceptor.Intercept(_member, _metadata, _target, ref value);
-        }
-    }
-
     /// <summary>
     ///     The injectorbase.
     /// </summary>
@@ -58,6 +37,19 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     public abstract class Injectorbase<TMember> : MemberInjector
         where TMember : MemberInfo
     {
+        private class UionExportMetatdataEqualityComparer : IEqualityComparer<ExportMetadata>
+        {
+            public bool Equals([NotNull] ExportMetadata x, [NotNull] ExportMetadata y)
+            {
+                return x.Export.ImplementType == y.Export.ImplementType;
+            }
+
+            public int GetHashCode([NotNull] ExportMetadata obj)
+            {
+                return obj.Export.ImplementType.GetHashCode();
+            }
+        }
+
         #region Fields
 
         private readonly TMember _member;
@@ -66,6 +58,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         private int _injectLevel;
 
+        private readonly ExportRegistry _buildParameters = new ExportRegistry();
         #endregion
 
         #region Constructors and Destructors
@@ -133,11 +126,25 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// </param>
         /// <param name="interceptor"></param>
         /// <param name="errorTracer"></param>
-        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer)
+        /// <param name="parameters"></param>
+        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
         {
             try
             {
                 errorTracer.Phase = "Creating Resolver for " + target.GetType().Name + "(" + metadata + ")";
+
+                if (parameters != null)
+                {
+                    foreach (var export in from buildParameter in parameters
+                        where buildParameter != null
+                        select buildParameter.CreateExport()
+                        into export
+                        where export != null
+                        select export)
+                    {
+                        _buildParameters.Register(export, int.MaxValue);
+                    }
+                }
 
                 InterceptorCallback callback = null;
 
@@ -347,16 +354,21 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         [NotNull]
         private IEnumerable<ExportMetadata> FindAllExports([NotNull] IContainer container,
-                                                           [NotNull] ImportMetadata metadata,
-                                                           [NotNull] Type memberType,
-                                                           [NotNull] ErrorTracer errorTracer)
+            [NotNull] ImportMetadata metadata,
+            [NotNull] Type memberType,
+            [NotNull] ErrorTracer errorTracer)
         {
             Contract.Requires<ArgumentNullException>(container != null, "container");
             Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
             Contract.Requires<ArgumentNullException>(memberType != null, "memberType");
 
-            return container.FindExports(metadata.InterfaceType ?? ExtractRealType(memberType), metadata.ContractName,
-                                         errorTracer, _injectLevel);
+            Type type = metadata.InterfaceType ?? ExtractRealType(memberType);
+            string name = metadata.ContractName;
+
+            return
+                _buildParameters.FindAll(type, name, new ErrorTracer())
+                    .Union(container.FindExports(type, name, errorTracer, _injectLevel),
+                        new UionExportMetatdataEqualityComparer());
         }
 
         [NotNull]
@@ -366,6 +378,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             Contract.Requires<ArgumentNullException>(container != null, "container");
             Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
             Contract.Requires<ArgumentNullException>(memberType != null, "memberType");
+
+            var type = metadata.InterfaceType ?? ExtractRealType(memberType);
+            var name = metadata.ContractName;
+
+            var temp = _buildParameters.FindOptional(type, name, new ErrorTracer());
+            if (temp != null)
+                return temp;
 
             return container.FindExport(metadata.InterfaceType ?? ExtractRealType(memberType), metadata.ContractName,
                                         errorTracer, metadata.Optional, _injectLevel);

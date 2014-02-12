@@ -78,7 +78,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         #region Public Methods and Operators
 
-        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer)
+        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
         {
             errorTracer.Phase = "EventManager Inject " + metadata.ContractName; 
 

@@ -29,6 +29,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.Components;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -57,7 +58,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         /// <param name="errorTracer"></param>
         [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1027:TabsMustNotBeUsed",
             Justification = "Reviewed. Suppression is OK here.")]
-        public DefaultBuildContext(IExport targetExport, BuildMode mode, IContainer container, string contractName, ErrorTracer errorTracer)
+        public DefaultBuildContext(IExport targetExport, BuildMode mode, IContainer container, string contractName, ErrorTracer errorTracer, BuildParameter[] parameters)
         {
             Contract.Requires<ArgumentNullException>(targetExport != null, "targetExport");
             Contract.Requires<ArgumentNullException>(container != null, "container");
@@ -72,6 +73,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             Mode = mode;
             Container = container;
             ErrorTracer = errorTracer;
+            Parameters = parameters;
         }
 
         /// <summary>
@@ -84,7 +86,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         ///     The container.
         /// </param>
         /// <param name="errorTracer"></param>
-        public DefaultBuildContext(BuildObject buildObject, IContainer container, ErrorTracer errorTracer)
+        /// <param name="parameters"></param>
+        public DefaultBuildContext([NotNull] BuildObject buildObject, [NotNull] IContainer container, [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] parameters)
         {
             Contract.Requires<ArgumentNullException>(buildObject != null, "buildObject");
             Contract.Requires<ArgumentNullException>(container != null, "container");
@@ -99,6 +102,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             BuildCompled = false;
             Container = container;
             ErrorTracer = errorTracer;
+            Parameters = parameters;
         }
 
         #endregion
@@ -134,6 +138,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public object Target { get; set; }
 
         public ErrorTracer ErrorTracer { get; private set; }
+        public BuildParameter[] Parameters { get; private set; }
 
         #endregion
 

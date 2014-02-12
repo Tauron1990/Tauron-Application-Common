@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reflection;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.JetBrains.Annotations;
 
@@ -85,7 +86,7 @@ namespace Tauron.Application.Ioc.Components
             }
 
             [CanBeNull]
-            public IEnumerable<ExportMetadata> Lookup([NotNull] Type type, [NotNull] string contractName, int at)
+            public IEnumerable<ExportMetadata> Lookup([NotNull] Type type, [CanBeNull] string contractName, int at)
             {
                 var realExports = new HashSet<ExportMetadata>();
 
@@ -95,6 +96,7 @@ namespace Tauron.Application.Ioc.Components
                     if (pair.Value.TryGetValue(type, out exports)) 
                         exports.SelectMany(ep => ep.SelectContractName(contractName)).Foreach(ex => realExports.Add(ex));
                 }
+
                 return realExports.Count == 0 ? null : realExports;
             }
 
@@ -230,7 +232,6 @@ namespace Tauron.Application.Ioc.Components
                 _registrations.RemoveValue(export);
             }
         }
-
         #endregion
     }
 }

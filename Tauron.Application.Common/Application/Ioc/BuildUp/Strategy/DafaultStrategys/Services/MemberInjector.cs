@@ -53,7 +53,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// </param>
         /// <param name="interceptor"></param>
         /// <param name="errorTracer"></param>
-        public abstract void Inject([NotNull] object target, [NotNull] IContainer container, [NotNull] ImportMetadata metadata, [CanBeNull] IImportInterceptor interceptor, [NotNull] ErrorTracer errorTracer);
+        /// <param name="parameters"></param>
+        public abstract void Inject([NotNull] object target, [NotNull] IContainer container, [NotNull] ImportMetadata metadata, [CanBeNull] IImportInterceptor interceptor, [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] parameters);
 
         #endregion
     }
@@ -63,7 +64,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     {
         #region Public Methods and Operators
 
-        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer)
+        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
         {
             Contract.Requires<ArgumentNullException>(target != null, "target");
             Contract.Requires<ArgumentNullException>(container != null, "container");

@@ -51,16 +51,14 @@ namespace Tauron.Application.Ioc.Components
         #region Constructors and Destructors
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="BuildObject" /> class.
         ///     Initialisiert eine neue Instanz der <see cref="BuildObject" /> Klasse.
-        ///     Initializes a new instance of the <see cref="BuildObject" /> class.
         /// </summary>
         /// <param name="imports">
         ///     The imports.
         /// </param>
         /// <param name="targetExport">
         /// </param>
-        public BuildObject(IEnumerable<ImportMetadata> imports, ExportMetadata targetExport)
+        public BuildObject(IEnumerable<ImportMetadata> imports, ExportMetadata targetExport, [CanBeNull]BuildParameter[] buildParameters)
         {
             Contract.Requires<ArgumentNullException>(imports != null, "imports");
             Contract.Requires<ArgumentNullException>(targetExport != null, "targetExport");
@@ -68,6 +66,7 @@ namespace Tauron.Application.Ioc.Components
             Metadata = targetExport;
             this.imports = imports.ToArray();
             Export = targetExport.Export;
+            BuildParameters = buildParameters;
         }
 
         #endregion
@@ -96,6 +95,9 @@ namespace Tauron.Application.Ioc.Components
         {
             get { return _instance.IsAlive; }
         }
+
+        [CanBeNull]
+        public BuildParameter[] BuildParameters { get; set; }
 
         #endregion
 
@@ -178,6 +180,7 @@ namespace Tauron.Application.Ioc.Components
                                               meta =>
                                               tup.InterfaceType == meta.InterfaceType
                                               && tup.ContractName == meta.ContractName))
+                       where buildObject.IsAlive
                        select buildObject;
             }
         }

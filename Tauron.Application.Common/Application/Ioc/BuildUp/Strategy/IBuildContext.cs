@@ -46,14 +46,17 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         /// <summary>Gets the container.</summary>
         /// <value>The container.</value>
+        [NotNull]
         IContainer Container { get; }
 
         /// <summary>Gets or sets the export type.</summary>
         /// <value>The export type.</value>
+        [NotNull]
         Type ExportType { get; set; }
 
         /// <summary>Gets the metadata.</summary>
         /// <value>The metadata.</value>
+        [NotNull]
         ExportMetadata Metadata { get; }
 
         /// <summary>Gets the mode.</summary>
@@ -62,14 +65,19 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         /// <summary>Gets the policys.</summary>
         /// <value>The policys.</value>
+        [NotNull]
         PolicyList Policys { get; }
 
         /// <summary>Gets or sets the target.</summary>
         /// <value>The target.</value>
+        [CanBeNull]
         object Target { get; set; }
 
         [NotNull]
         ErrorTracer ErrorTracer { get; }
+
+        [CanBeNull]
+        BuildParameter[] Parameters { get; }
 
         #endregion
     }
@@ -172,6 +180,14 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             {
                 Contract.Ensures(Contract.Result<ErrorTracer>() != null);
 
+                return null;
+            }
+        }
+
+        public BuildParameter[] Parameters
+        {
+            get
+            {
                 return null;
             }
         }

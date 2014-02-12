@@ -86,16 +86,18 @@ namespace Tauron.Application.Ioc
         /// <param name="data">
         ///     The data.
         /// </param>
+        /// <param name="errorTracer"></param>
+        /// <param name="parameters"></param>
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
         [NotNull]
-        public object BuildUp([NotNull] ExportMetadata data, ErrorTracer errorTracer)
+        public object BuildUp([NotNull] ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
         {
             try
             {
                 errorTracer.Export = data.ToString();
-                return _buildEngine.BuildUp(data.Export, data.ContractName, errorTracer);
+                return _buildEngine.BuildUp(data.Export, data.ContractName, errorTracer, parameters);
             }
             catch (Exception e)
             {
@@ -114,14 +116,16 @@ namespace Tauron.Application.Ioc
         /// <param name="toBuild">
         ///     The object.
         /// </param>
+        /// <param name="errorTracer"></param>
+        /// <param name="parameters"></param>
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        public object BuildUp(object toBuild, ErrorTracer errorTracer)
+        public object BuildUp(object toBuild, ErrorTracer errorTracer, params BuildParameter[] parameters)
         {
             try
             {
-                return _buildEngine.BuildUp(toBuild, errorTracer);
+                return _buildEngine.BuildUp(toBuild, errorTracer, parameters);
             }
             catch (Exception e)
             {
@@ -146,11 +150,11 @@ namespace Tauron.Application.Ioc
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        public object BuildUp(Type type,  ErrorTracer errorTracer, params object[] constructorArguments)
+        public object BuildUp(Type type,  ErrorTracer errorTracer, BuildParameter[] buildParameters, params object[] constructorArguments)
         {
             try
             {
-                return _buildEngine.BuildUp(type, constructorArguments, errorTracer);
+                return _buildEngine.BuildUp(type, constructorArguments, errorTracer, buildParameters);
             }
             catch (Exception e)
             {

@@ -47,10 +47,12 @@ namespace Tauron.Application.Ioc
         /// <param name="data">
         ///     The data.
         /// </param>
+        /// <param name="errorTracer"></param>
+        /// <param name="parameters"></param>
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        object BuildUp(ExportMetadata data, ErrorTracer errorTracer);
+        object BuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters);
 
         /// <summary>
         ///     The build up.
@@ -58,10 +60,12 @@ namespace Tauron.Application.Ioc
         /// <param name="toBuild">
         ///     The object.
         /// </param>
+        /// <param name="errorTracer"></param>
+        /// <param name="parameters"></param>
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        object BuildUp(object toBuild, ErrorTracer errorTracer);
+        object BuildUp(object toBuild, ErrorTracer errorTracer, params BuildParameter[] parameters);
 
         /// <summary>
         ///     The build up.
@@ -69,13 +73,14 @@ namespace Tauron.Application.Ioc
         /// <param name="type">
         ///     The type.
         /// </param>
+        /// <param name="buildParameters"></param>
         /// <param name="constructorArguments">
         ///     The constructor arguments.
         /// </param>
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        object BuildUp(Type type,  ErrorTracer errorTracer, params object[] constructorArguments);
+        object BuildUp(Type type,  ErrorTracer errorTracer, BuildParameter[] buildParameters, params object[] constructorArguments);
 
         /// <summary>
         ///     The find export.
@@ -180,12 +185,14 @@ namespace Tauron.Application.Ioc
         /// <param name="data">
         ///     The data.
         /// </param>
+        /// <param name="errorTracer"></param>
+        /// <param name="parameters"></param>
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public object BuildUp(ExportMetadata data, ErrorTracer errorTracer)
+        public object BuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
         {
             Contract.Requires<ArgumentNullException>(data != null, "data");
             Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
@@ -199,12 +206,14 @@ namespace Tauron.Application.Ioc
         /// <param name="toBuild">
         ///     The to build.
         /// </param>
+        /// <param name="errorTracer"></param>
+        /// <param name="parameters"></param>
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public object BuildUp(object toBuild, ErrorTracer errorTracer)
+        public object BuildUp(object toBuild, ErrorTracer errorTracer, params BuildParameter[] parameters)
         {
             Contract.Requires<ArgumentNullException>(toBuild != null, "toBuild");
             Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
@@ -226,7 +235,7 @@ namespace Tauron.Application.Ioc
         /// </returns>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public object BuildUp(Type type, ErrorTracer errorTracer, params object[] constructorArguments)
+        public object BuildUp(Type type, ErrorTracer errorTracer, BuildParameter[] buildParameters, params object[] constructorArguments)
         {
             Contract.Requires<ArgumentNullException>(type != null, "type");
             Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");

@@ -162,6 +162,7 @@
     <Compile Include="Application\Content\CommonElements\UISyncObservableCollection.cs" />
     <Compile Include="Application\Content\UI\UiSynchronize.cs" />
     <Compile Include="Application\Ioc\AggregareExportProvider.cs" />
+    <Compile Include="Application\Ioc\BuildParameter.cs" />
     <Compile Include="Application\Ioc\BuildUpException.cs" />
     <Compile Include="Application\Ioc\BuildUp\IImportInterceptorFactory.cs" />
     <Compile Include="Application\Ioc\BuildUp\IInterceptImport.cs" />
@@ -169,6 +170,7 @@
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Policys\ObjectContextPolicy.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\ArrayResolver.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\CompositeInterceptor.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\ImportInterceptorHelper.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\InjectorBaseConstants.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\IResolver.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\LazyResolver.cs" />

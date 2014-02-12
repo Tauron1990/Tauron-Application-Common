@@ -60,7 +60,7 @@ namespace Tauron.Application
 
             var tracer = new ErrorTracer();
 
-            var val = CommonApplication.Current.Container.BuildUp(typeof (TObject), tracer, args);
+            var val = CommonApplication.Current.Container.BuildUp(typeof (TObject), tracer, new BuildParameter[0], args);
             if(tracer.Exceptional)
                 throw new BuildUpException(tracer);
 
@@ -89,7 +89,7 @@ namespace Tauron.Application
 
             var errorTracer = new ErrorTracer();
 
-            var val = CommonApplication.Current.Container.BuildUp(targetType, errorTracer, args);
+            var val = CommonApplication.Current.Container.BuildUp(targetType, errorTracer, new BuildParameter[0], args);
             if(errorTracer.Exceptional)
                 throw new BuildUpException(errorTracer);
 
