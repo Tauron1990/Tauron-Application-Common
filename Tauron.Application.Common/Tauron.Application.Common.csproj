@@ -311,6 +311,7 @@
     <Compile Include="Application\Ioc\NotSharedAttribute.cs" />
     <Compile Include="Application\Ioc\ObjectContextPropertyattribute.cs" />
     <Compile Include="Application\Ioc\SharedAttribute.cs" />
+    <Compile Include="Application\Ioc\SimpleBuildPrameter.cs" />
     <Compile Include="Application\Ioc\ThreadSharedAttribute.cs" />
     <Compile Include="Application\Ioc\WeakSharedAttribute.cs" />
     <Compile Include="Application\Modules\AddIn.cs" />

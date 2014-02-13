@@ -39,7 +39,7 @@ namespace Tauron.Application.Views.Core
             return _views.First(v => v.Metadata.Name == name).Resolve();
         }
 
-        public override IWindow CreateWindowImpl(string name)
+        public override IWindow CreateWindowImpl(string name, object[] parameters)
         {
             Window window = _windows.First(win => win.Metadata.Name == name).Resolve(true);
 

@@ -111,7 +111,7 @@ namespace Tauron.Application.Ioc.BuildUp
 
                 IEnumerable<object> parameters = from parm in MapParameters(constructor)
                                                  select
-                                                     build.Container.Resolve(parm.Item1, parm.Item2, parm.Item3);
+                                                     build.Container.Resolve(parm.Item1, parm.Item2, parm.Item3, new BuildParameter[0]);
 
                 var policy = build.Policys.Get<InterceptionPolicy>();
 

@@ -147,6 +147,15 @@ namespace Tauron.Application
             UiSynchronize.Synchronize.Invoke(_window.Show);
         }
 
+        public bool? ShowDialog(IWindow window)
+        {
+            return UiSynchronize.Synchronize.Invoke(() =>
+            {
+                _window.Owner = window == null ? null : window.TranslateForTechnology() as Window;
+                return _window.ShowDialog();
+            });
+        }
+
         /// <summary>The translate for technology.</summary>
         /// <returns>
         ///     The <see cref="object" />.

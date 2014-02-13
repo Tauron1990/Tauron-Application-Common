@@ -191,7 +191,7 @@
     <Compile Include="Views\Core\IViewLocator.cs" />
     <Compile Include="Views\ViewManager.cs" />
     <Compile Include="Views\ExportWindowAttribute.cs" />
-    <Compile Include="Window.cs" />
+    <Compile Include="WpfWindow.cs" />
     <Compile Include="WorkspaceManager.cs" />
     <Compile Include="WpfApplication.cs" />
   </ItemGroup>

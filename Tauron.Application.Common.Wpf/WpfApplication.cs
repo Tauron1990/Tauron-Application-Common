@@ -184,6 +184,8 @@ namespace Tauron.Application
 
             var logConfig = builder.ConfigureLogging();
 
+            "Logs".ClearDirectory();
+
             CrateDefaultRollingFile(logConfig.LogToCategoryNamed(CommonConstants.CommonCategory).SendTo
                                              .RollingFile("Tauron.Application.Common.File"), "Logs\\Tauron.Application.Common.log");
             CrateDefaultRollingFile(logConfig.LogToCategoryNamed(CommonWpfConstans.CommonCategory).SendTo

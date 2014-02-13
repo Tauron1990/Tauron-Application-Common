@@ -45,13 +45,11 @@ namespace Tauron.Application
 
         #region Public Properties
 
-        /// <summary>Gets the handle.</summary>
-        /// <value>The handle.</value>
-        IntPtr Handle { get; }
-
         /// <summary>Gets or sets the title.</summary>
         [NotNull]
         string Title { get; set; }
+
+        IntPtr Handle { get; }
 
         #endregion
 
@@ -78,6 +76,8 @@ namespace Tauron.Application
 
         /// <summary>The show.</summary>
         void Show();
+
+        bool? ShowDialog([CanBeNull] IWindow window);
 
         /// <summary>The translate for technology.</summary>
         /// <returns>
@@ -154,6 +154,11 @@ namespace Tauron.Application
         /// <summary>The show.</summary>
         public void Show()
         {
+        }
+
+        public bool? ShowDialog(IWindow window)
+        {
+            return null;
         }
 
         /// <summary>The translate for technology.</summary>

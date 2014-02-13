@@ -21,7 +21,7 @@ namespace Tauron.Application.Views.Core
         DependencyObject CreateView([NotNull] string name);
 
         [NotNull]
-        IWindow CreateWindow([NotNull] string name);
+        IWindow CreateWindow([NotNull] string name, [CanBeNull] object[] parameters);
 
         [NotNull]
         Type GetViewType([NotNull] string name);
@@ -62,7 +62,7 @@ namespace Tauron.Application.Views.Core
             return null;
         }
 
-        public IWindow CreateWindow(string name)
+        public IWindow CreateWindow(string name, object[] parameters)
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
             Contract.Ensures(Contract.Result<IWindow>() != null);

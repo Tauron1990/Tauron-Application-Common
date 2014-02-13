@@ -182,9 +182,10 @@ namespace Tauron.Application.Views
             }
         }
 
-        public IWindow CreateWindow(string name)
+        
+        public IWindow CreateWindow( string name,  params object[] parameters)
         {
-            return ViewLocator.CreateWindow(name);
+            return ViewLocator.CreateWindow(name, parameters);
         }
 
         public Type GetViewType(string name)

@@ -57,7 +57,7 @@ namespace Tauron.Application.Views.Core
             return Match(name);
         }
 
-        public IWindow CreateWindow(string name)
+        public IWindow CreateWindow(string name, object[] parameters)
         {
             ExportNameHelper export;
             if (_views.TryGetValue(name, out export))
@@ -67,11 +67,11 @@ namespace Tauron.Application.Views.Core
                     return new WpfWindow(win);
             }
 
-            return CreateWindowImpl(name);
+            return CreateWindowImpl(name, parameters);
         }
 
         [NotNull]
-        public abstract IWindow CreateWindowImpl([NotNull] string name);
+        public abstract IWindow CreateWindowImpl([NotNull] string name, [CanBeNull]object[] parameters);
         public abstract Type GetViewType(string name);
 
         public IEnumerable<DependencyObject> GetAllViews(string name)
@@ -101,7 +101,7 @@ namespace Tauron.Application.Views.Core
             return null;
         }
 
-        public override IWindow CreateWindowImpl(string name)
+        public override IWindow CreateWindowImpl(string name, object[] parameters)
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
             return null;

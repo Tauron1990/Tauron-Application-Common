@@ -8,12 +8,12 @@ namespace Tauron.Application.Ioc
     public class InstanceResolver<TExport, TMetadata>
         where TMetadata : class
     {
-        private readonly Func<object> _resolver;
+        private readonly Func<BuildParameter[], object> _resolver;
 
         private TMetadata _metadata;
         private Func<object> _metadataFactory;
 
-        public InstanceResolver([NotNull] Func<object> resolver, [NotNull] Func<object> metadataFactory,
+        public InstanceResolver([NotNull] Func<BuildParameter[], object> resolver, [NotNull] Func<object> metadataFactory,
                                 [NotNull] Type realType)
         {
             Contract.Requires<ArgumentNullException>(resolver != null, "resolver");
@@ -43,18 +43,20 @@ namespace Tauron.Application.Ioc
             }
         }
 
-        public TExport Resolve()
+        public TExport Resolve([CanBeNull] BuildParameter[] buildParameters = null)
         {
-            object obj = _resolver();
+            object obj = _resolver(buildParameters);
 
             if (obj == null) return default(TExport);
 
             return (TExport) obj;
         }
 
-        public TExport Resolve(bool uiSync)
+        public TExport Resolve(bool uiSync, [CanBeNull] BuildParameter[] buildParameters = null)
         {
-            return UiSynchronize.Synchronize.Invoke<TExport>(Resolve);
+            if (uiSync)
+                return UiSynchronize.Synchronize.Invoke(() => Resolve(buildParameters));
+            return Resolve(buildParameters);
         }
     }
 }

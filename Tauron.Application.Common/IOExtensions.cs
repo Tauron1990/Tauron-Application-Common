@@ -84,18 +84,17 @@ namespace Tauron
                 else
                 {
                     var dici = entry as DirectoryInfo;
-                    if (dici != null)
-                    {
-                        Clear(dici);
-                        dici.Delete();
-                    }
+                    if (dici == null) continue;
+                    
+                    Clear(dici);
+                    dici.Delete();
                 }
             }
         }
 
         /// <summary>
         ///     The clear directory.
-        /// </summary>
+        /// </summary>+
         /// <param name="dic">
         ///     The dic.
         /// </param>

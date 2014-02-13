@@ -56,15 +56,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             }
 
             [CanBeNull]
-            public object BuildUp()
+            public object BuildUp([CanBeNull] BuildParameter[] parameters)
             {
                 var error = new ErrorTracer();
 
-                var temp = _container.BuildUp(_buildMetadata, error);
-                if(error.Exceptional) throw new BuildUpException(error);
+                var temp = _container.BuildUp(_buildMetadata, error, parameters);
+                if (error.Exceptional) throw new BuildUpException(error);
 
                 if (_interceptor == null) return temp;
-                
+
                 return _interceptor(ref temp) ? temp : null;
             }
 
@@ -186,7 +186,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 var helper = new ExportFactoryHelper(_container, _metadata, _metadataObject, _interceptor);
 
                 return Activator.CreateInstance(typeof (InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
-                    new Func<object>(helper.BuildUp), new Func<object>(helper.Metadata), _metadata.Export.ImplementType);
+                    new Func<BuildParameter[], object>(helper.BuildUp), new Func<object>(helper.Metadata), _metadata.Export.ImplementType);
             }
             catch(Exception e)
             {

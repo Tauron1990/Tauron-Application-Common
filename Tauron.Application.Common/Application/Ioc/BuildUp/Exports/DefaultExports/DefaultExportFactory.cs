@@ -28,6 +28,7 @@ using System;
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using Tauron.Application.Ioc.Components;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -140,16 +141,16 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns>
         ///     The <see cref="IExport" />.
         /// </returns>
-        public IExport CreateAnonymosWithTarget(Type type, object target)
+        [NotNull]
+        public IExport CreateAnonymosWithTarget([NotNull] Type type, [NotNull] object target)
         {
             Contract.Requires<ArgumentNullException>(type != null, "type");
             Contract.Requires<ArgumentNullException>(target != null, "target");
             Contract.Ensures(Contract.Result<IExport>() != null);
 
-            ExternalExportInfo info = target != null
-                                          ? new ExternalExportInfo(true, true, true, true, (context, service) => target,
-                                                                   type.ToString())
-                                          : new ExternalExportInfo(false, false, true, true, null, type.ToString());
+            var info = new ExternalExportInfo(true, true, true, true, (context, service) => target,
+                type.ToString());
+
             var export = new DefaultExport(type, info, true);
             export.ImportMetadata = _chain.SelectImport(export);
 
