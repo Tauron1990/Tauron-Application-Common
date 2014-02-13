@@ -681,7 +681,7 @@ namespace Tauron.Application
                                 select new {Method = method, IsSync = attr.Synchronize}).FirstOrDefault();
                     if (main == null)
                     {
-                        CommonWpfConstans.LogCommon(false, "CommandBinder: No CommandInvoke Found: {0}", Name);
+                        CommonWpfConstans.LogCommon(false, "CommandBinder: No Command-Method Found: {0}", Name);
                         return null;
                     }
 
