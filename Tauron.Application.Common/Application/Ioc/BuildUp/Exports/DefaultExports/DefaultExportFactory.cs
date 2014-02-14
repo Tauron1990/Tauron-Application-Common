@@ -122,7 +122,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
                     true,
                     true,
                     (con, ps) => Activator.CreateInstance(type, args),
-                    type.ToString()),
+                    type.Name),
                 true);
 
             export.ImportMetadata = _chain.SelectImport(export);
