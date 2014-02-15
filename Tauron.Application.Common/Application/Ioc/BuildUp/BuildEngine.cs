@@ -192,7 +192,7 @@ namespace Tauron.Application.Ioc.BuildUp
                         _factory.CreateAnonymosWithTarget(toBuild.GetType(), toBuild),
                         BuildMode.BuildUpObject,
                         container,
-                        toBuild.GetType().ToString(), errorTracer,
+                        toBuild.GetType().Name, errorTracer,
                         buildParameters);
                     Pipeline.Build(context);
                     Contract.Assume(context.Target != null);
@@ -234,7 +234,7 @@ namespace Tauron.Application.Ioc.BuildUp
                     _factory.CreateAnonymos(type, constructorArguments),
                     BuildMode.BuildUpObject,
                     container,
-                    type.ToString(), errorTracer,
+                    type.Name, errorTracer,
                     buildParameters);
                 Pipeline.Build(context);
                 Contract.Assume(context.Target != null);
