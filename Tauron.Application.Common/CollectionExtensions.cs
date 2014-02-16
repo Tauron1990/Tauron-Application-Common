@@ -67,13 +67,10 @@ namespace Tauron
         /// <returns>
         ///     Der Wert, der entwerder erstellt wurde oder schon enthalten war.
         /// </returns>
-        public static TValue AddIfNotExis<TKey, TValue>(
-            this IDictionary<TKey, TValue> dic,
-            TKey key,
-            Func<TValue> creator)
+        public static TValue AddIfNotExis<TKey, TValue>([NotNull] this IDictionary<TKey, TValue> dic,
+            TKey key, [NotNull] Func<TValue> creator)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
-            Contract.Requires<ArgumentNullException>(key != null, "key");
             Contract.Requires<ArgumentNullException>(creator != null, "creator");
 
             TValue temp;
@@ -122,7 +119,8 @@ namespace Tauron
         /// <returns>
         ///     Der gecastete wert oder null.
         /// </returns>
-        public static TValue TryGetAndCast<TValue>(this IDictionary<string, object> dic, string key)
+        [CanBeNull]
+        public static TValue TryGetAndCast<TValue>([NotNull] this IDictionary<string, object> dic, [NotNull] string key)
             where TValue : class
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");

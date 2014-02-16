@@ -41,7 +41,17 @@ namespace Tauron.Application.Views.Core
 
         public override IWindow CreateWindowImpl(string name, object[] parameters)
         {
-            Window window = _windows.First(win => win.Metadata.Name == name).Resolve(true);
+            BuildParameter[] buildParameters = null;
+            if (parameters != null)
+            {
+                buildParameters = new BuildParameter[parameters.Length];
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    buildParameters[i] = new SimpleBuildPrameter(parameters[i]);
+                }
+            }
+
+            Window window = _windows.First(win => win.Metadata.Name == name).Resolve(true, buildParameters);
 
             UiSynchronize.Synchronize.Invoke(() => window.Name = name);
 

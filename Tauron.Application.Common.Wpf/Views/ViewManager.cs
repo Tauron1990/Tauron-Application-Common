@@ -215,8 +215,12 @@ namespace Tauron.Application.Views
         [CanBeNull]
         public IWindow GetWindow([NotNull] string windowName)
         {
-            var wind = System.Windows.Application.Current.Windows.Cast<Window>().FirstOrDefault(w => w.Name == windowName);
-            return wind == null ? null : new WpfWindow(wind);
+            return UiSynchronize.Synchronize.Invoke(() =>
+            {
+                var wind =
+                    System.Windows.Application.Current.Windows.Cast<Window>().FirstOrDefault(w => w.Name == windowName);
+                return wind == null ? null : new WpfWindow(wind);
+            });
         }
 
         public void Register(ExportNameHelper export)

@@ -158,12 +158,12 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// </returns>
         public object Create(ErrorTracer errorTracer)
         {
-            errorTracer.Phase = "Injecting Import For " + Metadata; 
+            if (_metadata == null) return null;
+
+            errorTracer.Phase = "Injecting Import For " + _metadata; 
 
             try
             {
-                if (_metadata == null) return null;
-
                 if (!_isExportFactory)
                 {
                     object temp;

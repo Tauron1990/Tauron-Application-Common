@@ -17,6 +17,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 using Tauron.JetBrains.Annotations;
 
 #endregion
@@ -77,7 +78,8 @@ namespace Tauron.Application
         /// <summary>The show.</summary>
         void Show();
 
-        bool? ShowDialog([CanBeNull] IWindow window);
+        [NotNull]
+        Task ShowDialog([CanBeNull] IWindow window);
 
         /// <summary>The translate for technology.</summary>
         /// <returns>
@@ -156,8 +158,9 @@ namespace Tauron.Application
         {
         }
 
-        public bool? ShowDialog(IWindow window)
+        public Task ShowDialog(IWindow window)
         {
+            
             return null;
         }
 

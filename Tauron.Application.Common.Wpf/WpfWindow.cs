@@ -17,6 +17,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using Tauron.JetBrains.Annotations;
@@ -147,12 +148,12 @@ namespace Tauron.Application
             UiSynchronize.Synchronize.Invoke(_window.Show);
         }
 
-        public bool? ShowDialog(IWindow window)
+        public Task ShowDialog(IWindow window)
         {
-            return UiSynchronize.Synchronize.Invoke(() =>
+            return UiSynchronize.Synchronize.BeginInvoke(() =>
             {
                 _window.Owner = window == null ? null : window.TranslateForTechnology() as Window;
-                return _window.ShowDialog();
+                _window.ShowDialog();
             });
         }
 

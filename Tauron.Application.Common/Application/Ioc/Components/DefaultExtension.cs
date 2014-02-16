@@ -49,7 +49,7 @@ namespace Tauron.Application.Ioc.Components
         {
             components.Register<IMetadataFactory, MetadataFactory>();
             components.Register<IImportSelectorChain, ImportSelectorChain>();
-            components.Register<IExportFactory, DefaultExportFactory>();
+            components.Register<IExportFactory, DefaultExportFactory>(DefaultExportFactory.Factory);
             components.Register<ICache, BuildCache>();
             components.Register<IEventManager, EventManager>();
             components.Register<IProxyService, ProxyService>();

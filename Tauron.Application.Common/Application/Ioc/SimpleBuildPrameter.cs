@@ -16,7 +16,7 @@ namespace Tauron.Application.Ioc
 
         public SimpleBuildPrameter([NotNull] object obj)
         {
-            _export = new DefaultExportFactory().CreateAnonymosWithTarget(obj.GetType(), obj);
+            _export = DefaultExportFactory.Factory.CreateAnonymosWithTarget(obj.GetType(), obj);
         }
 
         protected internal override IExport CreateExport()

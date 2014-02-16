@@ -46,6 +46,8 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
         #region Public Properties
 
+        public static readonly DefaultExportFactory Factory = new DefaultExportFactory();
+
         /// <summary>Gets the technology name.</summary>
         /// <value>The technology name.</value>
         public string TechnologyName
@@ -56,6 +58,11 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         #endregion
 
         #region Public Methods and Operators
+
+        private DefaultExportFactory()
+        {
+            
+        }
 
         /// <summary>
         ///     The initialize.
