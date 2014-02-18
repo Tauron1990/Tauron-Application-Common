@@ -298,12 +298,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                                                         [NotNull] IMetadataFactory metadataFactory,
                                                         [CanBeNull] InterceptorCallback interceptorCallback)
         {
-            if (!content.IsGenericType || content.GetGenericTypeDefinition() != typeof (InstanceResolver<,>))
-            {
+            if (!content.IsGenericType) 
+                return new SimpleResolver(meta, container, false, content, null, null, interceptorCallback);
+
+            if (content.GetGenericTypeDefinition() != typeof (InstanceResolver<,>))
                 return new SimpleResolver(meta, container, false, content.GenericTypeArguments[0], null,
                                           null, interceptorCallback);
-            }
-            
+
             Type metaType = content.GenericTypeArguments[1];
             object metaObject = metadataFactory.CreateMetadata(metaType, meta.Metadata);
 
