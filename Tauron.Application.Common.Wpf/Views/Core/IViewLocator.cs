@@ -11,10 +11,10 @@ namespace Tauron.Application.Views.Core
     {
         void Register([NotNull] ExportNameHelper export);
 
-        [NotNull]
+        [CanBeNull]
         DependencyObject CreateViewForModel([NotNull] object model);
 
-        [NotNull]
+        [CanBeNull]
         DependencyObject CreateViewForModel([NotNull] Type model);
 
         [NotNull]

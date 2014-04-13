@@ -145,11 +145,12 @@
     <Compile Include="ControlHelper.cs" />
     <Compile Include="Converter\BoolToVisibilityConverter.cs" />
     <Compile Include="Converter\BrushValueConverter.cs" />
-    <Compile Include="Converter\NullableToBoolConverter.cs" />
-    <Compile Include="Converter\TextInputToVisibilityConverter.cs" />
     <Compile Include="Converter\ImageProviderExtension.cs" />
     <Compile Include="Converter\ImageSourceHelper.cs" />
     <Compile Include="Converter\ImageSourceProviderExtension.cs" />
+    <Compile Include="Converter\NullableToBoolConverter.cs" />
+    <Compile Include="Converter\TextInputToVisibilityConverter.cs" />
+    <Compile Include="Converter\ValueConverterFactoryBase.cs" />
     <Compile Include="DataContextServices.cs" />
     <Compile Include="DependencyObjectExtensions.cs" />
     <Compile Include="EventBinder.cs" />
@@ -164,36 +165,35 @@
     <Compile Include="Implementation\WpfApplicationController.cs" />
     <Compile Include="Implementation\WpfIuiControllerFactory.cs" />
     <Compile Include="Implementation\WPFSynchronize.cs" />
+    <Compile Include="INameExportMetadata.cs" />
     <Compile Include="IPackUriHelper.cs" />
     <Compile Include="ITabWorkspace.cs" />
     <Compile Include="IWorkspaceHolder.cs" />
     <Compile Include="MemberInfoAttributes.cs" />
+    <Compile Include="Models\ExportModelAttribute.cs" />
     <Compile Include="Models\ExportViewModelAttribute.cs" />
     <Compile Include="Models\IModel.cs" />
-    <Compile Include="Models\ExportModelAttribute.cs" />
     <Compile Include="Models\InjectModelAttribute.cs" />
     <Compile Include="Models\ModelBase.cs" />
     <Compile Include="Models\ObservableProperty.cs" />
-    <Compile Include="PropertyModelExtension.cs" />
+    <Compile Include="Models\ViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PropertyModelExtension.cs" />
     <Compile Include="SimpleLocalize.cs" />
     <Compile Include="SimpleLocalizeWithArg.cs" />
     <Compile Include="TabWorkspace.cs" />
-    <Compile Include="ValueConverterFactoryBase.cs" />
-    <Compile Include="Models\ViewModelBase.cs" />
-    <Compile Include="INameExportMetadata.cs" />
     <Compile Include="Views\Core\AttributeBasedLocator.cs" />
     <Compile Include="Views\Core\CommonLocatorBase.cs" />
+    <Compile Include="Views\Core\ISortableView.cs" />
+    <Compile Include="Views\Core\IViewLocator.cs" />
     <Compile Include="Views\Core\NamingHelper.cs" />
     <Compile Include="Views\ExportNameHelper.cs" />
     <Compile Include="Views\ExportViewAttribute.cs" />
-    <Compile Include="Views\Core\ISortableView.cs" />
-    <Compile Include="Views\Core\IViewLocator.cs" />
-    <Compile Include="Views\ViewManager.cs" />
     <Compile Include="Views\ExportWindowAttribute.cs" />
-    <Compile Include="WpfWindow.cs" />
+    <Compile Include="Views\ViewManager.cs" />
     <Compile Include="WorkspaceManager.cs" />
     <Compile Include="WpfApplication.cs" />
+    <Compile Include="WpfWindow.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JetBrains.Annotations\JetBrains.Annotations.csproj">
@@ -209,11 +209,10 @@
     <None Include="CommonKey.snk" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Page Include="Implementation\Controls\SplashScreen.xaml">
-      <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

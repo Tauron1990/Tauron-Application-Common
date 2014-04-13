@@ -1,7 +1,0 @@
-EXPORTS
-	DllCanUnloadNow		PRIVATE
-	DllGetClassObject	PRIVATE
-	rdtsc
-	DeactivateProfiler
-	ActivateProfiler
-	LogEvent

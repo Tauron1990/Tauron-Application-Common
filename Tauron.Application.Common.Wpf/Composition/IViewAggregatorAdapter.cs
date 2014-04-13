@@ -1,31 +1,7 @@
-﻿// The file IViewAggregatorAdapter.cs is part of Tauron.Application.Common.Wpf.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common.Wpf If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IViewAggregatorAdapter.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The ViewAggregatorAdapter interface.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
+﻿#region
 using System.Collections.Generic;
 using System.Windows;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -42,7 +18,7 @@ namespace Tauron.Application.Composition
         /// <param name="dependencyObject">
         ///     The dependency object.
         /// </param>
-        void Adapt(DependencyObject dependencyObject);
+        void Adapt([NotNull] DependencyObject dependencyObject);
 
         /// <summary>
         ///     The add views.
@@ -50,7 +26,7 @@ namespace Tauron.Application.Composition
         /// <param name="views">
         ///     The views.
         /// </param>
-        void AddViews(IEnumerable<object> views);
+        void AddViews([NotNull] IEnumerable<object> views);
 
         /// <summary>
         ///     The can adapt.
@@ -61,7 +37,7 @@ namespace Tauron.Application.Composition
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        bool CanAdapt(DependencyObject dependencyObject);
+        bool CanAdapt([NotNull] DependencyObject dependencyObject);
 
         /// <summary>The release.</summary>
         void Release();

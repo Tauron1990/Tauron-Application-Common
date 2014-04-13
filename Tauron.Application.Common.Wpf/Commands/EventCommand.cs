@@ -1,28 +1,4 @@
-﻿// The file EventCommand.cs is part of Tauron.Application.Common.Wpf.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common.Wpf If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="EventCommand.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The event command.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -33,7 +9,7 @@ using Tauron.JetBrains.Annotations;
 namespace Tauron.Application.Commands
 {
     /// <summary>The event command.</summary>
-    [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+    [PublicAPI]
     public sealed class EventCommand : CommandBase
     {
         #region Public Events
@@ -79,15 +55,13 @@ namespace Tauron.Application.Commands
 
         #region Methods
 
-        private bool OnCanExecute(object parameter)
+        private bool OnCanExecute([CanBeNull] object parameter)
         {
             Func<object, bool> handler = CanExecuteEvent;
-            if (handler != null) return handler(parameter);
-
-            return true;
+            return handler == null || handler(parameter);
         }
 
-        private void OnExecute(object parameter)
+        private void OnExecute([CanBeNull] object parameter)
         {
             Action<object> handler = ExecuteEvent;
             if (handler != null) handler(parameter);

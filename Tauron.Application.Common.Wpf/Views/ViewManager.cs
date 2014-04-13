@@ -38,6 +38,7 @@ namespace Tauron.Application.Views
 
             if (string.IsNullOrWhiteSpace(name) || (dependencyObject as Control) == null) return;
 
+            // ReSharper disable once AssignNullToNotNullAttribute
             manager.Register( new ExportNameHelper(name, dependencyObject));
         }
 
@@ -71,7 +72,7 @@ namespace Tauron.Application.Views
             if (panel != null)
             {
                 panel.Children.Clear();
-                foreach (Control control in Manager.GetAllViews(viewName)) panel.Children.Add(control);
+                foreach (DependencyObject control in Manager.GetAllViews(viewName)) panel.Children.Add((Control)control);
                 return;
             }
 

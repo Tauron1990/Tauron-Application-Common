@@ -1,30 +1,7 @@
-﻿// The file ImageHelper.cs is part of Tauron.Application.Common.Wpf.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common.Wpf If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ImageHelper.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The image helper.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -35,7 +12,6 @@ using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Implementation
 {
-    /// <summary>The image helper.</summary>
     [Export(typeof (IImageHelper))]
     public class ImageHelper : IImageHelper
     {
@@ -94,19 +70,7 @@ namespace Tauron.Application.Implementation
             }
         }
 
-        /// <summary>
-        ///     The convert.
-        /// </summary>
-        /// <param name="uri">
-        ///     The uri.
-        /// </param>
-        /// <param name="assembly">
-        ///     The assembly.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="ImageSource" />.
-        /// </returns>
-        public ImageSource Convert([NotNull] string uri, [NotNull] string assembly)
+        public ImageSource Convert(string uri, string assembly)
         {
             Uri target;
             return Uri.TryCreate(uri, UriKind.RelativeOrAbsolute, out target) ? Convert(target, assembly) : null;
@@ -124,17 +88,7 @@ namespace Tauron.Application.Implementation
 
             #region Constructors and Destructors
 
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="KeyedImage" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="KeyedImage" /> Klasse.
-            /// </summary>
-            /// <param name="key">
-            ///     The key.
-            /// </param>
-            /// <param name="source">
-            ///     The source.
-            /// </param>
-            public KeyedImage(Uri key, ImageSource source)
+            public KeyedImage([NotNull] Uri key, [NotNull] ImageSource source)
             {
                 Key = key;
                 _source = new WeakReference(source);
@@ -144,10 +98,9 @@ namespace Tauron.Application.Implementation
 
             #region Public Properties
 
-            /// <summary>Gets the key.</summary>
+            [NotNull]
             public Uri Key { get; private set; }
 
-            /// <summary>Gets a value indicating whether is alive.</summary>
             public bool IsAlive
             {
                 get { return _source.IsAlive; }
@@ -157,10 +110,7 @@ namespace Tauron.Application.Implementation
 
             #region Public Methods and Operators
 
-            /// <summary>The get image.</summary>
-            /// <returns>
-            ///     The <see cref="ImageSource" />.
-            /// </returns>
+            [CanBeNull]
             public ImageSource GetImage()
             {
                 return _source.Target as ImageSource;

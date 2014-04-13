@@ -16,6 +16,7 @@
 #region
 using System;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Windows;
 using Microsoft.Practices.EnterpriseLibrary.Common.Configuration;
 using Microsoft.Practices.EnterpriseLibrary.Common.Configuration.Fluent;

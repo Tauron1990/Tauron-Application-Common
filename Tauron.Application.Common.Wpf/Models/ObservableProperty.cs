@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Models
@@ -23,12 +24,13 @@ namespace Tauron.Application.Models
         [CanBeNull]
         public ObservablePropertyChanged PropertyChanged { get; private set; }
 
-        internal bool Prepare(Type targetType)
+        internal bool Prepare([NotNull] Type targetType)
         {
+            Contract.Requires<ArgumentNullException>(targetType != null, "targetType");
+
             if (DefaultValue != null && targetType != DefaultValue.GetType()) return false;
 
-            if (DefaultValue != null && targetType.BaseType == typeof (ValueType)) 
-                DefaultValue = targetType.GetConstructor(Type.EmptyTypes).Invoke(null);
+            if (DefaultValue != null && targetType.BaseType == typeof (ValueType)) DefaultValue = targetType.GetConstructor(Type.EmptyTypes).Invoke(null);
 
             return true;
         }

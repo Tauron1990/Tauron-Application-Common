@@ -1,28 +1,4 @@
-﻿// The file FrameworkObject.cs is part of Tauron.Application.Common.Wpf.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common.Wpf If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="FrameworkObject.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The framework object.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics;
@@ -36,7 +12,7 @@ namespace Tauron.Application
 {
     /// <summary>The framework object.</summary>
     [DebuggerStepThrough]
-    [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+    [PublicAPI]
     public sealed class FrameworkObject : IWeakReference
     {
         #region Fields
@@ -74,8 +50,10 @@ namespace Tauron.Application
             _isFce = fce != null;
             _isValid = _isFce || _isFe;
 
+            // ReSharper disable AssignNullToNotNullAttribute
             if (_isFe) _fe = new ElementReference<FrameworkElement>(fe, isWeak);
             else if (_isFce) _fce = new ElementReference<FrameworkContentElement>(fce, isWeak);
+            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         #endregion
@@ -306,6 +284,7 @@ namespace Tauron.Application
             [NotNull]
             public TReference Target
             {
+// ReSharper disable once AssignNullToNotNullAttribute
                 get { return _weakRef != null ? _weakRef.TypedTarget() : _reference; }
             }
 

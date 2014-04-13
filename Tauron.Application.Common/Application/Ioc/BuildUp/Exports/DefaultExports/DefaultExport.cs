@@ -30,6 +30,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using Tauron.Application.Ioc.LifeTime;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -66,7 +67,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <param name="asAnonym">
         ///     The as anonym.
         /// </param>
-        public DefaultExport(Type exportetType, ExternalExportInfo externalInfo, bool asAnonym)
+        public DefaultExport([NotNull] Type exportetType, [NotNull] ExternalExportInfo externalInfo, bool asAnonym)
         {
             Contract.Requires<ArgumentNullException>(exportetType != null, "exportetType");
             Contract.Requires<ArgumentNullException>(externalInfo != null, "externalInfo");
@@ -92,7 +93,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <param name="asAnonym">
         ///     The as anonym.
         /// </param>
-        public DefaultExport(MethodInfo info, ExternalExportInfo externalInfo, bool asAnonym)
+        public DefaultExport([NotNull] MethodInfo info, [NotNull] ExternalExportInfo externalInfo, bool asAnonym)
         {
             Contract.Requires<ArgumentNullException>(info != null, "exportetType");
             Contract.Requires<ArgumentNullException>(externalInfo != null, "externalInfo");
@@ -109,6 +110,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
         /// <summary>Gets the export metadata.</summary>
         /// <value>The export metadata.</value>
+        [NotNull]
         public IEnumerable<ExportMetadata> ExportMetadata
         {
             get { return _exports; }
@@ -116,6 +118,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
         /// <summary>Gets the exports.</summary>
         /// <value>The exports.</value>
+        [NotNull]
         public IEnumerable<Type> Exports
         {
             get { return _exports.Select(ex => ex.InterfaceType); }
@@ -123,6 +126,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
         /// <summary>Gets the external info.</summary>
         /// <value>The external info.</value>
+        [NotNull]
         public ExternalExportInfo ExternalInfo { get; private set; }
 
         /// <summary>Gets or sets the globalmetadata.</summary>

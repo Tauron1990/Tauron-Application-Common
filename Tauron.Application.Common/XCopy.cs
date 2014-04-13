@@ -28,6 +28,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Runtime.InteropServices;
 using Tauron.Interop;
 using Tauron.JetBrains.Annotations;

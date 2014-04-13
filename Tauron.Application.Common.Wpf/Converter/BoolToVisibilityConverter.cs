@@ -1,28 +1,4 @@
-﻿// The file BoolToVisibilityConverter.cs is part of Tauron.Application.Common.Wpf.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common.Wpf If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="BoolToVisibilityConverter.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The bool to visibility converter.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System.Windows;
 using System.Windows.Data;
@@ -63,9 +39,9 @@ namespace Tauron.Application.Converter
         {
             #region Fields
 
-            private readonly bool isHidden;
+            private readonly bool _isHidden;
 
-            private readonly bool reverse;
+            private readonly bool _reverse;
 
             #endregion
 
@@ -83,8 +59,8 @@ namespace Tauron.Application.Converter
             /// </param>
             public Converter(bool isHidden, bool reverse)
             {
-                this.isHidden = isHidden;
-                this.reverse = reverse;
+                _isHidden = isHidden;
+                _reverse = reverse;
             }
 
             #endregion
@@ -112,11 +88,11 @@ namespace Tauron.Application.Converter
             /// </returns>
             protected override Visibility Convert(bool value)
             {
-                if (reverse) value = !value;
+                if (_reverse) value = !value;
 
                 if (value) return Visibility.Visible;
 
-                return isHidden ? Visibility.Hidden : Visibility.Collapsed;
+                return _isHidden ? Visibility.Hidden : Visibility.Collapsed;
             }
 
             /// <summary>
@@ -145,7 +121,7 @@ namespace Tauron.Application.Converter
                         break;
                 }
 
-                if (reverse) result = !result;
+                if (_reverse) result = !result;
 
                 return result;
             }

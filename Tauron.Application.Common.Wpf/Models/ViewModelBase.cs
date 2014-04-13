@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Threading;
-using Microsoft.Practices.EnterpriseLibrary.Logging;
 using Tauron.Application.Ioc;
 using Tauron.Application.Views;
 using Tauron.JetBrains.Annotations;

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Models
 {
-    public class ModelBase : ObservableObject, IModel
+    public class ModelBase : ObservableObject, IModel, ICustomTypeDescriptor
     {
         private static GroupDictionary<Type, ObservableProperty> _properties =
             new GroupDictionary<Type, ObservableProperty>();
@@ -126,6 +128,12 @@ namespace Tauron.Application.Models
                 value = property.Metadata.CoerceValueCallback(this, value);
             }
 
+            if (value != null)
+            {
+                if(value.GetType() != property.Type)
+                    throw new ArgumentException("Invalid Content Type: " + property.Name);
+            }
+
             _values[property.Name] = value;
 
             if (property.Metadata.PropertyChanged != null) property.Metadata.PropertyChanged(property, this, value);
@@ -147,5 +155,140 @@ namespace Tauron.Application.Models
                 else changedAction.Invoke(_values[prop.Name]);
             }
         }
+
+        #region CustomTypeDescriptor
+
+        private class ObservablePropertyDescriptor : PropertyDescriptor
+        {
+            private readonly ObservableProperty _prop;
+            private readonly Type _componentType;
+
+            public ObservablePropertyDescriptor([NotNull] ObservableProperty prop, [NotNull] Type componentType)
+                : base(prop.Name, null)
+            {
+                Contract.Requires<ArgumentNullException>(prop != null, "prop");
+                Contract.Requires<ArgumentNullException>(componentType != null, "componentType");
+
+                _prop = prop;
+                _componentType = componentType;
+            }
+
+            public override bool CanResetValue(object component)
+            {
+                return true;
+            }
+
+            public override object GetValue(object component)
+            {
+                return ((ModelBase) component).GetValue(_prop);
+            }
+
+            public override void ResetValue(object component)
+            {
+                ((ModelBase)component).SetValue(_prop, _prop.Metadata.DefaultValue);
+            }
+
+            public override void SetValue(object component, object value)
+            {
+                ((ModelBase)component).SetValue(_prop, value);
+            }
+
+            public override bool ShouldSerializeValue(object component)
+            {
+                return ((ModelBase) component).GetValue(_prop) != _prop.Metadata.DefaultValue;
+            }
+
+            [NotNull]
+            public override Type ComponentType
+            {
+                get { return _componentType; }
+            }
+
+            public override bool IsReadOnly
+            {
+                get { return false; }
+            }
+
+            [NotNull]
+            public override Type PropertyType
+            {
+                get { return _prop.Type; }
+            }
+        }
+
+        [NotNull]
+        AttributeCollection ICustomTypeDescriptor.GetAttributes()
+        {
+            return TypeDescriptor.GetAttributes(this, true);
+        }
+
+        string ICustomTypeDescriptor.GetClassName()
+        {
+            return TypeDescriptor.GetClassName(this, true);
+        }
+
+        string ICustomTypeDescriptor.GetComponentName()
+        {
+            return TypeDescriptor.GetComponentName(this, true);
+        }
+
+        TypeConverter ICustomTypeDescriptor.GetConverter()
+        {
+            return TypeDescriptor.GetConverter(this, true);
+        }
+
+        EventDescriptor ICustomTypeDescriptor.GetDefaultEvent()
+        {
+            return TypeDescriptor.GetDefaultEvent(this, true);
+        }
+
+        PropertyDescriptor ICustomTypeDescriptor.GetDefaultProperty()
+        {
+            return TypeDescriptor.GetDefaultProperty(this, true);
+        }
+
+        [NotNull]
+        object ICustomTypeDescriptor.GetEditor(Type editorBaseType)
+        {
+            return TypeDescriptor.GetEditor(this, editorBaseType, true);
+        }
+
+        [NotNull]
+        EventDescriptorCollection ICustomTypeDescriptor.GetEvents([NotNull] Attribute[] attributes)
+        {
+            return TypeDescriptor.GetEvents(this, attributes, true);
+        }
+
+        [NotNull]
+        EventDescriptorCollection ICustomTypeDescriptor.GetEvents()
+        {
+            return TypeDescriptor.GetEvents(this, true);
+        }
+
+        [NotNull]
+        PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties([NotNull] Attribute[] attributes)
+        {
+            return TypeDescriptor.GetProperties(this, attributes, true);
+        }
+
+        [NotNull]
+        PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties()
+        {
+            var coll = TypeDescriptor.GetProperties(this, true);
+            var type = GetType();
+
+            foreach (var property in _properties.AllValues) coll.Add(new ObservablePropertyDescriptor(property, type));
+
+            return coll;
+        }
+
+        [NotNull]
+        object ICustomTypeDescriptor.GetPropertyOwner([NotNull] PropertyDescriptor pd)
+        {
+            return this;
+        }
+
+        #endregion CustomTypeDescriptor
+
     }
 }

@@ -1,28 +1,4 @@
-﻿// The file MethodCommand.cs is part of Tauron.Application.Common.Wpf.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common.Wpf If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MethodCommand.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   Kapselt die Event Daten fals es sich bei dem ziel um ein Commando Handelt.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.Contracts;
@@ -34,14 +10,11 @@ using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Commands
 {
-    /// <summary>
-    ///     Kapselt die Event Daten fals es sich bei dem ziel um ein Commando Handelt.
-    /// </summary>
     public sealed class EventData
     {
         #region Constructors and Destructors
 
-        internal EventData(object sender, EventArgs eventArgs)
+        internal EventData([NotNull] object sender, [NotNull] EventArgs eventArgs)
         {
             Contract.Requires<ArgumentNullException>(sender != null, "sender");
             Contract.Requires<ArgumentNullException>(eventArgs != null, "eventArgs");
@@ -74,18 +47,17 @@ namespace Tauron.Application.Commands
     {
         #region Fields
 
-        private readonly WeakReference context;
+        private readonly WeakReference _context;
 
-        private readonly MethodInfo method;
+        private readonly MethodInfo _method;
 
-        private readonly MethodType methodType;
+        private readonly MethodType _methodType;
 
         #endregion
 
         #region Constructors and Destructors
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="MethodCommand" /> class.
         ///     Initialisiert eine neue Instanz der <see cref="MethodCommand" /> Klasse.
         /// </summary>
         /// <param name="method">
@@ -94,15 +66,16 @@ namespace Tauron.Application.Commands
         /// <param name="context">
         ///     The context.
         /// </param>
-        public MethodCommand(MethodInfo method, WeakReference context)
+        public MethodCommand([NotNull] MethodInfo method, [NotNull] WeakReference context)
         {
             Contract.Requires<ArgumentNullException>(method != null, "method");
 
-            this.method = method;
-            this.context = context;
+            _method = method;
+            _context = context;
 
-            methodType = (MethodType) method.GetParameters().Count();
-            if (methodType == MethodType.One) if (this.method.GetParameters()[0].ParameterType != typeof (EventData)) methodType = MethodType.EventArgs;
+            _methodType = (MethodType) method.GetParameters().Count();
+            if (_methodType != MethodType.One) return;
+            if (_method.GetParameters()[0].ParameterType != typeof (EventData)) _methodType = MethodType.EventArgs;
         }
 
         #endregion
@@ -129,9 +102,10 @@ namespace Tauron.Application.Commands
         #region Public Properties
 
         /// <summary>Gets the context.</summary>
+        [CanBeNull]
         public object Context
         {
-            get { return context == null ? null : context.Target; }
+            get { return _context == null ? null : _context.Target; }
         }
 
         #endregion
@@ -148,19 +122,19 @@ namespace Tauron.Application.Commands
         public override void Execute(object parameter)
         {
             var temp = (EventData) parameter;
-            switch (methodType)
+            switch (_methodType)
             {
                 case MethodType.Zero:
-                    method.Invoke(Context, new object[0]);
+                    _method.Invoke(Context, new object[0]);
                     break;
                 case MethodType.One:
-                    method.Invoke(Context, new object[] {temp});
+                    _method.Invoke(Context, new object[] {temp});
                     break;
                 case MethodType.Two:
-                    method.Invoke(Context, new[] {temp.Sender, temp.EventArgs});
+                    _method.Invoke(Context, new[] {temp.Sender, temp.EventArgs});
                     break;
                 case MethodType.EventArgs:
-                    method.Invoke(Context, new object[] {temp.EventArgs});
+                    _method.Invoke(Context, new object[] {temp.EventArgs});
                     break;
             }
         }
