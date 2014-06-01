@@ -117,7 +117,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Castle.Core">
-      <HintPath>..\packages\Castle.Core.3.2.2\lib\net45\Castle.Core.dll</HintPath>
+      <HintPath>..\..\KSP Editor\packages\Castle.Core.3.3.0\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Practices.EnterpriseLibrary.Common">
       <HintPath>..\packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45\Microsoft.Practices.EnterpriseLibrary.Common.dll</HintPath>
@@ -314,8 +314,9 @@
     <Compile Include="Application\Ioc\SimpleBuildPrameter.cs" />
     <Compile Include="Application\Ioc\ThreadSharedAttribute.cs" />
     <Compile Include="Application\Ioc\WeakSharedAttribute.cs" />
-    <Compile Include="Application\Modules\AddIn.cs" />
-    <Compile Include="Application\Modules\AddinDescriptionAttribute.cs" />
+    <Compile Include="Application\Modules\AddinAttribute.cs" />
+    <Compile Include="Application\Modules\AddinDescription.cs" />
+    <Compile Include="Application\Modules\AddInDescriptionAttribute.cs" />
     <Compile Include="Application\Modules\AddInListner.cs" />
     <Compile Include="Application\Modules\ModuleHandlerRegistry.cs" />
     <Compile Include="AssemblyNameScpaces.cs" />

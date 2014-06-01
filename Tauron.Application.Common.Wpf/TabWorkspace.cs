@@ -85,9 +85,9 @@ namespace Tauron.Application
             }
         }
 
-        public abstract void OnClose();
-        public abstract void OnActivate();
-        public abstract void OnDeactivate();
+        public virtual void OnClose() { }
+        public virtual void OnActivate() { }
+        public virtual void OnDeactivate() { }
 
         #endregion
 

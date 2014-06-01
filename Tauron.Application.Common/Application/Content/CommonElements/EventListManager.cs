@@ -12,7 +12,7 @@ namespace Tauron.Application
 {
     /// <summary>The event list manager.</summary>
     [Serializable]
-    [DebuggerNonUserCode]
+    [DebuggerNonUserCode, PublicAPI]
     public class EventListManager : BaseObject
     {
         #region Fields

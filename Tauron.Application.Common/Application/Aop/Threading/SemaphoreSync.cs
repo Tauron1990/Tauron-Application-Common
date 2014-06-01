@@ -1,28 +1,4 @@
-﻿// The file SemaphoreSync.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SemaphoreSync.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The semaphore holder.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Reflection;
@@ -85,7 +61,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="target">
         ///     The target.
         /// </param>
-        protected internal override void Register([NotNull] ObjectContext context, [NotNull] MemberInfo info, [NotNull] object target)
+        protected internal override void Register( ObjectContext context,  MemberInfo info,  object target)
         {
             context.Register<SemaphoreHolder, SemaphoreHolder>(
                 new SemaphoreHolder(
@@ -126,7 +102,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="contextName">
         ///     The context name.
         /// </param>
-        protected internal override void Initialize([NotNull] object target, [NotNull] ObjectContext context, [NotNull] string contextName)
+        protected internal override void Initialize( object target,  ObjectContext context,  string contextName)
         {
             _holder = BaseHolder.GetOrAdd<SemaphoreHolder, SemaphoreHolder>(
                 context,

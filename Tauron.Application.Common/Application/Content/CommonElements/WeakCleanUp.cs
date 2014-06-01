@@ -1,28 +1,4 @@
-﻿// The file WeakCleanUp.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="WeakCleanUp.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The weak delegate.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -53,15 +29,7 @@ namespace Tauron.Application
 
         #region Constructors and Destructors
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="WeakDelegate" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="WeakDelegate" /> Klasse.
-        ///     Initializes a new instance of the <see cref="WeakDelegate" /> class.
-        /// </summary>
-        /// <param name="delegate">
-        ///     The delegate.
-        /// </param>
-        public WeakDelegate(Delegate @delegate)
+        public WeakDelegate([NotNull] Delegate @delegate)
         {
             Contract.Requires<ArgumentNullException>(@delegate != null, "delegate");
 
@@ -70,18 +38,7 @@ namespace Tauron.Application
             if (!_method.IsStatic) _reference = new WeakReference(@delegate.Target);
         }
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="WeakDelegate" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="WeakDelegate" /> Klasse.
-        ///     Initializes a new instance of the <see cref="WeakDelegate" /> class.
-        /// </summary>
-        /// <param name="methodInfo">
-        ///     The method info.
-        /// </param>
-        /// <param name="target">
-        ///     The target.
-        /// </param>
-        public WeakDelegate(MethodBase methodInfo, object target)
+        public WeakDelegate([NotNull] MethodBase methodInfo, [NotNull] object target)
         {
             Contract.Requires<ArgumentNullException>(methodInfo != null, "methodInfo");
             Contract.Requires<ArgumentNullException>(target != null, "target");
@@ -114,7 +71,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public bool Equals(WeakDelegate other)
+        public bool Equals([CanBeNull] WeakDelegate other)
         {
             if (ReferenceEquals(null, other)) return false;
 
@@ -157,15 +114,13 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public override bool Equals(object obj)
+        public override bool Equals([CanBeNull]object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
 
             if (ReferenceEquals(this, obj)) return true;
 
-            if (obj.GetType() != typeof (WeakDelegate)) return false;
-
-            return Equals((WeakDelegate) obj);
+            return obj is WeakDelegate && Equals((WeakDelegate) obj);
         }
 
         /// <summary>The get hash code.</summary>
@@ -191,7 +146,8 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        public object Invoke(params object[] parms)
+        [CanBeNull]
+        public object Invoke([CanBeNull] params object[] parms)
         {
             if (_method.IsStatic) return _method.Invoke(null, parms);
 
@@ -259,7 +215,7 @@ namespace Tauron.Application
         /// <param name="action">
         ///     The action.
         /// </param>
-        public static void RegisterAction(Action action)
+        public static void RegisterAction([NotNull] Action action)
         {
             Contract.Requires<ArgumentNullException>(action != null, "action");
 
@@ -284,6 +240,7 @@ namespace Tauron.Application
             var resetEvent = new AutoResetEvent(false);
             try
             {
+// ReSharper disable once ObjectCreationAsStatement
                 new GCNotifier(resetEvent);
 
                 while (true)
@@ -295,7 +252,7 @@ namespace Tauron.Application
                     {
                         Contract.Assume(weakDelegate != null);
 
-                        if (weakDelegate.IsAlive)
+                        if (weakDelegate != null && weakDelegate.IsAlive)
                         {
                             try
                             {
@@ -330,7 +287,7 @@ namespace Tauron.Application
         {
             #region Fields
 
-            private readonly AutoResetEvent resetEvent;
+            private readonly AutoResetEvent _resetEvent;
 
             #endregion
 
@@ -345,7 +302,7 @@ namespace Tauron.Application
             /// </param>
             public GCNotifier(AutoResetEvent resetEvent)
             {
-                this.resetEvent = resetEvent;
+                _resetEvent = resetEvent;
             }
 
             /// <summary>
@@ -358,8 +315,9 @@ namespace Tauron.Application
 
                 if (AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
 
-                resetEvent.Set();
-                new GCNotifier(resetEvent);
+                _resetEvent.Set();
+// ReSharper disable once ObjectCreationAsStatement
+                new GCNotifier(_resetEvent);
             }
 
             #endregion

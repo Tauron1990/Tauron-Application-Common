@@ -1,28 +1,4 @@
-﻿// The file ICommandLineCommand.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICommandLineCommand.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The CommandLineCommand interface.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.Contracts;
@@ -42,10 +18,12 @@ namespace Tauron.Application
 
         /// <summary>Gets the command name.</summary>
         /// <value>The command name.</value>
+        [NotNull]
         string CommandName { get; }
 
         /// <summary>Gets the factory.</summary>
         /// <value>The factory.</value>
+        [CanBeNull]
         IShellFactory Factory { get; }
 
         #endregion
@@ -61,7 +39,7 @@ namespace Tauron.Application
         /// <param name="container">
         ///     The container.
         /// </param>
-        void Execute(string[] args, IContainer container);
+        void Execute([NotNull] string[] args, [NotNull] IContainer container);
 
         #endregion
     }

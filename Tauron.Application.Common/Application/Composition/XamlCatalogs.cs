@@ -1,28 +1,4 @@
-﻿// The file XamlCatalogs.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="XamlCatalogs.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The assembly catalog.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -61,7 +37,7 @@ namespace Tauron.Application.Composition
         /// <param name="container">
         ///     The container.
         /// </param>
-        protected internal override void FillContainer([NotNull] ExportResolver container)
+        protected internal override void FillContainer(ExportResolver container)
         {
             try
             {
@@ -75,7 +51,7 @@ namespace Tauron.Application.Composition
             }
             catch (Exception e)
             {
-                CommonConstants.LogCommon(true, "Xaml Catalog: Invalid Assembly: {0}\n{2}", AssemblyName, e);
+                CommonConstants.LogCommon(true, "Xaml Catalog: Invalid Assembly: {0}\n{1}", AssemblyName, e);
                 throw;
             }
         }
@@ -137,6 +113,7 @@ namespace Tauron.Application.Composition
 
         /// <summary>Gets or sets the inner catalogs.</summary>
         /// <value>The inner catalogs.</value>
+        [NotNull]
         public Collection<XamlCatalog> InnerCatalogs { get; private set; }
 
         #endregion
@@ -193,6 +170,7 @@ namespace Tauron.Application.Composition
 
         /// <summary>Gets or sets the path.</summary>
         /// <value>The path.</value>
+        [NotNull]
         public string Path { get; set; }
 
         /// <summary>Gets or sets the search option.</summary>
@@ -201,6 +179,7 @@ namespace Tauron.Application.Composition
 
         /// <summary>Gets or sets the search pattern.</summary>
         /// <value>The search pattern.</value>
+        [NotNull]
         public string SearchPattern { get; set; }
 
         #endregion
@@ -252,7 +231,7 @@ namespace Tauron.Application.Composition
 
         /// <summary>Gets or sets the types.</summary>
         /// <value>The types.</value>
-        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        [NotNull,SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public Collection<string> Types { get; set; }
 
         #endregion

@@ -1,28 +1,4 @@
-﻿// The file ObjectExtension.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ObjectExtension.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The Rounding types
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -69,7 +45,8 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="T" />.
         /// </returns>
-        public static T As<T>(this object value) where T : class
+        [CanBeNull]
+        public static T As<T>([CanBeNull] this object value) where T : class
         {
             if (value == null) return default(T);
 
@@ -87,7 +64,7 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="T" />.
         /// </returns>
-        public static T CastObj<T>(this object value)
+        public static T CastObj<T>([CanBeNull] this object value)
         {
             if (value == null) return default(T);
 
@@ -108,18 +85,7 @@ namespace Tauron
             return new DateTime(source.Year, source.Month, source.Day, source.Hour, source.Minute, 0);
         }
 
-        /// <summary>
-        ///     The get service.
-        /// </summary>
-        /// <param name="provider">
-        ///     The provider.
-        /// </param>
-        /// <typeparam name="T">
-        /// </typeparam>
-        /// <returns>
-        ///     The <see cref="T" />.
-        /// </returns>
-        public static T GetService<T>(this IServiceProvider provider)
+        public static T GetService<T>([NotNull] this IServiceProvider provider)
         {
             Contract.Requires<ArgumentNullException>(provider != null, "provider");
 
@@ -140,7 +106,7 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool IsAlive<TType>(this WeakReference<TType> reference) where TType : class
+        public static bool IsAlive<TType>([NotNull] this WeakReference<TType> reference) where TType : class
         {
             Contract.Requires<ArgumentNullException>(reference != null, "reference");
 
@@ -190,12 +156,11 @@ namespace Tauron
 
             Math.DivRem(source.Minute, (int) minutes, out modulo);
 
-            if (modulo > 0)
-            {
-                result = modulo >= (minutes/2) ? source.AddMinutes(minutes - modulo) : source.AddMinutes(modulo*-1);
+            if (modulo <= 0) return result;
 
-                result = result.AddSeconds(source.Second*-1);
-            }
+            result = modulo >= (minutes/2) ? source.AddMinutes(minutes - modulo) : source.AddMinutes(modulo*-1);
+
+            result = result.AddSeconds(source.Second*-1);
 
             return result;
         }
@@ -212,7 +177,8 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string SFormat(this string format, params object[] args)
+        [NotNull, StringFormatMethod("format")]
+        public static string SFormat([NotNull] this string format, [NotNull] params object[] args)
         {
             Contract.Requires<ArgumentNullException>(format != null, "format");
             Contract.Requires<ArgumentNullException>(args != null, "args");

@@ -43,10 +43,10 @@ namespace Tauron.Application.Ioc
         [CanBeNull]
         public Exception Exception { get; set; }
 
-        public static string FormatExport([CanBeNull]Type type, [CanBeNull]string exportName)
+        [NotNull]
+        public static string FormatExport([CanBeNull]Type type, [CanBeNull]object exportName)
         {
-            if (type == null)
-                type = typeof (object);
+            if (type == null) type = typeof (object);
             return "[" + type.Name + "|" + exportName + "]";
         }
     }

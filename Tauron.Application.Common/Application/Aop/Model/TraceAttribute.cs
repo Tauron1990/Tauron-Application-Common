@@ -1,19 +1,4 @@
-﻿// The file TraceAttribute.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
+﻿#region
 
 using System;
 using System.Diagnostics;
@@ -92,6 +77,7 @@ namespace Tauron.Application.Aop.Model
 
         /// <summary>Gets or sets the category.</summary>
         /// <value>The category.</value>
+        [CanBeNull]
         public string Category { get; set; }
 
         /// <summary>Gets or sets a value indicating whether enable tracer.</summary>
@@ -100,6 +86,7 @@ namespace Tauron.Application.Aop.Model
 
         /// <summary>Gets or sets the exception policy.</summary>
         /// <value>The exception policy.</value>
+        [CanBeNull]
         public string ExceptionPolicy { get; set; }
 
         /// <summary>Gets or sets the log options.</summary>
@@ -108,6 +95,7 @@ namespace Tauron.Application.Aop.Model
 
         /// <summary>Gets or sets the log title.</summary>
         /// <value>The log title.</value>
+        [CanBeNull]
         public string LogTitle { get; set; }
 
         /// <summary>Gets or sets the trace event type.</summary>
@@ -116,17 +104,17 @@ namespace Tauron.Application.Aop.Model
 
         /// <summary>Gets or sets the tracer id.</summary>
         /// <value>The tracer id.</value>
+        [CanBeNull]
         public string TracerId { get; set; }
 
         /// <summary>Gets or sets the tracer title.</summary>
         /// <value>The tracer title.</value>
+        [CanBeNull]
         public string TracerTitle
         {
             get
             {
-                if (string.IsNullOrEmpty(_tracerTitle)) return LogTitle;
-
-                return _tracerTitle;
+                return string.IsNullOrEmpty(_tracerTitle) ? LogTitle : _tracerTitle;
             }
 
             set { _tracerTitle = value; }
@@ -271,7 +259,7 @@ namespace Tauron.Application.Aop.Model
             private string _types;
 
             /// <summary>The _parm names.</summary>
-            private string[] parmNames;
+            private string[] _parmNames;
 
             #endregion
 
@@ -299,14 +287,15 @@ namespace Tauron.Application.Aop.Model
             #region Properties
 
             /// <summary>The _parm names.</summary>
+            [NotNull]
             private string[] ParmNames
             {
                 get
                 {
-                    Contract.Requires(parmNames != null);
+                    Contract.Requires(_parmNames != null);
                     Contract.Ensures(Contract.Result<string[]>() != null);
 
-                    return parmNames;
+                    return _parmNames;
                 }
             }
 
@@ -324,7 +313,7 @@ namespace Tauron.Application.Aop.Model
             ///     The invocation.
             /// </param>
             [ContractVerification(false)]
-            public void Log(LogEntry entry, IInvocation invocation)
+            public void Log([NotNull] LogEntry entry, [NotNull] IInvocation invocation)
             {
                 Contract.Requires<ArgumentNullException>(entry != null, "entry");
                 Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
@@ -353,12 +342,12 @@ namespace Tauron.Application.Aop.Model
             /// <param name="info">
             ///     The info.
             /// </param>
-            private void Initialize(MethodInfo info)
+            private void Initialize([NotNull] MethodInfo info)
             {
                 Contract.Requires<ArgumentNullException>(info != null, "info");
 
                 ParameterInfo[] parms = info.GetParameters();
-                parmNames = parms.Select(parm => parm.Name).ToArray();
+                _parmNames = parms.Select(parm => parm.Name).ToArray();
                 _stringNmes = ParmNames.Aggregate((working, next) => working + ", " + next);
                 if (_type)
                 {

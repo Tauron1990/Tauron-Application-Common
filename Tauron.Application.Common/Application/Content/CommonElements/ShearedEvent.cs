@@ -1,29 +1,4 @@
-﻿// The file ShearedEvent.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ShearedEvent.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The shared event.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
+﻿#region
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -94,7 +69,7 @@ namespace Tauron.Application
     }
 
     /// <summary>The EventAggregator interface.</summary>
-    [ContractClass(typeof (EventAggregatorContracts))]
+    [ContractClass(typeof (EventAggregatorContracts)), PublicAPI]
     public interface IEventAggregator
     {
         #region Public Methods and Operators
@@ -105,7 +80,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="TEventType" />.
         /// </returns>
-        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
+        [NotNull,SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         TEventType GetEvent<TEventType, TPayload>() where TEventType : SharedEvent<TPayload>, new();
 
         #endregion
@@ -154,6 +129,7 @@ namespace Tauron.Application
 
         /// <summary>Gets the aggregator.</summary>
         /// <value>The aggregator.</value>
+        [NotNull]
         public static IEventAggregator Aggregator
         {
             get

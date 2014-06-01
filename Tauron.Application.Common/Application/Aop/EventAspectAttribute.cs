@@ -1,19 +1,4 @@
-﻿// The file EventAspectAttribute.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
+﻿#region
 
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EventAspectAttribute.cs" company="Tauron Parallel Works">
@@ -44,7 +29,7 @@ namespace Tauron.Application.Aop
         #region Fields
 
         /// <summary>The _event info.</summary>
-        private EventInfo mEventInfo;
+        private EventInfo _eventInfo;
 
         #endregion
 
@@ -63,16 +48,16 @@ namespace Tauron.Application.Aop
         {
             string name = invocation.Method.Name;
             bool getter = name.StartsWith(AopConstants.EventAdder, StringComparison.Ordinal);
-            if (mEventInfo == null)
+            if (_eventInfo == null)
             {
                 name = name.Remove(0, getter ? AopConstants.EventAdder.Length : AopConstants.EventRemover.Length);
 
-                mEventInfo = invocation.Method.DeclaringType.GetEvent(name, AopConstants.DefaultBindingFlags);
-                Contract.Assert(mEventInfo != null);
+                _eventInfo = invocation.Method.DeclaringType.GetEvent(name, AopConstants.DefaultBindingFlags);
+                Contract.Assert(_eventInfo != null);
             }
 
-            if (getter) OnGet(invocation, context, mEventInfo);
-            else OnSet(invocation, context, mEventInfo);
+            if (getter) OnGet(invocation, context, _eventInfo);
+            else OnSet(invocation, context, _eventInfo);
         }
 
         /// <summary>
@@ -87,7 +72,7 @@ namespace Tauron.Application.Aop
         /// <param name="eventInfo">
         ///     The event info.
         /// </param>
-        protected virtual void OnGet(IInvocation invocation, ObjectContext context, EventInfo eventInfo)
+        protected virtual void OnGet([NotNull] IInvocation invocation, [NotNull] ObjectContext context, [NotNull] EventInfo eventInfo)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");
@@ -108,7 +93,7 @@ namespace Tauron.Application.Aop
         /// <param name="eventInfo">
         ///     The event info.
         /// </param>
-        protected virtual void OnSet(IInvocation invocation, ObjectContext context, EventInfo eventInfo)
+        protected virtual void OnSet([NotNull] IInvocation invocation, [NotNull] ObjectContext context, [NotNull] EventInfo eventInfo)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");

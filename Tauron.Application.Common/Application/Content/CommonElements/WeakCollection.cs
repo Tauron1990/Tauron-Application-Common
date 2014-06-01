@@ -1,28 +1,4 @@
-﻿// The file WeakCollection.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="WeakCollection.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The weak collection.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections;
@@ -138,7 +114,7 @@ namespace Tauron.Application
         ///     The item.
         /// </param>
         [ContractVerification(false)]
-        public void Add(TType item)
+        public void Add([CanBeNull] TType item)
         {
             if (item == null) return;
 
@@ -161,11 +137,9 @@ namespace Tauron.Application
         ///     The <see cref="bool" />.
         /// </returns>
         [ContractVerification(false)]
-        public bool Contains(TType item)
+        public bool Contains([CanBeNull] TType item)
         {
-            if (item == null) return false;
-
-            return _internalCollection.Any(it => it.TypedTarget() == item);
+            return item != null && _internalCollection.Any(it => it.TypedTarget() == item);
         }
 
         /// <summary>
@@ -218,7 +192,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="int" />.
         /// </returns>
-        public int IndexOf(TType item)
+        public int IndexOf([CanBeNull]TType item)
         {
             if (item == null) return -1;
 
@@ -241,7 +215,7 @@ namespace Tauron.Application
         /// <param name="item">
         ///     The item.
         /// </param>
-        public void Insert(int index, TType item)
+        public void Insert(int index, [CanBeNull]TType item)
         {
             if (item == null) return;
 
@@ -257,7 +231,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public bool Remove(TType item)
+        public bool Remove([CanBeNull]TType item)
         {
             if (item == null) return false;
 

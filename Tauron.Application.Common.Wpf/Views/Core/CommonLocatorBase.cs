@@ -19,7 +19,10 @@ namespace Tauron.Application.Views.Core
 
         public DependencyObject CreateViewForModel(object model)
         {
-            return CreateViewForModel(model.GetType());
+            var temp = CreateViewForModel(model.GetType());
+            new FrameworkObject(temp, false).DataContext = model;
+
+            return temp;
         }
 
         public DependencyObject CreateViewForModel(Type model)

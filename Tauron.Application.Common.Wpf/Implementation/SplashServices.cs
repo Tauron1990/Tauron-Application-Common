@@ -68,11 +68,9 @@ namespace Tauron.Application.Implementation
             context.Invoke(
                 () =>
                 {
-                    if (_screen != null)
-                    {
-                        _screen.Close();
-                        _screen = null;
-                    }
+                    if (_screen == null) return;
+                    _screen.Close();
+                    _screen = null;
                 });
         }
 
@@ -83,7 +81,7 @@ namespace Tauron.Application.Implementation
             context.Invoke(
                 () =>
                 {
-                    _screen = new SplashScreen {DataContext = Listner};
+                    _screen = new SplashScreen {DataContext = Listner, Width = Listner.Width, Height = Listner.Height};
                     _screen.Show();
                 });
         }

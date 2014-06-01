@@ -49,7 +49,6 @@ namespace Tauron.Application
     /// <summary>The observable object.</summary>
     [Serializable, DebuggerNonUserCode]
     [PublicAPI]
-    [Intercept]
     public abstract class ObservableObject : EventListManager, INotifyPropertyChangedMethod
     {
         [PublicAPI]
@@ -117,7 +116,7 @@ namespace Tauron.Application
         /// <param name="eventArgs">
         ///     The event args.
         /// </param>
-        public virtual void OnPropertyChanged([NotNull,CallerMemberName] string eventArgs = null)
+        public virtual void OnPropertyChanged([CallerMemberName] string eventArgs = null)
         {
             OnPropertyChanged(new PropertyChangedEventArgs(eventArgs));
         }

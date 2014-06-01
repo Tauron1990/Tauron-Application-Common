@@ -255,7 +255,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         /// </returns>
         public override string ToString()
         {
-            return ErrorTracer.FormatExport(_interfaceType, ContractName);
+            object name;
+            if (!Metadata.TryGetValue("DebugName", out name)) name = ContractName;
+            return ErrorTracer.FormatExport(_interfaceType, name);
         }
 
         #endregion

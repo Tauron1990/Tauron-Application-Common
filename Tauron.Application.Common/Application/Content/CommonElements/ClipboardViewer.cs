@@ -1,28 +1,4 @@
-﻿// The file ClipboardViewer.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ClipboardViewer.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The clipboard viewer.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.Contracts;
@@ -109,7 +85,7 @@ namespace Tauron.Application
             if (_disposed) return;
 
             CloseCbViewer();
-            _target.Closed -= TargetClosed;
+            if (_target != null) _target.Closed -= TargetClosed;
             _target = null;
 
             ClipboardChanged = null;
@@ -124,10 +100,13 @@ namespace Tauron.Application
         {
             if (_isViewing) return;
 
-            _target.AddHook(WinProc); // start processing window messages
-            _hWndNextViewer = new ViewerSafeHandle(
-                NativeMethods.SetClipboardViewer(_target.Handle),
-                _target); // set this window as a viewer
+            if (_target != null)
+            {
+                _target.AddHook(WinProc); // start processing window messages
+                _hWndNextViewer = new ViewerSafeHandle(
+                    NativeMethods.SetClipboardViewer(_target.Handle),
+                    _target); // set this window as a viewer
+            }
 
             _isViewing = true;
         }
@@ -147,7 +126,7 @@ namespace Tauron.Application
             _hWndNextViewer.Dispose();
 
             _hWndNextViewer = null;
-            _target.RemoveHook(WinProc);
+            if (_target != null) _target.RemoveHook(WinProc);
             _isViewing = false;
         }
 

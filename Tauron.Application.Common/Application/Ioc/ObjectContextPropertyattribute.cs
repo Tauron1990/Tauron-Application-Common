@@ -28,6 +28,7 @@ using System;
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using Tauron.Application.Ioc.LifeTime;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -52,7 +53,7 @@ namespace Tauron.Application.Ioc
         /// <param name="target">
         ///     The target.
         /// </param>
-        protected internal abstract void Register(ObjectContext context, MemberInfo info, object target);
+        protected internal abstract void Register([NotNull] ObjectContext context, [NotNull] MemberInfo info, [NotNull] object target);
 
         #endregion
     }

@@ -1,18 +1,3 @@
-// The file GroupDirectory.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
 #region
 
 using System;
@@ -81,7 +66,7 @@ namespace Tauron.Application
         /// <param name="context">
         /// </param>
         [SuppressMessage("Microsoft.Design", "CA1047:DoNotDeclareProtectedMembersInSealedTypes")]
-        protected GroupDictionary(SerializationInfo info, StreamingContext context)
+        protected GroupDictionary([NotNull] SerializationInfo info, StreamingContext context)
 #pragma warning restore 628
             : base(info, context)
         {
@@ -105,7 +90,7 @@ namespace Tauron.Application
         /// <param name="listType">
         ///     The list type.
         /// </param>
-        public GroupDictionary(Type listType)
+        public GroupDictionary([NotNull] Type listType)
         {
             Contract.Requires<ArgumentNullException>(listType != null, "listType");
 
@@ -135,6 +120,7 @@ namespace Tauron.Application
 
         /// <summary>Gibt eine Collection zurück die Alle in den Listen enthaltenen Werte Darstellen.</summary>
         /// <value>The all values.</value>
+        [NotNull]
         public ICollection<TValue> AllValues
         {
             get
@@ -156,7 +142,7 @@ namespace Tauron.Application
         ///     Eine Passende Collection.
         /// </returns>
         [ContractVerification(false)]
-        public new ICollection<TValue> this[TKey key]
+        public new ICollection<TValue> this[[NotNull]TKey key]
         {
             get
             {
@@ -182,6 +168,7 @@ namespace Tauron.Application
         ///     The <see cref="object" />.
         /// </returns>
         /// <exception cref="InvalidOperationException"></exception>
+        [NotNull]
         private object CreateList()
         {
             Contract.Ensures(Contract.Result<object>() != null);
@@ -218,7 +205,7 @@ namespace Tauron.Application
         /// <param name="key">
         ///     Der Schlüssel der hinzugefügt werden soll.
         /// </param>
-        public void Add(TKey key)
+        public void Add([NotNull] TKey key)
         {
             Contract.Requires<ArgumentNullException>(key != null, "key");
 
@@ -234,7 +221,7 @@ namespace Tauron.Application
         /// <param name="value">
         ///     Der wert der Hinzugefügt werden soll.
         /// </param>
-        public void Add(TKey key, TValue value)
+        public void Add([NotNull] TKey key, [NotNull] TValue value)
         {
             Contract.Requires<ArgumentNullException>(key != null, "key");
             Contract.Requires<ArgumentNullException>(value != null, "value");
@@ -254,7 +241,7 @@ namespace Tauron.Application
         /// <param name="value">
         ///     Die werte die hinzugefügt werden sollen.
         /// </param>
-        public void AddRange(TKey key, IEnumerable<TValue> value)
+        public void AddRange([NotNull] TKey key, [NotNull] IEnumerable<TValue> value)
         {
             Contract.Requires<ArgumentNullException>(key != null, "key");
             Contract.Requires<ArgumentNullException>(value != null, "value");
@@ -262,7 +249,8 @@ namespace Tauron.Application
             if (!ContainsKey(key)) Add(key);
 
             ICollection<TValue> values = base[key];
-            if (values != null) foreach (TValue item in value.Where(item => item != null)) values.Add(item);
+            if (values == null) return;
+            foreach (TValue item in value.Where(item => item != null)) values.Add(item);
         }
 
         /// <summary>
@@ -274,7 +262,7 @@ namespace Tauron.Application
         /// <returns>
         ///     Ob der wert Entfernt werden konnte.
         /// </returns>
-        public bool RemoveValue(TValue value)
+        public bool RemoveValue([NotNull] TValue value)
         {
             return RemoveImpl(null, value, false, true);
         }
@@ -291,7 +279,7 @@ namespace Tauron.Application
         /// <returns>
         ///     Ob der wert Entfernt werden konnte.
         /// </returns>
-        public bool Remove(TValue value, bool removeEmptyLists)
+        public bool Remove([NotNull] TValue value, bool removeEmptyLists)
         {
             return RemoveImpl(null, value, removeEmptyLists, true);
         }
@@ -308,7 +296,7 @@ namespace Tauron.Application
         /// <returns>
         ///     Ob der wert Enfernt werden konnte.
         /// </returns>
-        public bool Remove(TKey key, TValue value)
+        public bool Remove([NotNull] TKey key, [NotNull] TValue value)
         {
             Contract.Requires<ArgumentNullException>(key != null, "key");
 
@@ -330,7 +318,7 @@ namespace Tauron.Application
         /// <returns>
         ///     Ob der wert Enfernt werden konnte.
         /// </returns>
-        public bool Remove(TKey key, TValue value, bool removeListIfEmpty)
+        public bool Remove([NotNull] TKey key, [NotNull] TValue value, bool removeListIfEmpty)
         {
             Contract.Requires<ArgumentNullException>(key != null, "key");
 
@@ -355,7 +343,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        private bool RemoveImpl(TKey key, TValue val, bool removeEmpty, bool removeAll)
+        private bool RemoveImpl([CanBeNull] TKey key, [CanBeNull] TValue val, bool removeEmpty, bool removeAll)
         {
             bool ok = false;
 
@@ -402,7 +390,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        private static bool RemoveList(ICollection<TValue> vals, TValue val)
+        private static bool RemoveList([NotNull] ICollection<TValue> vals, [NotNull] TValue val)
         {
             Contract.Requires<ArgumentNullException>(vals != null, "vals");
 
@@ -434,7 +422,7 @@ namespace Tauron.Application
             /// <param name="list">
             ///     The list.
             /// </param>
-            public AllValueCollection(GroupDictionary<TKey, TValue> list)
+            public AllValueCollection([NotNull] GroupDictionary<TKey, TValue> list)
             {
                 Contract.Requires<ArgumentNullException>(list != null, "list");
 
@@ -475,6 +463,7 @@ namespace Tauron.Application
 
             /// <summary>Gets the get all.</summary>
             /// <value>The get all.</value>
+            [NotNull]
             private IEnumerable<TValue> GetAll
             {
                 get
@@ -499,7 +488,7 @@ namespace Tauron.Application
             /// <exception cref="T:System.NotSupportedException">
             ///     <see cref="T:System.Collections.Generic.ICollection`1" /> ist schreibgeschützt.
             /// </exception>
-            public void Add(TValue item)
+            public void Add([NotNull] TValue item)
             {
                 throw new NotSupportedException();
             }

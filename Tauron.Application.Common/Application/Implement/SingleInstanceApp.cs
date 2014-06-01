@@ -1,29 +1,4 @@
-﻿// The file SingleInstanceApp.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SingleInstanceApp.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   This class checks to make sure that only one instance of
-//   this application is running at a time.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections;
@@ -81,15 +56,19 @@ namespace Tauron.Application.Implement
         #region Static Fields
 
         /// <summary>The _app.</summary>
-        [CanBeNull] private static ISingleInstanceApp _app;
+        [CanBeNull]
+        private static ISingleInstanceApp _app;
 
         /// <summary>IPC channel for communications.</summary>
+        [CanBeNull]
         private static IpcServerChannel channel;
 
         /// <summary>List of command line arguments for the application.</summary>
+        [CanBeNull]
         private static IList<string> commandLineArgs;
 
         /// <summary>Application mutex.</summary>
+        [CanBeNull]
         private static Mutex singleInstanceMutex;
 
         #endregion
@@ -98,7 +77,7 @@ namespace Tauron.Application.Implement
 
         /// <summary>Gets list of command line arguments for the application.</summary>
         /// <value>The command line args.</value>
-        [SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes")]
+        [NotNull,SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes")]
         public static IList<string> CommandLineArgs
         {
             get { return commandLineArgs; }

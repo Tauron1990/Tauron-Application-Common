@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"    xmlns:conv="clr-namespace:Tauron.Application.Converter"
-    Title="Loading..." MaxHeight="{Binding Height}" MaxWidth="{Binding Widht}" WindowStartupLocation="CenterScreen"
+    Title="Loading..." WindowStartupLocation="CenterScreen"
     WindowStyle="None" AllowsTransparency="True"
     BorderThickness="3" ResizeMode="NoResize" BorderBrush="Black"
     Background="{Binding MainLabelBackground, Converter={conv:BrushValueConverter}}">

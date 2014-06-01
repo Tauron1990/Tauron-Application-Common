@@ -91,6 +91,13 @@ namespace Tauron.Application.Views
                 return;
             }
 
+            var decorator = dependencyObject as Decorator;
+            if (decorator != null)
+            {
+                decorator.Child = (UIElement)Manager.CreateView(viewName);
+                return;
+            }
+
             PropertyDescriptorCollection propertyes = TypeDescriptor.GetProperties(dependencyObject);
             var attribute = dependencyObject.GetType().GetCustomAttribute<ContentPropertyAttribute>();
             PropertyDescriptor desc;

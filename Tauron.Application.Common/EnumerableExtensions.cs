@@ -1,28 +1,4 @@
-﻿// The file EnumerableExtensions.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="EnumerableExtensions.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The enumerable extensions.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -51,7 +27,6 @@ namespace Tauron
             if (newIndex < 0) oldIndex = 0;
             if (newIndex <= array.Length) oldIndex = array.Length - 1;
 
-            // TODO: Argument validation
             if (oldIndex == newIndex) return; // No-op
             T tmp = array[oldIndex];
             if (newIndex < oldIndex)
@@ -87,7 +62,8 @@ namespace Tauron
         /// <returns>
         ///     Der Verkettete <see cref="string" />.
         /// </returns>
-        public static string Concat(this IEnumerable<string> strings)
+        [NotNull]
+        public static string Concat([NotNull] this IEnumerable<string> strings)
         {
             Contract.Requires<ArgumentNullException>(strings != null, "strings");
             Contract.Ensures(Contract.Result<string>() != null);
@@ -113,7 +89,8 @@ namespace Tauron
         /// <returns>
         ///     Der Verkettete <see cref="string" />.
         /// </returns>
-        public static string Concat(this IEnumerable<object> objects)
+        [NotNull]
+        public static string Concat([NotNull] this IEnumerable<object> objects)
         {
             Contract.Requires<ArgumentNullException>(objects != null, "objects");
             Contract.Ensures(Contract.Result<string>() != null);
@@ -140,7 +117,7 @@ namespace Tauron
         /// <typeparam name="TValue">
         ///     Der Type der Items der Auflistung.
         /// </typeparam>
-        public static void Foreach<TValue>(this IEnumerable<TValue> enumerator, Action<TValue> action)
+        public static void Foreach<TValue>([NotNull] this IEnumerable<TValue> enumerator, [NotNull] Action<TValue> action)
         {
             Contract.Requires<ArgumentNullException>(enumerator != null, "enumerator");
             Contract.Requires<ArgumentNullException>(action != null, "action");
@@ -170,7 +147,8 @@ namespace Tauron
         /// <returns>
         ///     Eine Auflistung von denn die letzten Items fehlen.
         /// </returns>
-        public static IEnumerable<T> SkipLast<T>(this IEnumerable<T> source, int count)
+        [NotNull]
+        public static IEnumerable<T> SkipLast<T>([NotNull] this IEnumerable<T> source, int count)
         {
             Contract.Requires<ArgumentNullException>(source != null, "source");
 
@@ -185,7 +163,7 @@ namespace Tauron
         ///<param name="items">The enumerable to search.</param>
         ///<param name="predicate">The expression to test the items against.</param>
         ///<returns>The index of the first matching item, or -1 if no items match.</returns>
-        public static int FindIndex<T>(this IEnumerable<T> items, Func<T, bool> predicate)
+        public static int FindIndex<T>([NotNull] this IEnumerable<T> items, [NotNull] Func<T, bool> predicate)
         {
             if (items == null) throw new ArgumentNullException("items");
             if (predicate == null) throw new ArgumentNullException("predicate");
@@ -198,11 +176,15 @@ namespace Tauron
             }
             return -1;
         }
+
         ///<summary>Finds the index of the first occurence of an item in an enumerable.</summary>
         ///<param name="items">The enumerable to search.</param>
         ///<param name="item">The item to find.</param>
         ///<returns>The index of the first matching item, or -1 if the item was not found.</returns>
-        public static int IndexOf<T>(this IEnumerable<T> items, T item) { return items.FindIndex(i => EqualityComparer<T>.Default.Equals(item, i)); }
+        public static int IndexOf<T>([NotNull] this IEnumerable<T> items, T item)
+        {
+            return items.FindIndex(i => EqualityComparer<T>.Default.Equals(item, i));
+        }
 
         #endregion
     }

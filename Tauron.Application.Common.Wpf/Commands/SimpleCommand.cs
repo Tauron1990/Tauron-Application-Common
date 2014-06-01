@@ -27,6 +27,11 @@ namespace Tauron.Application.Commands
             _execute = execute;
         }
 
+        public SimpleCommand([NotNull] Action<object> execute)
+            : this(null, execute)
+        {
+        }
+
         #endregion
 
         #region Public Events

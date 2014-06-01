@@ -19,6 +19,11 @@ namespace Tauron.Application.Models
 
         public string Name { get { return ContractName; } }
 
+        public override string DebugName
+        {
+            get { return Name; }
+        }
+
         protected override bool HasMetadata
         {
             get { return true; }

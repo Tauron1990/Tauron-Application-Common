@@ -1,33 +1,10 @@
-﻿// The file MethodAspectAttribute.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MethodAspectAttribute.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The method aspect attribute.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.Contracts;
 using Castle.DynamicProxy;
 using Tauron.Application.Ioc.LifeTime;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -48,7 +25,7 @@ namespace Tauron.Application.Aop
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected virtual void EnterMethod(IInvocation invocation, ObjectContext context)
+        protected virtual void EnterMethod([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");
@@ -63,7 +40,7 @@ namespace Tauron.Application.Aop
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected virtual void ExecuteMethod(IInvocation invocation, ObjectContext context)
+        protected virtual void ExecuteMethod([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");
@@ -80,7 +57,7 @@ namespace Tauron.Application.Aop
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected virtual void ExitMethod(IInvocation invocation, ObjectContext context)
+        protected virtual void ExitMethod([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");
@@ -95,7 +72,7 @@ namespace Tauron.Application.Aop
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected virtual void FinallyMethod(IInvocation invocation, ObjectContext context)
+        protected virtual void FinallyMethod([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");
@@ -120,8 +97,8 @@ namespace Tauron.Application.Aop
             }
             catch (Exception e)
             {
-                MethodException(invocation, e, context);
-                throw;
+                if(MethodException(invocation, e, context))
+                    throw;
             }
             finally
             {
@@ -141,11 +118,13 @@ namespace Tauron.Application.Aop
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected virtual void MethodException(IInvocation invocation, Exception exception, ObjectContext context)
+        protected virtual bool MethodException([NotNull] IInvocation invocation, [NotNull] Exception exception, [NotNull] ObjectContext context)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");
             Contract.Requires<ArgumentNullException>(exception != null, "exception");
+
+            return true;
         }
 
         #endregion

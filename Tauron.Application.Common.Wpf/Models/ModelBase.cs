@@ -9,6 +9,12 @@ namespace Tauron.Application.Models
 {
     public class ModelBase : ObservableObject, IModel, ICustomTypeDescriptor
     {
+        [NotNull]
+        public static ModelBase ResolveModel([NotNull] string name)
+        {
+            return CommonApplication.Current.Container.Resolve<ModelBase>(name, false);
+        }
+
         private static GroupDictionary<Type, ObservableProperty> _properties =
             new GroupDictionary<Type, ObservableProperty>();
 

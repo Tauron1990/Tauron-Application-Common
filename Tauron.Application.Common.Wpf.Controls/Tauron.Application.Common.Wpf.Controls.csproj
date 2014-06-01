@@ -134,6 +134,7 @@
     <Compile Include="Controls\IHeaderProvider.cs" />
     <Compile Include="Controls\IToggle.cs" />
     <Compile Include="Controls\LabeledTextbox.cs" />
+    <Compile Include="Controls\TabControlEx.cs" />
     <Compile Include="Controls\ToggleBase.cs" />
     <Compile Include="Controls\TogglrButtonList.cs" />
     <Compile Include="Help\HelpViewFactory.cs" />

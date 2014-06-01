@@ -7,9 +7,14 @@ using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Models
 {
-    [Intercept]
     public abstract class ViewModelBase : ModelBase
     {
+        [NotNull]
+        public static ViewModelBase ResolveViewModel([NotNull] string name)
+        {
+            return CommonApplication.Current.Container.Resolve<ViewModelBase>(name, false);
+        }
+
         protected ViewModelBase()
         {
             ModelList = new Dictionary<string, ModelBase>();
@@ -63,6 +68,12 @@ namespace Tauron.Application.Models
             {
                 return CurrentApplication.Dispatcher;
             }
+        }
+
+        [CanBeNull]
+        public IWindow MainWindow
+        {
+            get { return CommonApplication.Current.MainWindow; }
         }
     }
 }

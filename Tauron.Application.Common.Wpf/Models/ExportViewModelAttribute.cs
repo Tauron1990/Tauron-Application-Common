@@ -26,6 +26,11 @@ namespace Tauron.Application.Models
             get { return true; }
         }
 
+        public override string DebugName
+        {
+            get { return Name; }
+        }
+
         protected override LifetimeContextAttribute OverrideDefaultPolicy
         {
             get { return new NotSharedAttribute(); }

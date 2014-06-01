@@ -1,28 +1,4 @@
-﻿// The file PropertyAspectAttrebute.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PropertyAspectAttrebute.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The property aspect attrebute.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.Contracts;
@@ -30,6 +6,7 @@ using System.Reflection;
 using Castle.DynamicProxy;
 using Tauron.Application.Ioc;
 using Tauron.Application.Ioc.LifeTime;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -42,7 +19,7 @@ namespace Tauron.Application.Aop
         #region Fields
 
         /// <summary>The _property info.</summary>
-        private PropertyInfo mpropertyInfo;
+        private PropertyInfo _propertyInfo;
 
         #endregion
 
@@ -61,16 +38,16 @@ namespace Tauron.Application.Aop
         {
             string name = invocation.Method.Name;
             bool getter = name.StartsWith(AopConstants.PropertyGetter, StringComparison.Ordinal);
-            if (mpropertyInfo == null)
+            if (_propertyInfo == null)
             {
                 name = name.Remove(0, getter ? AopConstants.PropertyGetter.Length : AopConstants.PropertySetter.Length);
 
-                mpropertyInfo = invocation.Method.DeclaringType.GetProperty(name, AopConstants.DefaultBindingFlags);
-                Contract.Assert(mpropertyInfo != null);
+                _propertyInfo = invocation.Method.DeclaringType.GetProperty(name, AopConstants.DefaultBindingFlags);
+                Contract.Assert(_propertyInfo != null);
             }
 
-            if (getter) OnGet(invocation, context, mpropertyInfo);
-            else OnSet(invocation, context, mpropertyInfo);
+            if (getter) OnGet(invocation, context, _propertyInfo);
+            else OnSet(invocation, context, _propertyInfo);
         }
 
         /// <summary>
@@ -85,7 +62,7 @@ namespace Tauron.Application.Aop
         /// <param name="propertyInfo">
         ///     The property.
         /// </param>
-        protected virtual void OnGet(IInvocation invocation, ObjectContext context, PropertyInfo propertyInfo)
+        protected virtual void OnGet([NotNull] IInvocation invocation, [NotNull] ObjectContext context, [NotNull] PropertyInfo propertyInfo)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");
@@ -106,7 +83,7 @@ namespace Tauron.Application.Aop
         /// <param name="propertyInfo">
         ///     The property.
         /// </param>
-        protected virtual void OnSet(IInvocation invocation, ObjectContext context, PropertyInfo propertyInfo)
+        protected virtual void OnSet([NotNull] IInvocation invocation, [NotNull] ObjectContext context, [NotNull] PropertyInfo propertyInfo)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");

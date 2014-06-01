@@ -1,28 +1,4 @@
-﻿// The file CatalogCollection.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="CatalogCollection.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The catalog collection.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections.ObjectModel;
@@ -45,7 +21,7 @@ namespace Tauron.Application.Composition
     {
         #region Fields
 
-        private Collection<XamlCatalog> mcatalogs;
+        private Collection<XamlCatalog> _catalogs;
 
         #endregion
 
@@ -67,21 +43,21 @@ namespace Tauron.Application.Composition
 
         /// <summary>Gets or sets the catalogs.</summary>
         /// <value>The catalogs.</value>
-        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        [NotNull,SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public Collection<XamlCatalog> Catalogs
         {
             get
             {
                 Contract.Ensures(Contract.Result<Collection<XamlCatalog>>() != null);
 
-                return mcatalogs;
+                return _catalogs;
             }
 
             set
             {
                 Contract.Requires<ArgumentNullException>(value != null, "value");
 
-                mcatalogs = value;
+                _catalogs = value;
             }
         }
 
@@ -95,7 +71,7 @@ namespace Tauron.Application.Composition
         /// <param name="container">
         ///     The container.
         /// </param>
-        public void FillCatalag(ExportResolver container)
+        public void FillCatalag([NotNull] ExportResolver container)
         {
             Contract.Requires<ArgumentNullException>(container != null, "container");
 

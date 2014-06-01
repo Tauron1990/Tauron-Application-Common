@@ -27,6 +27,11 @@ namespace Tauron.Application.Views
             get { return new NotSharedAttribute(); }
         }
 
+        public override string DebugName
+        {
+            get { return Name; }
+        }
+
         protected override bool HasMetadata
         {
             get { return true; }

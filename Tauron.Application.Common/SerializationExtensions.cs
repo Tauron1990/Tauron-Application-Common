@@ -1,28 +1,4 @@
-﻿// The file SerializationExtensions.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SerializationExtensions.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The serialization extensions.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -37,7 +13,6 @@ using Tauron.JetBrains.Annotations;
 
 namespace Tauron
 {
-    /// <summary>The serialization extensions.</summary>
     [PublicAPI]
     public static class SerializationExtensions
     {
@@ -57,7 +32,9 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="TValue" />.
         /// </returns>
-        public static TValue Deserialize<TValue>(this string path, IFormatter formatter)
+        [NotNull]
+        public static TValue Deserialize<TValue>([NotNull] this string path, [NotNull] IFormatter formatter)
+            where TValue : class
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Requires<ArgumentNullException>(formatter != null, "formatter");
@@ -77,7 +54,9 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="TValue" />.
         /// </returns>
-        public static TValue Deserialize<TValue>(this string path)
+        [NotNull]
+        public static TValue Deserialize<TValue>([NotNull] this string path)
+            where TValue : class
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Ensures(Contract.Result<TValue>() != null);
@@ -99,7 +78,7 @@ namespace Tauron
         /// <param name="path">
         ///     The path.
         /// </param>
-        public static void Serialize(this object graph, IFormatter formatter, string path)
+        public static void Serialize([NotNull] this object graph, [NotNull] IFormatter formatter, [NotNull] string path)
         {
             Contract.Requires<ArgumentNullException>(graph != null, "graph");
             Contract.Requires<ArgumentNullException>(formatter != null, "formatter");
@@ -117,7 +96,7 @@ namespace Tauron
         /// <param name="path">
         ///     The path.
         /// </param>
-        public static void Serialize(this object graph, string path)
+        public static void Serialize([NotNull] this object graph, [NotNull] string path)
         {
             Contract.Requires<ArgumentNullException>(graph != null, "graph");
             Contract.Requires<ArgumentNullException>(path != null, "path");
@@ -140,7 +119,9 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="TValue" />.
         /// </returns>
-        public static TValue XmlDeserialize<TValue>(this string path, XmlSerializer formatter)
+        [NotNull]
+        public static TValue XmlDeserialize<TValue>([NotNull] this string path, [NotNull] XmlSerializer formatter)
+            where TValue : class
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Requires<ArgumentNullException>(formatter != null, "formatter");
@@ -163,7 +144,9 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="TValue" />.
         /// </returns>
-        public static TValue XmlDeserializeIfExis<TValue>(this string path, XmlSerializer formatter)
+        [NotNull]
+        public static TValue XmlDeserializeIfExis<TValue>([NotNull] this string path, [NotNull] XmlSerializer formatter)
+            where TValue : class
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Requires<ArgumentNullException>(formatter != null, "formatter");
@@ -184,7 +167,7 @@ namespace Tauron
         /// <param name="path">
         ///     The path.
         /// </param>
-        public static void XmlSerialize(this object graph, XmlSerializer formatter, string path)
+        public static void XmlSerialize([NotNull] this object graph, [NotNull] XmlSerializer formatter, [NotNull] string path)
         {
             Contract.Requires<ArgumentNullException>(graph != null, "graph");
             Contract.Requires<ArgumentNullException>(formatter != null, "formatter");
@@ -209,8 +192,8 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        [ContractVerification(false)]
-        private static object InternalDeserialize(IFormatter formatter, Stream stream)
+        [NotNull,ContractVerification(false)]
+        private static object InternalDeserialize([NotNull] IFormatter formatter, [NotNull] Stream stream)
         {
             Contract.Requires<ArgumentNullException>(formatter != null, "formatter");
             Contract.Requires<ArgumentNullException>(stream != null, "stream");
@@ -231,7 +214,7 @@ namespace Tauron
         /// <param name="stream">
         ///     The stream.
         /// </param>
-        private static void InternalSerialize(object graph, IFormatter formatter, Stream stream)
+        private static void InternalSerialize([NotNull] object graph, [NotNull] IFormatter formatter, [NotNull] Stream stream)
         {
             Contract.Requires<ArgumentNullException>(graph != null, "graph");
             Contract.Requires<ArgumentNullException>(formatter != null, "formatter");
@@ -242,13 +225,12 @@ namespace Tauron
 
         #endregion
 
-        /// <summary>The xml serilalizer delegator.</summary>
         private class XmlSerilalizerDelegator : IFormatter
         {
             #region Fields
 
             /// <summary>The _serializer.</summary>
-            private readonly XmlSerializer serializer;
+            private readonly XmlSerializer _serializer;
 
             #endregion
 
@@ -262,11 +244,11 @@ namespace Tauron
             /// <param name="serializer">
             ///     The serializer.
             /// </param>
-            public XmlSerilalizerDelegator(XmlSerializer serializer)
+            public XmlSerilalizerDelegator([NotNull] XmlSerializer serializer)
             {
                 Contract.Requires<ArgumentNullException>(serializer != null, "serializer");
 
-                this.serializer = serializer;
+                _serializer = serializer;
             }
 
             #endregion
@@ -275,6 +257,7 @@ namespace Tauron
 
             /// <summary>Gets or sets the binder.</summary>
             /// <value>The binder.</value>
+            [CanBeNull]
             public SerializationBinder Binder
             {
                 get { return null; }
@@ -293,6 +276,7 @@ namespace Tauron
 
             /// <summary>Gets or sets the surrogate selector.</summary>
             /// <value>The surrogate selector.</value>
+            [CanBeNull]
             public ISurrogateSelector SurrogateSelector
             {
                 get { return null; }
@@ -313,9 +297,10 @@ namespace Tauron
             /// <returns>
             ///     The <see cref="object" />.
             /// </returns>
-            public object Deserialize(Stream serializationStream)
+            [NotNull]
+            public object Deserialize([NotNull] Stream serializationStream)
             {
-                return serializer.Deserialize(serializationStream);
+                return _serializer.Deserialize(serializationStream);
             }
 
             /// <summary>
@@ -327,9 +312,9 @@ namespace Tauron
             /// <param name="graph">
             ///     The graph.
             /// </param>
-            public void Serialize(Stream serializationStream, object graph)
+            public void Serialize([NotNull] Stream serializationStream, [NotNull] object graph)
             {
-                serializer.Serialize(serializationStream, graph);
+                _serializer.Serialize(serializationStream, graph);
             }
 
             #endregion
@@ -341,7 +326,7 @@ namespace Tauron
                 Justification = "Required for code contracts.")]
             private void ObjectInvariant()
             {
-                Contract.Invariant(serializer != null);
+                Contract.Invariant(_serializer != null);
             }
 
             #endregion

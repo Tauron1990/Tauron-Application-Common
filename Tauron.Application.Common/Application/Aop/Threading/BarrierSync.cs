@@ -1,28 +1,4 @@
-﻿// The file BarrierSync.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="BarrierSync.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The barrier holder.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -112,7 +88,7 @@ namespace Tauron.Application.Aop.Threading
         #region Fields
 
         /// <summary>The _holder.</summary>
-        private BarrierHolder holder;
+        private BarrierHolder _holder;
 
         #endregion
 
@@ -140,7 +116,7 @@ namespace Tauron.Application.Aop.Threading
         /// </param>
         protected internal override void Initialize(object target, ObjectContext context, string contextName)
         {
-            holder = BaseHolder.GetOrAdd<BarrierHolder, BarrierHolder>(
+            _holder = BaseHolder.GetOrAdd<BarrierHolder, BarrierHolder>(
                 context,
                 () => new BarrierHolder(),
                 HolderName);
@@ -159,11 +135,11 @@ namespace Tauron.Application.Aop.Threading
         /// </param>
         protected override void Intercept(IInvocation invocation, ObjectContext context)
         {
-            if (Position == MethodInvocationPosition.Before) holder.Value.SignalAndWait();
+            if (Position == MethodInvocationPosition.Before) _holder.Value.SignalAndWait();
 
             invocation.Proceed();
 
-            if (Position == MethodInvocationPosition.After) holder.Value.SignalAndWait();
+            if (Position == MethodInvocationPosition.After) _holder.Value.SignalAndWait();
         }
 
         #endregion

@@ -30,6 +30,7 @@ using System.Reflection;
 using Castle.DynamicProxy;
 using Tauron.Application.Ioc;
 using Tauron.Application.Ioc.LifeTime;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -128,7 +129,7 @@ namespace Tauron.Application.Aop
         /// <param name="contextName">
         ///     The context name.
         /// </param>
-        protected internal override void Initialize(object target, ObjectContext context, string contextName)
+        protected internal override void Initialize([NotNull] object target, [NotNull] ObjectContext context, [NotNull] string contextName)
         {
             ContextName = contextName;
         }
@@ -142,7 +143,7 @@ namespace Tauron.Application.Aop
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected virtual void Intercept(IInvocation invocation, ObjectContext context)
+        protected virtual void Intercept([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
             Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
             Contract.Requires<ArgumentNullException>(context != null, "context");

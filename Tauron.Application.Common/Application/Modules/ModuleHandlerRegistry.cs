@@ -10,9 +10,18 @@ namespace Tauron.Application.Modules
     [PublicAPI]
     public static class ModuleHandlerRegistry
     {
-        private static readonly GroupDictionary<Type, Action<MemberInfo, object, IModule>> Handlers = new GroupDictionary<Type, Action<MemberInfo, object, IModule>>();
+        private static readonly GroupDictionary<Type, Action<MemberInfo, Attribute, IModule>> Handlers = Initialize();
 
-        public static void RegisterHandler<TAttribute>([NotNull] Action<MemberInfo, object, IModule> handler)
+        private static GroupDictionary<Type, Action<MemberInfo, Attribute, IModule>> Initialize()
+        {
+            var temp = new GroupDictionary<Type, Action<MemberInfo, Attribute, IModule>>();
+
+            temp[typeof (AddinDescriptionAttribute)].Add(AddInListner.OnProgress);
+
+            return temp;
+        }
+
+        public static void RegisterHandler<TAttribute>([NotNull] Action<MemberInfo, Attribute, IModule> handler)
             where TAttribute : Attribute
         {
             Contract.Requires<ArgumentNullException>(handler != null, "handler");
@@ -21,13 +30,13 @@ namespace Tauron.Application.Modules
         }
 
         [NotNull]
-        public static IEnumerable<Action<MemberInfo, object, IModule>> GetHandler([NotNull] Type key)
+        public static IEnumerable<Action<MemberInfo, Attribute, IModule>> GetHandler([NotNull] Type key)
         {
             Contract.Requires<ArgumentNullException>(key != null, "key");
-            Contract.Ensures(Contract.Result<IEnumerable<Action<MemberInfo, object, IModule>>>() != null);
+            Contract.Ensures(Contract.Result<IEnumerable<Action<MemberInfo, Attribute, IModule>>>() != null);
 
-            ICollection<Action<MemberInfo, object, IModule>> action;
-            return Handlers.TryGetValue(key, out action) ? action : Enumerable.Empty<Action<MemberInfo, object, IModule>>();
+            ICollection<Action<MemberInfo, Attribute, IModule>> action;
+            return Handlers.TryGetValue(key, out action) ? action : Enumerable.Empty<Action<MemberInfo, Attribute, IModule>>();
         }
 
         public static void Progress([NotNull] IModule module)
@@ -42,7 +51,7 @@ namespace Tauron.Application.Modules
                 {
                     foreach (var action in GetHandler(attribute.GetType()))
                     {
-                        action(info, attribute, module);
+                        action(info, (Attribute)attribute, module);
                     }
                 }
             }

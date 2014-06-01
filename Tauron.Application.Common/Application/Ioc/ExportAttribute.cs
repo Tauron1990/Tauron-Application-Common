@@ -70,13 +70,21 @@ namespace Tauron.Application.Ioc
 
         /// <summary>Gets or sets the contract name.</summary>
         /// <value>The contract name.</value>
+        [CanBeNull]
         public string ContractName { get; set; }
 
         /// <summary>Gets the export.</summary>
         /// <value>The export.</value>
+        [NotNull]
         public Type Export
         {
             get { return m_export; }
+        }
+
+        [CanBeNull]
+        public virtual string DebugName
+        {
+            get { return ContractName; }
         }
 
         /// <summary>The get metadata.</summary>
@@ -84,6 +92,7 @@ namespace Tauron.Application.Ioc
         ///     The <see cref="IEnumerable" />.
         /// </returns>
         /// <value>The metadata.</value>
+        [NotNull]
         public IEnumerable<Tuple<string, object>> Metadata
         {
             get

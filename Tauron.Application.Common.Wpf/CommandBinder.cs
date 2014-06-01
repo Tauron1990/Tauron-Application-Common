@@ -317,6 +317,11 @@ namespace Tauron.Application
                 RoutedCommand command = Find(vals[0]);
                 if (command != null) SetTargetCommand(d, command);
             }
+            else if (GetTargetCommand(d) == null && real != null)
+            {
+                RoutedCommand command = Find(real);
+                if (command != null) SetTargetCommand(d, command);
+            }
 
             foreach (CommandLinker linker in LinkerCollection.Where(linker => Equals(linker.Target, d)))
             {
@@ -719,6 +724,8 @@ namespace Tauron.Application
                     private readonly bool _isParameter;
 
                     private readonly MethodInfo _method;
+
+                    private readonly Func<object, object[], RoutedEventArgs> _parmeterMapper;
 
                     #endregion
 

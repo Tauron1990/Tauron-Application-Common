@@ -1,8 +1,10 @@
 ﻿#region
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Practices.EnterpriseLibrary.ExceptionHandling;
@@ -10,7 +12,7 @@ using Tauron.JetBrains.Annotations;
 
 #endregion
 
-namespace System.IO
+namespace Tauron
 {
     /// <summary>The io extensions.</summary>
     [PublicAPI]
@@ -45,7 +47,7 @@ namespace System.IO
         /// <param name="dic">
         ///     The dic.
         /// </param>
-        public static void Clear(this DirectoryInfo dic)
+        public static void Clear([NotNull] this DirectoryInfo dic)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
 
@@ -59,7 +61,7 @@ namespace System.IO
                 {
                     var dici = entry as DirectoryInfo;
                     if (dici == null) continue;
-                    
+
                     Clear(dici);
                     dici.Delete();
                 }
@@ -72,7 +74,7 @@ namespace System.IO
         /// <param name="dic">
         ///     The dic.
         /// </param>
-        public static void ClearDirectory(this string dic)
+        public static void ClearDirectory([NotNull] this string dic)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
 
@@ -85,7 +87,7 @@ namespace System.IO
         /// <param name="dic">
         ///     The dic.
         /// </param>
-        public static void ClearParentDirectory(this string dic)
+        public static void ClearParentDirectory([NotNull] this string dic)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
 
@@ -104,7 +106,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string CombinePath(this string path, params string[] paths)
+        [NotNull]
+        public static string CombinePath([NotNull] this string path, [NotNull] params string[] paths)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Requires<ArgumentNullException>(paths != null, "paths");
@@ -130,7 +133,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string CombinePath(this string path, string path1)
+        [NotNull]
+        public static string CombinePath([NotNull] this string path, [NotNull] string path1)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Requires<ArgumentNullException>(path1 != null, "path1");
@@ -153,7 +157,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string CombinePath(this FileSystemInfo path, string path1)
+        [NotNull]
+        public static string CombinePath([NotNull] this FileSystemInfo path, [NotNull] string path1)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Requires<ArgumentNullException>(path1 != null, "path1");
@@ -170,7 +175,7 @@ namespace System.IO
         /// <param name="destination">
         ///     The destination.
         /// </param>
-        public static void CopyFileTo(this string source, string destination)
+        public static void CopyFileTo([NotNull] this string source, [NotNull] string destination)
         {
             Contract.Requires<ArgumentNullException>(source != null, "source");
             Contract.Requires<ArgumentNullException>(destination != null, "destination");
@@ -189,18 +194,15 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool CreateDirectoryIfNotExis(this string path)
+        public static bool CreateDirectoryIfNotExis([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
-            if (Path.HasExtension(path))
-            {
-                string temp = Path.GetDirectoryName(path);
+            if (!Path.HasExtension(path)) return CreateDirectoryIfNotExis(new DirectoryInfo(path));
 
-                return CreateDirectoryIfNotExis(new DirectoryInfo(temp));
-            }
+            string temp = Path.GetDirectoryName(path);
 
-            return CreateDirectoryIfNotExis(new DirectoryInfo(path));
+            return CreateDirectoryIfNotExis(new DirectoryInfo(temp));
         }
 
         /// <summary>
@@ -212,7 +214,7 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool CreateDirectoryIfNotExis(this DirectoryInfo dic)
+        public static bool CreateDirectoryIfNotExis([NotNull] this DirectoryInfo dic)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
 
@@ -229,7 +231,7 @@ namespace System.IO
         /// <param name="info">
         ///     The info.
         /// </param>
-        public static void Delete(this FileSystemInfo info)
+        public static void Delete([NotNull] this FileSystemInfo info)
         {
             Contract.Requires<ArgumentNullException>(info != null, "info");
 
@@ -242,7 +244,7 @@ namespace System.IO
         /// <param name="path">
         ///     The path.
         /// </param>
-        public static void DeleteDirectory(this string path)
+        public static void DeleteDirectory([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -270,7 +272,7 @@ namespace System.IO
         /// <param name="sub">
         ///     The sub.
         /// </param>
-        public static void DeleteDirectory(this string path, object sub)
+        public static void DeleteDirectory([NotNull] this string path, [NotNull] object sub)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Requires<ArgumentNullException>(sub != null, "sub");
@@ -279,7 +281,7 @@ namespace System.IO
             if (Directory.Exists(compl)) Directory.Delete(compl);
         }
 
-        public static void DeleteDirectory(this string path, bool recursive)
+        public static void DeleteDirectory([NotNull] this string path, bool recursive)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -293,7 +295,7 @@ namespace System.IO
         ///     The path.
         /// </param>
         [ContractVerification(false)]
-        public static void DeleteDirectoryIfEmpty(this string path)
+        public static void DeleteDirectoryIfEmpty([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -306,7 +308,7 @@ namespace System.IO
         /// <param name="path">
         ///     The path.
         /// </param>
-        public static void DeleteFile(this string path)
+        public static void DeleteFile([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -315,7 +317,7 @@ namespace System.IO
             File.Delete(path);
         }
 
-        public static bool DirectoryConainsInvalidChars(this string path)
+        public static bool DirectoryConainsInvalidChars([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -324,7 +326,8 @@ namespace System.IO
             return path.All(invalid.Contains);
         }
 
-        public static IEnumerable<string> EnumrateFileSystemEntries(this string dic)
+        [NotNull]
+        public static IEnumerable<string> EnumrateFileSystemEntries([NotNull] this string dic)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
             Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
@@ -332,7 +335,8 @@ namespace System.IO
             return Directory.EnumerateFileSystemEntries(dic);
         }
 
-        public static IEnumerable<string> EnumerateAllFiles(this string dic)
+        [NotNull]
+        public static IEnumerable<string> EnumerateAllFiles([NotNull] this string dic)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
             Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
@@ -340,7 +344,8 @@ namespace System.IO
             return Directory.EnumerateFiles(dic, "*.*", SearchOption.AllDirectories);
         }
 
-        public static IEnumerable<string> EnumerateAllFiles(this string dic, string filter)
+        [NotNull]
+        public static IEnumerable<string> EnumerateAllFiles([NotNull] this string dic, [NotNull] string filter)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
             Contract.Requires<ArgumentNullException>(filter != null, "filter");
@@ -349,36 +354,17 @@ namespace System.IO
             return Directory.EnumerateFiles(dic, filter, SearchOption.AllDirectories);
         }
 
-        /// <summary>
-        ///     The enumerate directorys.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
-        [ContractVerification(false)]
-        public static IEnumerable<string> EnumerateDirectorys(this string path)
+        [NotNull,ContractVerification(false)]
+        public static IEnumerable<string> EnumerateDirectorys([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
 
-            if (!Directory.Exists(path)) return Enumerable.Empty<string>();
-
-            return Directory.EnumerateDirectories(path);
+            return !Directory.Exists(path) ? Enumerable.Empty<string>() : Directory.EnumerateDirectories(path);
         }
 
-        /// <summary>
-        ///     The enumerate file system entrys.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
-        public static IEnumerable<FileSystemInfo> EnumerateFileSystemEntrys(this string path)
+        [NotNull]
+        public static IEnumerable<FileSystemInfo> EnumerateFileSystemEntrys([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Ensures(Contract.Result<IEnumerable<FileSystemInfo>>() != null);
@@ -386,16 +372,8 @@ namespace System.IO
             return new DirectoryInfo(path).EnumerateFileSystemInfos();
         }
 
-        /// <summary>
-        ///     The enumerate all files.
-        /// </summary>
-        /// <param name="dic">
-        ///     The dic.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
-        public static IEnumerable<string> EnumerateFiles(this string dic)
+        [NotNull]
+        public static IEnumerable<string> EnumerateFiles([NotNull] this string dic)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
             Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
@@ -403,7 +381,8 @@ namespace System.IO
             return Directory.EnumerateFiles(dic, "*.*", SearchOption.TopDirectoryOnly);
         }
 
-        public static IEnumerable<string> EnumerateFiles(this string dic, string filter)
+        [NotNull]
+        public static IEnumerable<string> EnumerateFiles([NotNull] this string dic, [NotNull] string filter)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
             Contract.Requires<ArgumentNullException>(filter != null, "filter");
@@ -412,16 +391,8 @@ namespace System.IO
             return Directory.EnumerateFiles(dic, filter, SearchOption.TopDirectoryOnly);
         }
 
-        /// <summary>
-        ///     The enumerate text lines if exis.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
-        public static IEnumerable<string> EnumerateTextLinesIfExis(this string path)
+        [NotNull]
+        public static IEnumerable<string> EnumerateTextLinesIfExis([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -439,7 +410,8 @@ namespace System.IO
             }
         }
 
-        public static IEnumerable<string> EnumerateTextLines(this TextReader reader)
+        [NotNull]
+        public static IEnumerable<string> EnumerateTextLines([NotNull] this TextReader reader)
         {
             while (true)
             {
@@ -459,7 +431,7 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool ExisDirectory(this string path)
+        public static bool ExisDirectory([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -478,7 +450,7 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool ExisFile(this string workingDirectory, string file)
+        public static bool ExisFile([NotNull] this string workingDirectory, [NotNull] string file)
         {
             Contract.Requires<ArgumentNullException>(workingDirectory != null, "workingDirectory");
             Contract.Requires<ArgumentNullException>(file != null, "file");
@@ -502,11 +474,9 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool ExisFile(this string file)
+        public static bool ExisFile([NotNull] this string file)
         {
-            if (string.IsNullOrWhiteSpace(file)) return false;
-
-            return File.Exists(file);
+            return !string.IsNullOrWhiteSpace(file) && File.Exists(file);
         }
 
         /// <summary>
@@ -518,7 +488,7 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="DateTime" />.
         /// </returns>
-        public static DateTime GetDirectoryCreationTime(this string path)
+        public static DateTime GetDirectoryCreationTime([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -534,7 +504,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string GetDirectoryName(this string path)
+        [NotNull]
+        public static string GetDirectoryName([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -550,23 +521,17 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string GetDirectoryName(this StringBuilder path)
+        [NotNull]
+        public static string GetDirectoryName([NotNull] this StringBuilder path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
             return GetDirectoryName(path.ToString());
         }
 
-        /// <summary>
-        ///     The get directorys.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string[]" />.
-        /// </returns>
-        public static string[] GetDirectorys(this string path)
+
+        [NotNull]
+        public static string[] GetDirectorys([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -582,7 +547,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string GetExtension(this string path)
+        [NotNull]
+        public static string GetExtension([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -598,7 +564,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string GetFileName(this string path)
+        [NotNull]
+        public static string GetFileName([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -614,7 +581,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string GetFileNameWithoutExtension(this string path)
+        [NotNull]
+        public static string GetFileNameWithoutExtension([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -630,7 +598,7 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="int" />.
         /// </returns>
-        public static int GetFileSystemCount(this string strDir)
+        public static int GetFileSystemCount([NotNull] this string strDir)
         {
             Contract.Requires<ArgumentNullException>(strDir != null, "strDir");
 
@@ -647,7 +615,7 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="int" />.
         /// </returns>
-        public static int GetFileSystemCount(this DirectoryInfo di)
+        public static int GetFileSystemCount([NotNull] this DirectoryInfo di)
         {
             Contract.Requires<ArgumentNullException>(di != null, "di");
 
@@ -677,38 +645,16 @@ namespace System.IO
             return count;
         }
 
-        /// <summary>
-        ///     The get files.
-        /// </summary>
-        /// <param name="dic">
-        ///     The dic.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string[]" />.
-        /// </returns>
-        public static string[] GetFiles(this string dic)
+        [NotNull]
+        public static string[] GetFiles([NotNull] this string dic)
         {
             Contract.Requires<ArgumentNullException>(dic != null, "dic");
 
             return Directory.GetFiles(dic);
         }
 
-        /// <summary>
-        ///     The get files.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <param name="pattern">
-        ///     The pattern.
-        /// </param>
-        /// <param name="option">
-        ///     The option.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string[]" />.
-        /// </returns>
-        public static string[] GetFiles(this string path, string pattern, SearchOption option)
+        [NotNull]
+        public static string[] GetFiles([NotNull] this string path, [NotNull] string pattern, SearchOption option)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Requires<ArgumentNullException>(pattern != null, "pattern");
@@ -725,7 +671,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string GetFullPath(this string path)
+        [NotNull]
+        public static string GetFullPath([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -741,7 +688,7 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool HasExtension(this string path)
+        public static bool HasExtension([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -757,7 +704,7 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool IsPathRooted(this string path)
+        public static bool IsPathRooted([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -773,7 +720,7 @@ namespace System.IO
         /// <param name="dest">
         ///     The dest.
         /// </param>
-        public static void MoveTo(this string source, string dest)
+        public static void MoveTo([NotNull] this string source, [NotNull] string dest)
         {
             Contract.Requires<ArgumentNullException>(source != null, "source");
             Contract.Requires<ArgumentNullException>(dest != null, "dest");
@@ -795,7 +742,7 @@ namespace System.IO
         /// <param name="dest">
         ///     The dest.
         /// </param>
-        public static void MoveTo(this string source, string workingDirectory, string dest)
+        public static void MoveTo([NotNull] this string source, [NotNull] string workingDirectory, [NotNull] string dest)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source), "source");
             Contract.Requires<ArgumentNullException>(workingDirectory != null, "workingDirectory");
@@ -829,7 +776,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="Stream" />.
         /// </returns>
-        public static Stream OpenRead(this string path, FileShare share)
+        [NotNull]
+        public static Stream OpenRead([NotNull] this string path, FileShare share)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -847,7 +795,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="Stream" />.
         /// </returns>
-        public static Stream OpenRead(this string path)
+        [NotNull]
+        public static Stream OpenRead([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -863,7 +812,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="StreamWriter" />.
         /// </returns>
-        public static StreamWriter OpenTextAppend(this string path)
+        [NotNull]
+        public static StreamWriter OpenTextAppend([NotNull] this string path)
         {
             Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(path), "path");
 
@@ -880,7 +830,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="StreamReader" />.
         /// </returns>
-        public static StreamReader OpenTextRead(this string path)
+        [NotNull]
+        public static StreamReader OpenTextRead([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -896,7 +847,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="StreamWriter" />.
         /// </returns>
-        public static StreamWriter OpenTextWrite(this string path)
+        [NotNull]
+        public static StreamWriter OpenTextWrite([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -913,7 +865,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="Stream" />.
         /// </returns>
-        public static Stream OpenWrite(this string path)
+        [NotNull]
+        public static Stream OpenWrite([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -932,7 +885,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="Stream" />.
         /// </returns>
-        public static Stream OpenWrite(this string path, FileShare share)
+        [NotNull]
+        public static Stream OpenWrite([NotNull] this string path, FileShare share)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -941,14 +895,13 @@ namespace System.IO
             return new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, share);
         }
 
-        public static byte[] ReadAllBytesIfExis(this string path)
+        [NotNull]
+        public static byte[] ReadAllBytesIfExis([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            if (!File.Exists(path)) return new byte[0];
-
-            return File.ReadAllBytes(path);
+            return !File.Exists(path) ? new byte[0] : File.ReadAllBytes(path);
         }
 
         /// <summary>
@@ -960,7 +913,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string ReadTextIfExis(this string path)
+        [NotNull]
+        public static string ReadTextIfExis([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -979,7 +933,8 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        public static string ReadTextIfExis(this string workingDirectory, string subPath)
+        [NotNull]
+        public static string ReadTextIfExis([NotNull] this string workingDirectory, [NotNull] string subPath)
         {
             Contract.Requires<ArgumentNullException>(workingDirectory != null, "workingDirectory");
             Contract.Requires<ArgumentNullException>(subPath != null, "subPath");
@@ -987,16 +942,8 @@ namespace System.IO
             return ReadTextIfExis(CombinePath(workingDirectory, subPath));
         }
 
-        /// <summary>
-        ///     The read text lines if exis.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string[]" />.
-        /// </returns>
-        public static IEnumerable<string> ReadTextLinesIfExis(this string path)
+        [NotNull]
+        public static IEnumerable<string> ReadTextLinesIfExis([NotNull] this string path)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
@@ -1029,7 +976,7 @@ namespace System.IO
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool TryCreateUriWithoutScheme(this string str, out Uri uri, params string[] scheme)
+        public static bool TryCreateUriWithoutScheme([NotNull] this string str, out Uri uri, [NotNull] params string[] scheme)
         {
             Contract.Requires<ArgumentNullException>(!string.IsNullOrEmpty(str), "enumerator");
             Contract.Requires<ArgumentNullException>(scheme != null, "scheme");
@@ -1037,7 +984,8 @@ namespace System.IO
             Uri target;
             bool flag = Uri.TryCreate(str, UriKind.RelativeOrAbsolute, out target);
 
-            if (flag) foreach (string s in scheme) if (flag) flag = target.Scheme != s;
+// ReSharper disable once AccessToModifiedClosure
+            if (flag) foreach (string s in scheme.Where(s => flag)) flag = target.Scheme != s;
 
             uri = flag ? target : null;
 
@@ -1053,7 +1001,7 @@ namespace System.IO
         /// <param name="path">
         ///     The path.
         /// </param>
-        public static void WriteTextContentTo(this string content, string path)
+        public static void WriteTextContentTo([NotNull] this string content, [NotNull] string path)
         {
             Contract.Requires<ArgumentNullException>(content != null, "content");
             Contract.Requires<ArgumentNullException>(path != null, "path");
@@ -1073,7 +1021,7 @@ namespace System.IO
         /// <param name="path">
         ///     The path.
         /// </param>
-        public static void WriteTextContentTo(this string content, string workingDirectory, string path)
+        public static void WriteTextContentTo([NotNull] this string content, [NotNull] string workingDirectory, [NotNull] string path)
         {
             Contract.Requires<ArgumentNullException>(content != null, "content");
             Contract.Requires<ArgumentNullException>(workingDirectory != null, "workingDirectory");

@@ -18,7 +18,7 @@ namespace Tauron.Application.Views.Core
 
         protected override string GetName(Type model)
         {
-            var attr = model.GetCustomAttribute<ExportModelAttribute>();
+            var attr = model.GetCustomAttribute<ExportViewModelAttribute>();
             return attr == null ? null : attr.Name;
         }
 

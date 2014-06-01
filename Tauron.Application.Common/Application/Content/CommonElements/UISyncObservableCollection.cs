@@ -1,28 +1,4 @@
-﻿// The file UISyncObservableCollection.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="UISyncObservableCollection.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The ui sync observable collection.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -30,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 using Tauron.JetBrains.Annotations;
 
@@ -42,7 +19,7 @@ namespace Tauron.Application
     /// </summary>
     /// <typeparam name="TType">
     /// </typeparam>
-    [DebuggerNonUserCode, PublicAPI]
+    [DebuggerNonUserCode, PublicAPI, Serializable]
     public class UISyncObservableCollection<TType> : ObservableCollection<TType>
     {
         private class DummySync : IUISynchronize
@@ -50,6 +27,7 @@ namespace Tauron.Application
             public Task BeginInvoke(Action action)
             {
                 action();
+// ReSharper disable once AssignNullToNotNullAttribute
                 return null;
             }
 
@@ -112,5 +90,12 @@ namespace Tauron.Application
         }
 
         #endregion
+
+        public void AddRange([NotNull] IEnumerable<TType> enumerable)
+        {
+            Contract.Requires<ArgumentNullException>(enumerable != null, "enumerable");
+
+            foreach (var item in enumerable) Add(item);
+        }
     }
 }

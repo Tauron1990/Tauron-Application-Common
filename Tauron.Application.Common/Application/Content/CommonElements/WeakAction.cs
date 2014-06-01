@@ -1,28 +1,4 @@
-﻿// The file WeakAction.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="WeakAction.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   Speichert informationen für eine Aktion ohne Refernce auf das Object.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -39,7 +15,7 @@ namespace Tauron.Application
     [PublicAPI]
     public sealed class WeakAction
     {
-        private bool Equals(WeakAction other)
+        private bool Equals([NotNull] WeakAction other)
         {
             return Equals(_method, other._method) && Equals(TargetObject.Target, other.TargetObject.Target);
         }
@@ -76,7 +52,7 @@ namespace Tauron.Application
         ///     Der Parameter der methode.
         /// </param>
         [ContractVerification(false)]
-        public WeakAction([NotNull] object target, [NotNull] MethodInfo method, [NotNull] Type parameterType)
+        public WeakAction([CanBeNull] object target, [NotNull] MethodInfo method, [CanBeNull] Type parameterType)
         {
             Contract.Requires<ArgumentNullException>(method != null, "method");
 
@@ -99,7 +75,7 @@ namespace Tauron.Application
         /// <param name="method">
         ///     Die Methode die AUsgefürt werden soll.
         /// </param>
-        public WeakAction(object target, MethodInfo method)
+        public WeakAction([CanBeNull] object target, [NotNull] MethodInfo method)
         {
             Contract.Requires<ArgumentNullException>(method != null, "method");
 
@@ -136,6 +112,7 @@ namespace Tauron.Application
 
         /// <summary>Das Object mit dem die Methode Ausgeführt werden soll.</summary>
         /// <value>The target object.</value>
+        [CanBeNull]
         public WeakReference TargetObject { get; private set; }
 
         #endregion
@@ -203,7 +180,7 @@ namespace Tauron.Application
 
         #endregion
 
-        public override bool Equals(object obj)
+        public override bool Equals([CanBeNull] object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -250,7 +227,8 @@ namespace Tauron.Application
         /// <returns>
         ///     The WeakActionEvent.
         /// </returns>
-        public WeakActionEvent<T> Add(Action<T> handler)
+        [NotNull]
+        public WeakActionEvent<T> Add([NotNull] Action<T> handler)
         {
             Contract.Requires<ArgumentNullException>(handler != null, "handler");
 
@@ -294,13 +272,14 @@ namespace Tauron.Application
         /// <returns>
         ///     The WeakActionEvent.
         /// </returns>
-        public WeakActionEvent<T> Remove(Action<T> handler)
+        [NotNull]
+        public WeakActionEvent<T> Remove([NotNull] Action<T> handler)
         {
             Contract.Requires<ArgumentNullException>(handler != null, "handler");
 
             lock (this)
             {
-                foreach (WeakAction del in _delegates.Where(del => del.TargetObject.Target == handler.Target))
+                foreach (WeakAction del in _delegates.Where(del => del.TargetObject != null && del.TargetObject.Target == handler.Target))
                 {
                     _delegates.Remove(del);
                     return this;

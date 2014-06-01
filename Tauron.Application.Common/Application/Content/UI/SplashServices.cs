@@ -1,28 +1,4 @@
-﻿// The file SplashServices.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SplashServices.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The splash message listener.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.Contracts;
@@ -49,7 +25,7 @@ namespace Tauron.Application
 
         private object _mainLabelBackground = "White";
 
-        private double _widht = 414;
+        private double _width = 414;
 
         #endregion
 
@@ -147,13 +123,13 @@ namespace Tauron.Application
         /// <summary>
         ///     Gets or sets the widht.
         /// </summary>
-        public double Widht
+        public double Width
         {
-            get { return _widht; }
+            get { return _width; }
 
             set
             {
-                _widht = value;
+                _width = value;
                 OnPropertyChanged();
             }
         }

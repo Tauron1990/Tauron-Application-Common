@@ -1,34 +1,6 @@
-﻿// The file ActiveProgress.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ActiveProgress.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The active progress.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.Diagnostics.Contracts;
 using Tauron.JetBrains.Annotations;
-
-#endregion
 
 namespace Tauron.Application
 {
@@ -38,11 +10,11 @@ namespace Tauron.Application
     {
         #region Fields
 
-        private string message;
+        private string _message;
 
-        private double overAllProgress;
+        private double _overAllProgress;
 
-        private double percent;
+        private double _percent;
 
         #endregion
 
@@ -62,7 +34,7 @@ namespace Tauron.Application
         /// <param name="overAllProgress">
         ///     The over all progress.
         /// </param>
-        public ActiveProgress(string message, double percent, double overAllProgress)
+        public ActiveProgress([NotNull] string message, double percent, double overAllProgress)
         {
             if (percent < 0) percent = 0;
             if (overAllProgress < 0) overAllProgress = 0;
@@ -82,20 +54,21 @@ namespace Tauron.Application
 
         /// <summary>Gets the message.</summary>
         /// <value>The message.</value>
+        [NotNull]
         public string Message
         {
             get
             {
                 Contract.Ensures(Contract.Result<string>() != null);
 
-                return message;
+                return _message;
             }
 
             private set
             {
                 Contract.Requires<ArgumentNullException>(value != null, "value");
 
-                message = value;
+                _message = value;
             }
         }
 
@@ -107,14 +80,14 @@ namespace Tauron.Application
             {
                 Contract.Ensures(Contract.Result<double>() >= 0 && Contract.Result<double>() <= 100);
 
-                return overAllProgress;
+                return _overAllProgress;
             }
 
             set
             {
                 Contract.Requires<ArgumentException>(value >= 0 && value <= 100, "OverAllProgress");
 
-                overAllProgress = value;
+                _overAllProgress = value;
             }
         }
 
@@ -126,14 +99,14 @@ namespace Tauron.Application
             {
                 Contract.Ensures(Contract.Result<double>() >= 0 && Contract.Result<double>() <= 100);
 
-                return percent;
+                return _percent;
             }
 
             private set
             {
                 Contract.Requires<ArgumentException>(value >= 0 && value <= 100, "Percent");
 
-                percent = value;
+                _percent = value;
             }
         }
 
