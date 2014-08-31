@@ -282,10 +282,13 @@ namespace Tauron.Application.Models
         {
             var coll = TypeDescriptor.GetProperties(this, true);
             var type = GetType();
+            var props =
+                _properties.AllValues.Select(property => new ObservablePropertyDescriptor(property, type))
+                           .Cast<PropertyDescriptor>()
+                           .ToList();
+            props.AddRange(coll.Cast<PropertyDescriptor>());
 
-            foreach (var property in _properties.AllValues) coll.Add(new ObservablePropertyDescriptor(property, type));
-
-            return coll;
+            return new PropertyDescriptorCollection(props.ToArray(), true);
         }
 
         [NotNull]

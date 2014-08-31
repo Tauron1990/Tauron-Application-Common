@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.JetBrains.Annotations;
@@ -24,9 +25,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         {
             bool returnValue = true;
 
-            foreach (var importInterceptor in _interceptors)
+            foreach (var importInterceptor in _interceptors.Where(importInterceptor => returnValue))
             {
-                if (returnValue) returnValue = importInterceptor.Intercept(member, metadata, target, ref value);
+                returnValue = importInterceptor.Intercept(member, metadata, target, ref value);
             }
 
             return returnValue;

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using Tauron.Application.Ioc;
 using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Views.Core
@@ -44,16 +46,16 @@ namespace Tauron.Application.Views.Core
 
 
         [NotNull]
-        protected abstract DependencyObject Match([NotNull] string name);
+        public abstract DependencyObject Match([NotNull] string name);
 
         [CanBeNull]
-        protected abstract string GetName([NotNull] Type model);
+        public abstract string GetName([NotNull] Type model);
 
         [CanBeNull]
-        protected abstract DependencyObject Match([NotNull] ISortableViewExportMetadata name);
+        public abstract DependencyObject Match([NotNull] ISortableViewExportMetadata name);
 
         [NotNull]
-        protected abstract IEnumerable<ISortableViewExportMetadata> GetAllViewsImpl([NotNull] string name);
+        public abstract IEnumerable<InstanceResolver<Control, ISortableViewExportMetadata>> GetAllViewsImpl([NotNull] string name);
 
         public DependencyObject CreateView(string name)
         {
@@ -75,26 +77,26 @@ namespace Tauron.Application.Views.Core
 
         public IEnumerable<DependencyObject> GetAllViews(string name)
         {
-            return GetAllViewsImpl(name).OrderBy(meta => meta.Order).Select(Match);
+            return GetAllViewsImpl(name).OrderBy(meta => meta.Metadata.Order).Select(i => i.Resolve());
         }
     }
 
     [ContractClassFor(typeof(CommonLocatorBase))]
     abstract class CommonLocatorBaseContracts : CommonLocatorBase
     {
-        protected override string GetName(Type model)
+        public override string GetName(Type model)
         {
             Contract.Requires<ArgumentNullException>(model != null, "model");
             return null;
         }
 
-        protected override DependencyObject Match(ISortableViewExportMetadata name)
+        public override DependencyObject Match(ISortableViewExportMetadata name)
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
             return null;
         }
 
-        protected override IEnumerable<ISortableViewExportMetadata> GetAllViewsImpl(string name)
+        public override IEnumerable<InstanceResolver<Control, ISortableViewExportMetadata>> GetAllViewsImpl(string name)
         {
             Contract.Requires<ArgumentNullException>(name != null, "name");
             return null;

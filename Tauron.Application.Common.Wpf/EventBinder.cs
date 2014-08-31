@@ -110,7 +110,17 @@ namespace Tauron.Application
         {
             if (DesignerProperties.GetIsInDesignMode(d)) return;
 
+            bool simpleMode = false;
+
             var newValue = e.NewValue as string;
+            if(newValue == null) return;
+
+            if (newValue.StartsWith("SimpleMode"))
+            {
+                simpleMode = true;
+                newValue = newValue.Remove(0, 10);
+            }
+
             var oldValue = e.OldValue as string;
 
             if (oldValue != null)
@@ -119,6 +129,7 @@ namespace Tauron.Application
                     EventLinkerCollection.Where(ele => ele.Commands == oldValue && Equals(ele.Target, d)))
                 {
                     linker.Commands = newValue;
+                    linker.SimpleMode = simpleMode;
                     linker.Bind();
                     return;
                 }
@@ -126,7 +137,7 @@ namespace Tauron.Application
 
             if (newValue == null) return;
             
-            var temp = new EventLinker(newValue, d);
+            var temp = new EventLinker(newValue, d, simpleMode);
             EventLinkerCollection.Add(temp);
             temp.Bind();
         }
@@ -143,18 +154,8 @@ namespace Tauron.Application
 
             #region Constructors and Destructors
 
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="EventLinker" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="EventLinker" /> Klasse.
-            /// </summary>
-            /// <param name="commands">
-            ///     The commands.
-            /// </param>
-            /// <param name="target">
-            ///     The target.
-            /// </param>
-            public EventLinker([NotNull] string commands, [NotNull] DependencyObject target)
-                : base(target)
+            public EventLinker([NotNull] string commands, [NotNull] DependencyObject target, bool simpleMode)
+                : base(target, simpleMode)
             {
                 Contract.Requires<ArgumentNullException>(commands != null, "commands");
                 Contract.Requires<ArgumentNullException>(target != null, "target");

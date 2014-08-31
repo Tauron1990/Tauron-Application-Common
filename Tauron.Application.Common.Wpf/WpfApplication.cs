@@ -88,7 +88,7 @@ namespace Tauron.Application
         public string ThemeDictionary { get; set; }
 
         [NotNull]
-        public System.Windows.Application CurrentWpfApplication
+        public static System.Windows.Application CurrentWpfApplication
         {
             get { return System.Windows.Application.Current; }
         }

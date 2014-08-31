@@ -14,10 +14,14 @@
     <CodeContractsAssemblyMode>1</CodeContractsAssemblyMode>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -175,11 +179,27 @@
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\IResolver.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\LazyResolver.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\ListResolver.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Injectorbase.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\SimpleResolver.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\ArrayResolverStep.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\ExportEinuerableHelper.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\InitializeStep.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\InjectorContext.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\InjectorStep.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\IsGenericStep.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\ListResolverStep.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\ManyResolverStep.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\ReflectionContext.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\ResolverCreationStep.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\ResolverFactory.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\SimpleResolverStep.cs" />
+    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Steps\StepIds.cs" />
     <Compile Include="Application\Ioc\ContextScopeAttribute.cs" />
     <Compile Include="Application\Ioc\ErrorTracer.cs" />
+    <Compile Include="Application\Ioc\ExportDescriptor.cs" />
     <Compile Include="Application\Ioc\ExportFactory.cs" />
     <Compile Include="Application\Ioc\ExportLevelAttribute.cs" />
+    <Compile Include="Application\Ioc\LevelSpecificImport.cs" />
     <Compile Include="Application\Ioc\LevelSpecificInject.cs" />
     <Compile Include="Application\Ioc\LifeTime\ObjectContext.cs" />
     <Compile Include="Application\Ioc\LifeTime\ContextManager.cs" />
@@ -261,7 +281,6 @@
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\EventMemberInjector.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\FieldInjector.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\IEventManager.cs" />
-    <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\Injectorbase.cs" />
     <Compile Include="Application\Ioc\BuildUp\IProxyService.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\MemberInjector.cs" />
     <Compile Include="Application\Ioc\BuildUp\Strategy\DafaultStrategys\Services\MethodInjector.cs" />
@@ -319,6 +338,11 @@
     <Compile Include="Application\Modules\AddInDescriptionAttribute.cs" />
     <Compile Include="Application\Modules\AddInListner.cs" />
     <Compile Include="Application\Modules\ModuleHandlerRegistry.cs" />
+    <Compile Include="Application\SimpleWorkflow\ICondition.cs" />
+    <Compile Include="Application\SimpleWorkflow\IStep.cs" />
+    <Compile Include="Application\SimpleWorkflow\Producer.cs" />
+    <Compile Include="Application\SimpleWorkflow\SimpleCondition.cs" />
+    <Compile Include="Application\SimpleWorkflow\StepId.cs" />
     <Compile Include="AssemblyNameScpaces.cs" />
     <Compile Include="ContainerExtensions.cs" />
     <Compile Include="EditableValueMap.cs" />

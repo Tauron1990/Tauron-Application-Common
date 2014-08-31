@@ -271,7 +271,7 @@ namespace Tauron.Application
             /// </param>
             [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
             protected LinkerBase([NotNull] string name, [NotNull] DependencyObject element)
-                : base(element)
+                : base(element, false)
             {
                 Contract.Requires<ArgumentNullException>(name != null, "name");
                 Contract.Requires<ArgumentNullException>(element != null, "element");

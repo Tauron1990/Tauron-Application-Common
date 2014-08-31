@@ -370,7 +370,7 @@ namespace Tauron.Application
             ///     The element.
             /// </param>
             public CommandLinker([NotNull] DependencyObject element)
-                : base(element)
+                : base(element, false)
             {
                 Contract.Requires<ArgumentNullException>(element != null, "element");
             }

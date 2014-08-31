@@ -1,7 +1,6 @@
 ﻿#region
 
 using System;
-using System.IO;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -19,7 +18,8 @@ namespace Tauron.Application.Implementation
 
         private readonly WeakReferenceCollection<KeyedImage> _cache = new WeakReferenceCollection<KeyedImage>();
 
-        [Inject] private IPackUriHelper _packUriHelper;
+        [Inject] 
+        private IPackUriHelper _packUriHelper;
 
         #endregion
 

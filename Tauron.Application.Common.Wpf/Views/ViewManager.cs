@@ -166,7 +166,7 @@ namespace Tauron.Application.Views
         #endregion
 
         [NotNull]
-        public IViewLocator ViewLocator { get; private set; }
+        public IViewLocator ViewLocator { get; set; }
 
         public ViewManager()
         {

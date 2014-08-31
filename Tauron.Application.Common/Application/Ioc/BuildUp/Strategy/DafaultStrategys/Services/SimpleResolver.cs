@@ -1,28 +1,4 @@
-﻿// The file SimpleResolver.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SimpleResolver.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The simple resolver.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.Contracts;
@@ -35,7 +11,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
     public delegate bool InterceptorCallback(ref object value);
 
-    /// <summary>The simple resolver.</summary>
     [PublicAPI]
     public class SimpleResolver : IResolver
     {
@@ -84,29 +59,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         private readonly object _metadataObject;
         private readonly Type _metadataType;
         private readonly InterceptorCallback _interceptor;
+        private readonly bool _isDescriptor;
 
         #endregion
 
         #region Constructors and Destructors
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="SimpleResolver" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="SimpleResolver" /> Klasse.
-        /// </summary>
-        /// <param name="metadata">
-        ///     The metadata.
-        /// </param>
-        /// <param name="container">
-        ///     The container.
-        /// </param>
-        /// <param name="isExportFactory"></param>
-        /// <param name="factoryType"></param>
-        /// <param name="metadataObject"></param>
-        /// <param name="metadataType"></param>
-        /// <param name="interceptor"></param>
         public SimpleResolver([NotNull] ExportMetadata metadata, [NotNull] IContainer container,
                               bool isExportFactory, [CanBeNull] Type factoryType, [CanBeNull] object metadataObject,
-                              [CanBeNull] Type metadataType, [CanBeNull] InterceptorCallback interceptor)
+                              [CanBeNull] Type metadataType, [CanBeNull] InterceptorCallback interceptor, bool isDescriptor)
         {
             Contract.Requires<ArgumentNullException>(container != null, "container");
             Contract.Requires<ArgumentNullException>(!isExportFactory || metadataType != null, "metadataType");
@@ -118,6 +79,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _metadataObject = metadataObject;
             _metadataType = metadataType;
             _interceptor = interceptor;
+            _isDescriptor = isDescriptor;
         }
 
         #endregion
@@ -152,18 +114,16 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         #region Public Methods and Operators
 
-        /// <summary>The create.</summary>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        public object Create(ErrorTracer errorTracer)
+        public object Create([NotNull] ErrorTracer errorTracer)
         {
             if (_metadata == null) return null;
 
-            errorTracer.Phase = "Injecting Import For " + _metadata; 
+            errorTracer.Phase = "Injecting Import For " + _metadata;
 
             try
             {
+                if (_isDescriptor) return new ExportDescriptor(_metadata);
+
                 if (!_isExportFactory)
                 {
                     object temp;
@@ -185,10 +145,12 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
                 var helper = new ExportFactoryHelper(_container, _metadata, _metadataObject, _interceptor);
 
-                return Activator.CreateInstance(typeof (InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
-                    new Func<BuildParameter[], object>(helper.BuildUp), new Func<object>(helper.Metadata), _metadata.Export.ImplementType);
+                return
+                    Activator.CreateInstance(typeof (InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
+                                             new Func<BuildParameter[], object>(helper.BuildUp),
+                                             new Func<object>(helper.Metadata), _metadata.Export.ImplementType);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 errorTracer.Exceptional = true;
                 errorTracer.Exception = e;

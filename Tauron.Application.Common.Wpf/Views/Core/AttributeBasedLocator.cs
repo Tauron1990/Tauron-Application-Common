@@ -16,25 +16,25 @@ namespace Tauron.Application.Views.Core
         [Inject]
         private List<InstanceResolver<Window, INameExportMetadata>> _windows;
 
-        protected override string GetName(Type model)
+        public override string GetName(Type model)
         {
             var attr = model.GetCustomAttribute<ExportViewModelAttribute>();
             return attr == null ? null : attr.Name;
         }
 
-        protected override DependencyObject Match(ISortableViewExportMetadata name)
+        public override DependencyObject Match(ISortableViewExportMetadata name)
         {
             var temp = _views.FirstOrDefault(rs => rs.Metadata == name);
 
             return temp == null ? null : temp.Resolve(true);
         }
 
-        protected override IEnumerable<ISortableViewExportMetadata> GetAllViewsImpl(string name)
+        public override IEnumerable<InstanceResolver<Control, ISortableViewExportMetadata>> GetAllViewsImpl(string name)
         {
-            return _views.Where(v => v.Metadata.Name == name).Select(v => v.Metadata);
+            return _views.Where(v => v.Metadata.Name == name);
         }
 
-        protected override DependencyObject Match(string name)
+        public override DependencyObject Match(string name)
         {
             return _views.First(v => v.Metadata.Name == name).Resolve();
         }

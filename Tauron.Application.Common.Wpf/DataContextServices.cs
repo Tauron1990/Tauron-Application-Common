@@ -141,11 +141,35 @@ namespace Tauron.Application
 
     internal abstract class PipelineBase : IPipeLine, ITask
     {
+        public bool SimpleMode
+        {
+            get { return _simpleMode; }
+            set
+            {
+                _simpleMode = value;
+                DependencyObject target = Target;
+
+                if (SimpleMode)
+                {
+                    DataContextServices.UnregisterHandler(target, this);
+                    var cont = new FrameworkObject(target, false).DataContext;
+                    DataContext = cont == null ? null : new WeakReference(cont);
+                    TaskScheduler = CommonApplication.Scheduler;
+                }
+                else
+                {
+                    DataContext = null;
+                    DataContextServices.RegisterHandler(target, this);
+                }
+            }
+        }
+
         #region Fields
 
         private readonly WeakReference<DependencyObject> _element;
 
         private readonly TaskCompletionSource<object> _task;
+        private bool _simpleMode;
 
         #endregion
 
@@ -158,10 +182,10 @@ namespace Tauron.Application
         /// <param name="target">
         ///     The target.
         /// </param>
-        protected PipelineBase([NotNull] DependencyObject target)
+        protected PipelineBase([NotNull] DependencyObject target, bool simpleMode)
         {
             _element = new WeakReference<DependencyObject>(target);
-            DataContextServices.RegisterHandler(target, this);
+            SimpleMode = simpleMode;
             _task = new TaskCompletionSource<object>();
             _task.SetResult(null);
         }
@@ -407,6 +431,14 @@ namespace Tauron.Application
             return false;
         }
 
+        internal static void UnregisterHandler([CanBeNull] DependencyObject element, [NotNull] IPipeLine pipeLine)
+        {
+            ObjectReference objRef = FindObjectRecusiv(element);
+
+            if(objRef != null)
+                objRef.RemovePipline(pipeLine);
+        }
+
         private static void BeginDataContextChanging([NotNull] object d, DependencyPropertyChangedEventArgs e)
         {
             ObjectReference objRef = FindObject(d);
@@ -541,7 +573,14 @@ namespace Tauron.Application
                     pipline.TaskScheduler = schedule;
                 }
 
+                if(_pips.Contains(pipline)) return;
+
                 _pips.Add(pipline);
+            }
+
+            public void RemovePipline(IPipeLine pipeline)
+            {
+                _pips.Remove(pipeline);
             }
 
             /// <summary>

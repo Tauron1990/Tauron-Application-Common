@@ -9,7 +9,6 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Microsoft.Practices.EnterpriseLibrary.Logging;
 using Tauron.Application.Aop.Model;
-using Tauron.Application.Ioc;
 using Tauron.JetBrains.Annotations;
 
 #endregion
