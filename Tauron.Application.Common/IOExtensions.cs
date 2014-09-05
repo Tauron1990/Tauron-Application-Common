@@ -856,39 +856,21 @@ namespace Tauron
             return new StreamWriter(path);
         }
 
-        /// <summary>
-        ///     The open write.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="Stream" />.
-        /// </returns>
         [NotNull]
-        public static Stream OpenWrite([NotNull] this string path)
+        public static Stream OpenWrite([NotNull] this string path, bool delete = true)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
 
-            return OpenWrite(path, FileShare.None);
+            return OpenWrite(path, FileShare.None, delete);
         }
 
-        /// <summary>
-        ///     The open write.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <param name="share">
-        ///     The share.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="Stream" />.
-        /// </returns>
         [NotNull]
-        public static Stream OpenWrite([NotNull] this string path, FileShare share)
+        public static Stream OpenWrite([NotNull] this string path, FileShare share, bool delete = true)
         {
             Contract.Requires<ArgumentNullException>(path != null, "path");
+
+            if(delete)
+                path.DeleteFile();
 
             path = path.GetFullPath();
             path.CreateDirectoryIfNotExis();
