@@ -47,11 +47,11 @@ using System.Runtime.InteropServices;
 #endregion
 
 [assembly: AssemblyTitle("JetBrains.Annotations")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("JetBrains.Annotations")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("JetBrains.Annotations")]
-[assembly: AssemblyCopyright("Copyright ©  2013")]
+[assembly: AssemblyCopyright("Copyright Tauron©  2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

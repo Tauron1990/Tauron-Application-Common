@@ -41,6 +41,7 @@
   <ItemGroup>
     <Reference Include="Ionic.Zip">
       <HintPath>..\..\Radio-Streamer\packages\DotNetZip.1.9.3\lib\net20\Ionic.Zip.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="System" />
@@ -161,24 +162,31 @@
     <ProjectReference Include="..\JetBrains.Annotations\JetBrains.Annotations.csproj">
       <Project>{df97133f-565a-4d1a-afe3-4155b31a89e5}</Project>
       <Name>JetBrains.Annotations</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\Tauron.Application.Common\Tauron.Application.Common.csproj">
       <Project>{0d50ee98-a718-41b2-a1b6-57d23fdf5223}</Project>
       <Name>Tauron.Application.Common</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="CommonKey.snk" />
     <None Include="packages.config" />
+    <None Include="Tauron.Application.Files.nuspec">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
+  <!--To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.-->
   <Target Name="BeforeBuild">
   </Target>
   <Target Name="AfterBuild">
+    <CreateItem Include="$(ProjectDir)$(OutputPath)**\*.*">
+      <Output TaskParameter="Include" ItemName="BinFiles" />
+    </CreateItem>
+    <Copy SkipUnchangedFiles="True" OverWriteReadOnlyFiles="true" SourceFiles="@(BinFiles)" DestinationFiles="@(BinFiles->'$(SolutionDir)\NugetBuilder\$(ProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
-  -->
 </Project>

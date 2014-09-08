@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>JetBrains.Annotations</id>
+        <version>1.0.0</version>
+        <title>JetBrains.Annotations</title>
+        <authors>Tauron</authors>
+        <owners>Tauron</owners>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>JetBrains Annotations Attributes.</description>
+        <summary>JetBrains Annotations Attributes.</summary>
+        <copyright>Copyright Tauron©  2013</copyright>
+    </metadata>
+    <files>
+        <file src="JetBrains.Annotations.dll" target="lib\net45\JetBrains.Annotations.dll" />
+        <file src="JetBrains.Annotations.pdb" target="lib\net45\JetBrains.Annotations.pdb" />
+    </files>
+</package>

@@ -10,7 +10,7 @@ using Tauron.Application.Ioc;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Tauron")]
 [assembly: AssemblyProduct("Tauron.Application.Common.Wpf")]
-[assembly: AssemblyCopyright("Copyright © Tauron  2013")]
+[assembly: AssemblyCopyright("Copyright © Tauron  2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -35,6 +35,6 @@ using Tauron.Application.Ioc;
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("0.7.0.0")]
-[assembly: AssemblyFileVersion("0.7.0.0")]
+[assembly: AssemblyVersion("0.9.0.0")]
+[assembly: AssemblyFileVersion("0.9.0.0")]
 [assembly: ExportLevel(0)]

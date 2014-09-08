@@ -88,13 +88,20 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CommonKey.snk" />
+    <None Include="JetBrains.Annotations.nuspec">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
+  <!--To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.-->
   <Target Name="BeforeBuild">
   </Target>
   <Target Name="AfterBuild">
+    <CreateItem Include="$(ProjectDir)$(OutputPath)**\*.*">
+      <Output TaskParameter="Include" ItemName="BinFiles"/>
+    </CreateItem>
+    <Copy SkipUnchangedFiles="True" OverWriteReadOnlyFiles="true" SourceFiles="@(BinFiles)"
+          DestinationFiles="@(BinFiles->'$(SolutionDir)\NugetBuilder\$(ProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
-  -->
 </Project>
