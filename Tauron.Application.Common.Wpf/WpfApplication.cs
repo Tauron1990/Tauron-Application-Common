@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using Microsoft.Practices.EnterpriseLibrary.Common.Configuration;
 using Microsoft.Practices.EnterpriseLibrary.Common.Configuration.Fluent;
@@ -178,9 +179,9 @@ namespace Tauron.Application
                     .LogToCategory(CommonConstants.CommonCategory)
                     .ThenNotifyRethrow();
             exConfig.GivenPolicyWithName(CommonWpfConstans.CommonExceptionPolicy)
-                    .ForExceptionType<Exception>()
-                    .LogToCategory(CommonWpfConstans.CommonCategory)
-                    .ThenNotifyRethrow();
+                .ForExceptionType<Exception>()
+                .LogToCategory(CommonWpfConstans.CommonCategory)
+                .ThenNotifyRethrow();
             ConfigureExceptionHandling(exConfig);
 
             var logConfig = builder.ConfigureLogging();
