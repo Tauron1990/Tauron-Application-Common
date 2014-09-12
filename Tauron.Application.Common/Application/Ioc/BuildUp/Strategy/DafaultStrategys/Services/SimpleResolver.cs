@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.JetBrains.Annotations;
 
@@ -20,27 +21,42 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             private readonly IContainer _container;
             private readonly object _metadataObject;
             private readonly InterceptorCallback _interceptor;
+            private readonly IResolverExtension[] _extensions;
 
-            public ExportFactoryHelper([NotNull] IContainer container, [NotNull] ExportMetadata buildMetadata,
-                                       [NotNull] object metadataObject, [CanBeNull] InterceptorCallback interceptor)
+            public ExportFactoryHelper([NotNull] IContainer container, [NotNull] ExportMetadata buildMetadata, 
+                [NotNull] object metadataObject, [CanBeNull] InterceptorCallback interceptor,
+                [NotNull] IResolverExtension[] extensions)
             {
                 _container = container;
                 _buildMetadata = buildMetadata;
                 _metadataObject = metadataObject;
                 _interceptor = interceptor;
+                _extensions = extensions;
             }
 
             [CanBeNull]
             public object BuildUp([CanBeNull] BuildParameter[] parameters)
             {
-                var error = new ErrorTracer();
+                return BuildUp(parameters, null);
+            }
+
+            [CanBeNull]
+            public object BuildUp([CanBeNull] BuildParameter[] parameters, [CanBeNull] ErrorTracer error)
+            {
+                if (error == null)
+                    error = new ErrorTracer();
 
                 var temp = _container.BuildUp(_buildMetadata, error, parameters);
                 if (error.Exceptional) throw new BuildUpException(error);
 
-                if (_interceptor == null) return temp;
+                var effectiveType = temp.GetType();
+                var extension = _extensions.FirstOrDefault(e => e.TargetType == effectiveType);
+                if (extension != null)
+                    temp = extension.Progress(_buildMetadata, temp);
 
-                return _interceptor(ref temp) ? temp : null;
+                bool flag = _interceptor == null || _interceptor(ref temp);
+
+                return !flag ? null : temp;
             }
 
             [NotNull]
@@ -60,6 +76,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         private readonly Type _metadataType;
         private readonly InterceptorCallback _interceptor;
         private readonly bool _isDescriptor;
+        private readonly IResolverExtension[] _extensions;
 
         #endregion
 
@@ -67,8 +84,10 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         public SimpleResolver([NotNull] ExportMetadata metadata, [NotNull] IContainer container,
                               bool isExportFactory, [CanBeNull] Type factoryType, [CanBeNull] object metadataObject,
-                              [CanBeNull] Type metadataType, [CanBeNull] InterceptorCallback interceptor, bool isDescriptor)
+                              [CanBeNull] Type metadataType, [CanBeNull] InterceptorCallback interceptor, bool isDescriptor,
+                              [NotNull] IResolverExtension[] extensions)
         {
+            Contract.Requires<ArgumentNullException>(extensions != null, "extensions");
             Contract.Requires<ArgumentNullException>(container != null, "container");
             Contract.Requires<ArgumentNullException>(!isExportFactory || metadataType != null, "metadataType");
 
@@ -80,6 +99,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _metadataType = metadataType;
             _interceptor = interceptor;
             _isDescriptor = isDescriptor;
+            _extensions = extensions;
         }
 
         #endregion
@@ -120,35 +140,27 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             errorTracer.Phase = "Injecting Import For " + _metadata;
 
+            var helper = new ExportFactoryHelper(_container, _metadata, _metadataObject, _interceptor, _extensions);
+
             try
             {
                 if (_isDescriptor) return new ExportDescriptor(_metadata);
 
-                if (!_isExportFactory)
+                if (_isExportFactory)
+                    return
+                        Activator.CreateInstance(
+                            typeof (InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
+                            new Func<BuildParameter[], object>(helper.BuildUp),
+                            new Func<object>(helper.Metadata), _metadata.Export.ImplementType);
+                try
                 {
-                    object temp;
-                    try
-                    {
-                        errorTracer.IncrementIdent();
-                        temp = Container.BuildUp(Metadata, errorTracer);
-                    }
-                    finally
-                    {
-                        errorTracer.DecrementIdent();
-                    }
-                    if (errorTracer.Exceptional) return null;
-
-                    if (_interceptor == null) return temp;
-
-                    return _interceptor(ref temp) ? temp : null;
+                    errorTracer.IncrementIdent();
+                    return helper.BuildUp(null, errorTracer);
                 }
-
-                var helper = new ExportFactoryHelper(_container, _metadata, _metadataObject, _interceptor);
-
-                return
-                    Activator.CreateInstance(typeof (InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
-                                             new Func<BuildParameter[], object>(helper.BuildUp),
-                                             new Func<object>(helper.Metadata), _metadata.Export.ImplementType);
+                finally
+                {
+                    errorTracer.DecrementIdent();
+                }
             }
             catch (Exception e)
             {

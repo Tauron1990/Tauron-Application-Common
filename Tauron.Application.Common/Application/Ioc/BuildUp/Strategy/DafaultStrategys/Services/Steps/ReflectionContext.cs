@@ -35,6 +35,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
             BuildParametersRegistry = new ExportRegistry();
         }
 
+        public IExten I { get; private set; }
+
         [CanBeNull]
         public ExportMetadata ExportMetadataOverride { get; set; }
 

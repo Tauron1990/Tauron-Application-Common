@@ -35,7 +35,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
                                                   reflectionContext.Metadata,
                                                   reflectionContext.MetadataType,
                                                   reflectionContext.InterceptorCallback,
-                                                  currentType == typeof (ExportDescriptor));
+                                                  currentType == typeof (ExportDescriptor), TODO);
 
             return base.OnExecute(context);
         }
