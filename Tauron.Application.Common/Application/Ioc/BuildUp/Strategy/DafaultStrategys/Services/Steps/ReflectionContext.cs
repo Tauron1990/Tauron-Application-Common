@@ -26,16 +26,18 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         private readonly InjectorContext _parentContext;
 
         public ReflectionContext([NotNull] IMetadataFactory metadataFactory, [NotNull] Type memberType,
-                                 [NotNull] InjectorContext parentContext)
+                                 [NotNull] InjectorContext parentContext, [NotNull] IResolverExtension[] resolverExtensions)
         {
             _parentContext = parentContext;
             MetadataFactory = metadataFactory;
             MemberType = memberType;
+            ResolverExtensions = resolverExtensions;
             CurrentType = memberType;
             BuildParametersRegistry = new ExportRegistry();
         }
 
-        public IExten I { get; private set; }
+        [NotNull]
+        public IResolverExtension[] ResolverExtensions { get; private set; }
 
         [CanBeNull]
         public ExportMetadata ExportMetadataOverride { get; set; }
@@ -55,6 +57,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         [NotNull]
         public Type CurrentType { get; set; }
 
+        [NotNull]
         public Type AdditionalInfo { get; set; }
 
         public int Level { get; set; }
@@ -120,10 +123,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof (InstanceResolver<,>))
                 return type.GenericTypeArguments[0];
-            if (type.IsArray)
-                return type.GetElementType();
-            
-            return type;
+            return type.IsArray ? type.GetElementType() : type;
         }
     }
 }

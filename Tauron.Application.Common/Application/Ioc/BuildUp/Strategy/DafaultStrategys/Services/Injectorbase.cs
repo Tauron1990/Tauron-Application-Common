@@ -31,14 +31,14 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         [NotNull]
         protected abstract Type MemberType { get; }
 
-        protected Injectorbase([NotNull] IMetadataFactory metadataFactory, [NotNull] TMember member)
+        protected Injectorbase([NotNull] IMetadataFactory metadataFactory, [NotNull] TMember member, [NotNull] IResolverExtension[] resolverExtensions)
         {
             Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
 
             _member = member;
 
 // ReSharper disable once DoNotCallOverridableMethodsInConstructor
-            InjectorContext = new InjectorContext(metadataFactory, member, MemberType);
+            InjectorContext = new InjectorContext(metadataFactory, member, MemberType, resolverExtensions);
         }
 
         protected virtual StepId InitializeMachine([NotNull] out ResolverFactory solidMachine)

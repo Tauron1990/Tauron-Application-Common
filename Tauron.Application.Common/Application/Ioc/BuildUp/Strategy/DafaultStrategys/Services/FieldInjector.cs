@@ -1,24 +1,9 @@
-﻿// The file FieldInjector.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
+﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 using Tauron.Application.Ioc.BuildUp.Exports;
+using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -27,29 +12,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     /// <summary>The field injector.</summary>
     public class FieldInjector : Injectorbase<FieldInfo>
     {
-        #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="FieldInjector" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="FieldInjector" /> Klasse.
-        ///     Initializes a new instance of the <see cref="FieldInjector" /> class.
-        /// </summary>
-        /// <param name="metadataFactory">
-        ///     The metadata factory.
-        /// </param>
-        /// <param name="member">
-        ///     The member.
-        /// </param>
-        public FieldInjector(IMetadataFactory metadataFactory, FieldInfo member)
-            : base(metadataFactory, member)
-        {
-            Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
-            Contract.Requires<ArgumentNullException>(member != null, "member");
-        }
-
-        #endregion
-
         #region Properties
+
+        public FieldInjector([NotNull] IMetadataFactory metadataFactory, [NotNull] FieldInfo member, [NotNull] IResolverExtension[] resolverExtensions) : base(metadataFactory, member, resolverExtensions)
+        {
+        }
 
         /// <summary>The get member type.</summary>
         /// <returns>

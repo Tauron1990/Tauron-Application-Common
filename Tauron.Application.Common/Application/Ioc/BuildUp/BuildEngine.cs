@@ -1,32 +1,7 @@
-﻿// The file BuildEngine.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="BuildEngine.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The build engine.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using Tauron.Application.Ioc.BuildUp.Exports;
@@ -49,46 +24,33 @@ namespace Tauron.Application.Ioc.BuildUp
         private readonly DefaultExportFactory _factory;
 
         /// <summary>The _container.</summary>
-        private readonly IContainer container;
+        private readonly IContainer _container;
 
-        private readonly Pipeline pipeline;
+        private readonly ComponentRegistry _componentRegistry;
 
-        private readonly RebuildManager rebuildManager;
+        private readonly Pipeline _pipeline;
+
+        private readonly RebuildManager _rebuildManager;
 
         #endregion
 
         #region Constructors and Destructors
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="BuildEngine" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="BuildEngine" /> Klasse.
-        ///     Initializes a new instance of the <see cref="BuildEngine" /> class.
-        /// </summary>
-        /// <param name="container">
-        ///     The container.
-        /// </param>
-        /// <param name="providerRegistry">
-        ///     The provider registry.
-        /// </param>
-        /// <param name="componentRegistry">
-        ///     The component registry.
-        /// </param>
-        public BuildEngine(
-            IContainer container,
-            ExportProviderRegistry providerRegistry,
-            ComponentRegistry componentRegistry)
+        public BuildEngine([NotNull] IContainer container, [NotNull] ExportProviderRegistry providerRegistry, 
+            [NotNull] ComponentRegistry componentRegistry)
         {
             Contract.Requires<ArgumentNullException>(container != null, "container");
             Contract.Requires<ArgumentNullException>(providerRegistry != null, "providerRegistry");
             Contract.Requires<ArgumentNullException>(componentRegistry != null, "componentRegistry");
 
-            this.container = container;
+            _container = container;
+            _componentRegistry = componentRegistry;
             _factory =
                 componentRegistry.GetAll<IExportFactory>()
                                  .First(fac => fac.TechnologyName == AopConstants.DefaultExportFactoryName)
                                  .CastObj<DefaultExportFactory>();
-            pipeline = new Pipeline(componentRegistry);
-            rebuildManager = new RebuildManager();
+            _pipeline = new Pipeline(componentRegistry);
+            _rebuildManager = new RebuildManager();
             providerRegistry.ExportsChanged += ExportsChanged;
         }
 
@@ -98,25 +60,27 @@ namespace Tauron.Application.Ioc.BuildUp
 
         /// <summary>Gets the pipeline.</summary>
         /// <value>The pipeline.</value>
+        [NotNull]
         public Pipeline Pipeline
         {
             get
             {
                 Contract.Ensures(Contract.Result<Pipeline>() != null);
 
-                return pipeline;
+                return _pipeline;
             }
         }
 
         /// <summary>Gets the rebuild manager.</summary>
         /// <value>The rebuild manager.</value>
+        [NotNull]
         public RebuildManager RebuildManager
         {
             get
             {
                 Contract.Ensures(Contract.Result<RebuildManager>() != null);
 
-                return rebuildManager;
+                return _rebuildManager;
             }
         }
 
@@ -124,21 +88,10 @@ namespace Tauron.Application.Ioc.BuildUp
 
         #region Public Methods and Operators
 
-        /// <summary>
-        ///     The build up.
-        /// </summary>
-        /// <param name="export">
-        ///     The export.
-        /// </param>
-        /// <param name="contractName">
-        ///     The contract name.
-        /// </param>
-        /// <param name="tracer"></param>
-        /// <param name="buildParameters"></param>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        public object BuildUp(IExport export, string contractName, ErrorTracer tracer, BuildParameter[] buildParameters)
+
+        [CanBeNull]
+        public object BuildUp([NotNull] IExport export, [NotNull] string contractName, [NotNull] ErrorTracer tracer, 
+            [CanBeNull] BuildParameter[] buildParameters)
         {
             Contract.Requires<ArgumentNullException>(export != null, "export");
 
@@ -147,13 +100,14 @@ namespace Tauron.Application.Ioc.BuildUp
                 try
                 {
                     tracer.Phase = "Begin Building Up";
-                    var context = new DefaultBuildContext(export, BuildMode.Resolve, container, contractName, tracer, buildParameters);
+                    var context = new DefaultBuildContext(export, BuildMode.Resolve, _container, contractName, tracer,
+                                                          buildParameters,
+                                                          _componentRegistry.GetAll<IResolverExtension>().ToArray());
                     var buildObject = new BuildObject(export.ImportMetadata, context.Metadata, buildParameters);
                     Pipeline.Build(context);
                     if (tracer.Exceptional) return null;
                     buildObject.Instance = context.Target;
-                    if (!export.ExternalInfo.External && !export.ExternalInfo.HandlesLiftime) 
-                        RebuildManager.AddBuild(buildObject);
+                    if (!export.ExternalInfo.External && !export.ExternalInfo.HandlesLiftime) RebuildManager.AddBuild(buildObject);
 
                     Contract.Assume(context.Target != null);
                     return context.Target;
@@ -167,18 +121,10 @@ namespace Tauron.Application.Ioc.BuildUp
             }
         }
 
-        /// <summary>
-        ///     The build up.
-        /// </summary>
-        /// <param name="toBuild"></param>
-        /// <param name="export">
-        ///     The export.
-        /// </param>
-        /// <param name="errorTracer"></param>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        public object BuildUp(object toBuild, ErrorTracer errorTracer, BuildParameter[] buildParameters)
+
+        [CanBeNull]
+        public object BuildUp([NotNull] object toBuild, [NotNull] ErrorTracer errorTracer, 
+            [CanBeNull] BuildParameter[] buildParameters)
         {
             Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
             Contract.Requires<ArgumentNullException>(toBuild != null, "export");
@@ -191,9 +137,9 @@ namespace Tauron.Application.Ioc.BuildUp
                     var context = new DefaultBuildContext(
                         _factory.CreateAnonymosWithTarget(toBuild.GetType(), toBuild),
                         BuildMode.BuildUpObject,
-                        container,
+                        _container,
                         toBuild.GetType().Name, errorTracer,
-                        buildParameters);
+                        buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
                     Pipeline.Build(context);
                     Contract.Assume(context.Target != null);
                     return context.Target;
@@ -211,19 +157,9 @@ namespace Tauron.Application.Ioc.BuildUp
 
         #region Methods
 
-        /// <summary>
-        ///     The build up.
-        /// </summary>
-        /// <param name="type">
-        ///     The type.
-        /// </param>
-        /// <param name="constructorArguments">
-        ///     The constructor arguments.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        internal object BuildUp(Type type, object[] constructorArguments, ErrorTracer errorTracer, BuildParameter[] buildParameters)
+        [CanBeNull]
+        internal object BuildUp([NotNull] Type type, [NotNull] object[] constructorArguments, 
+            [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] buildParameters)
         {
             Contract.Requires<ArgumentNullException>(type != null, "type");
 
@@ -233,9 +169,9 @@ namespace Tauron.Application.Ioc.BuildUp
                 var context = new DefaultBuildContext(
                     _factory.CreateAnonymos(type, constructorArguments),
                     BuildMode.BuildUpObject,
-                    container,
+                    _container,
                     type.Name, errorTracer,
-                    buildParameters);
+                    buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
                 Pipeline.Build(context);
                 Contract.Assume(context.Target != null);
                 return context.Target;
@@ -248,26 +184,18 @@ namespace Tauron.Application.Ioc.BuildUp
             }
         }
 
-        private void BuildUp(BuildObject build, ErrorTracer errorTracer, BuildParameter[] buildParameters)
+        private void BuildUp([NotNull] BuildObject build, [NotNull] ErrorTracer errorTracer, 
+            [CanBeNull] BuildParameter[] buildParameters)
         {
             lock (build.Export)
             {
-                var context = new DefaultBuildContext(build, container, errorTracer, buildParameters);
+                var context = new DefaultBuildContext(build, _container, errorTracer, buildParameters);
                 build.Instance = context.Target;
                 Pipeline.Build(context);
             }
         }
 
-        /// <summary>
-        ///     The exports changed.
-        /// </summary>
-        /// <param name="sender">
-        ///     The sender.
-        /// </param>
-        /// <param name="e">
-        ///     The e.
-        /// </param>
-        private void ExportsChanged(object sender, ExportChangedEventArgs e)
+        private void ExportsChanged([NotNull] object sender, [NotNull] ExportChangedEventArgs e)
         {
             Contract.Requires<ArgumentNullException>(sender != null, "sender");
 
@@ -280,12 +208,10 @@ namespace Tauron.Application.Ioc.BuildUp
                 var errorTracer = new ErrorTracer();
                 BuildUp(buildObject, errorTracer, buildObject.BuildParameters);
 
-                if(errorTracer.Exceptional)
-                    errors.Add(errorTracer);
+                if (errorTracer.Exceptional) errors.Add(errorTracer);
             }
 
-            if(errors.Count != 0)
-                throw new AggregateException(errors.Select(err => new BuildUpException(err)));
+            if (errors.Count != 0) throw new AggregateException(errors.Select(err => new BuildUpException(err)));
         }
 
         #endregion

@@ -1,28 +1,4 @@
-﻿// The file DefaultBuildContext.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DefaultBuildContext.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The default build context.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -40,29 +16,16 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
     {
         #region Constructors and Destructors
 
-        /// <summary>
-        ///     Initialisiert eine neue Instanz der <see cref="DefaultBuildContext" /> Klasse.
-        /// </summary>
-        /// <param name="targetExport">
-        ///     The target export.
-        /// </param>
-        /// <param name="mode">
-        ///     The mode.
-        /// </param>
-        /// <param name="container">
-        ///     The container.
-        /// </param>
-        /// <param name="contractName">
-        ///     The contract name.
-        /// </param>
-        /// <param name="errorTracer"></param>
         [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1027:TabsMustNotBeUsed",
             Justification = "Reviewed. Suppression is OK here.")]
-        public DefaultBuildContext(IExport targetExport, BuildMode mode, IContainer container, string contractName, ErrorTracer errorTracer, BuildParameter[] parameters)
+        public DefaultBuildContext([NotNull] IExport targetExport, BuildMode mode, [NotNull] IContainer container, 
+            [NotNull] string contractName, [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] parameters, 
+            [NotNull] IResolverExtension[] resolverExtensions)
         {
             Contract.Requires<ArgumentNullException>(targetExport != null, "targetExport");
             Contract.Requires<ArgumentNullException>(container != null, "container");
             Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
+            Contract.Requires<ArgumentNullException>(resolverExtensions != null, "resolverExtensions");
 
             Metadata = targetExport.GetNamedExportMetadata(contractName);
             errorTracer.Export = Metadata.ToString();
@@ -74,6 +37,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             Container = container;
             ErrorTracer = errorTracer;
             Parameters = parameters;
+            ResolverExtensions = resolverExtensions;
         }
 
         /// <summary>
@@ -139,6 +103,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         public ErrorTracer ErrorTracer { get; private set; }
         public BuildParameter[] Parameters { get; private set; }
+        public IResolverExtension[] ResolverExtensions { get; set; }
 
         #endregion
 

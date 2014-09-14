@@ -1,28 +1,4 @@
-﻿// The file MethodInjector.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MethodInjector.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The method injector.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -119,6 +95,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <summary>The _event manager.</summary>
         private readonly IEventManager _eventManager;
 
+        private readonly IResolverExtension[] _resolverExtensions;
+
         /// <summary>The _metadata factory.</summary>
         private readonly IMetadataFactory _metadataFactory;
 
@@ -128,30 +106,19 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         #endregion
 
         #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="MethodInjector" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="MethodInjector" /> Klasse.
-        ///     Initializes a new instance of the <see cref="MethodInjector" /> class.
-        /// </summary>
-        /// <param name="method">
-        ///     The method.
-        /// </param>
-        /// <param name="metadataFactory">
-        ///     The metadata factory.
-        /// </param>
-        /// <param name="eventManager">
-        ///     The event manager.
-        /// </param>
-        public MethodInjector(MethodInfo method, IMetadataFactory metadataFactory, IEventManager eventManager)
+        
+        public MethodInjector([NotNull] MethodInfo method, [NotNull] IMetadataFactory metadataFactory, 
+            [NotNull] IEventManager eventManager, [NotNull] IResolverExtension[] resolverExtensions)
         {
             Contract.Requires<ArgumentNullException>(method != null, "method");
             Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
             Contract.Requires<ArgumentNullException>(eventManager != null, "eventManager");
+            Contract.Requires<ArgumentNullException>(resolverExtensions != null, "resolverExtensions");
 
             _method = method;
             _metadataFactory = metadataFactory;
             _eventManager = eventManager;
+            _resolverExtensions = resolverExtensions;
         }
 
         #endregion
@@ -200,7 +167,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             {
                 Contract.Assume(parameterInfo != null);
 
-                new ParameterHelper(_metadataFactory, parameterInfo, args).Inject(target, container, metadata, interceptor, errorTracer, parameters);
+                new ParameterHelper(_metadataFactory, parameterInfo, args, _resolverExtensions).Inject(target, container, metadata, interceptor, errorTracer, parameters);
             }
 
             _method.Invoke(target, args.ToArray());
@@ -220,22 +187,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             #region Constructors and Destructors
 
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="ParameterHelper" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="ParameterHelper" /> Klasse.
-            ///     Initializes a new instance of the <see cref="ParameterHelper" /> class.
-            /// </summary>
-            /// <param name="metadataFactory">
-            ///     The metadata factory.
-            /// </param>
-            /// <param name="parameter">
-            ///     The parameter.
-            /// </param>
-            /// <param name="parameters">
-            ///     The parameters.
-            /// </param>
-            public ParameterHelper([NotNull] IMetadataFactory metadataFactory, [NotNull] ParameterMemberInfo parameter, [NotNull] List<object> parameters)
-                : base(metadataFactory, parameter)
+            public ParameterHelper([NotNull] IMetadataFactory metadataFactory, [NotNull] ParameterMemberInfo parameter, 
+                [NotNull] List<object> parameters, [NotNull] IResolverExtension[] resolverExtensions)
+                : base(metadataFactory, parameter, resolverExtensions)
             {
                 Contract.Requires<ArgumentNullException>(parameter != null, "parameter");
                 Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
