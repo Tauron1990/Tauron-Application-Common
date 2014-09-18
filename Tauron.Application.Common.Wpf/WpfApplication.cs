@@ -23,6 +23,7 @@ using Microsoft.Practices.EnterpriseLibrary.Common.Configuration;
 using Microsoft.Practices.EnterpriseLibrary.Common.Configuration.Fluent;
 using Microsoft.Practices.EnterpriseLibrary.Logging.Configuration;
 using Microsoft.Practices.EnterpriseLibrary.Logging.TraceListeners;
+using Tauron.Application.Aop.Model;
 using Tauron.Application.Composition;
 using Tauron.Application.Implementation;
 using Tauron.Application.Ioc;
@@ -99,10 +100,12 @@ namespace Tauron.Application
         #region Public Methods and Operators
 
         /// <summary>The run.</summary>
-        public static void Run<TApp>() where TApp : WpfApplication, new()
+        public static void Run<TApp>(Action<TApp> runBeforStart = null) where TApp : WpfApplication, new()
         {
             WpfApplicationController.Initialize();
-            WpfApplication app = new TApp();
+            var app = new TApp();
+            if(runBeforStart != null)
+                runBeforStart(app);
             UiSynchronize.Synchronize.Invoke(app.ConfigSplash);
             app.OnStartup(Environment.GetCommandLineArgs());
         }

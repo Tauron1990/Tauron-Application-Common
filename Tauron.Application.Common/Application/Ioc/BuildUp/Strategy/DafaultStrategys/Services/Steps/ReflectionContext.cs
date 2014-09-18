@@ -26,16 +26,17 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         private readonly InjectorContext _parentContext;
 
         public ReflectionContext([NotNull] IMetadataFactory metadataFactory, [NotNull] Type memberType,
-                                 [NotNull] InjectorContext parentContext)
+                                 [NotNull] InjectorContext parentContext, [NotNull] IResolverExtension[] resolverExtensions)
         {
             _parentContext = parentContext;
             MetadataFactory = metadataFactory;
             MemberType = memberType;
+            ResolverExtensions = resolverExtensions;
             CurrentType = memberType;
             BuildParametersRegistry = new ExportRegistry();
         }
 
-        public IExten I { get; private set; }
+        public IResolverExtension[] ResolverExtensions { get; private set; }
 
         [CanBeNull]
         public ExportMetadata ExportMetadataOverride { get; set; }

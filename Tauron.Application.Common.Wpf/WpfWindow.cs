@@ -151,6 +151,11 @@ namespace Tauron.Application
             return _window;
         }
 
+        public void Focus()
+        {
+            UiSynchronize.Synchronize.BeginInvoke(() => _window.Focus());
+        }
+
         #endregion
 
         #region Methods

@@ -40,8 +40,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <param name="member">
         ///     The member.
         /// </param>
-        public FieldInjector(IMetadataFactory metadataFactory, FieldInfo member)
-            : base(metadataFactory, member)
+        public FieldInjector(IMetadataFactory metadataFactory, FieldInfo member, IResolverExtension[] resolverExtensions)
+            : base(metadataFactory, member, resolverExtensions)
         {
             Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
             Contract.Requires<ArgumentNullException>(member != null, "member");

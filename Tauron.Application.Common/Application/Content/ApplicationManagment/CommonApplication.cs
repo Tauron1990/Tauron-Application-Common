@@ -12,6 +12,7 @@ using Microsoft.Practices.EnterpriseLibrary.Logging;
 using Tauron.Application.Composition;
 using Tauron.Application.Implement;
 using Tauron.Application.Ioc;
+using Tauron.Application.Modules;
 using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application
@@ -293,6 +294,7 @@ namespace Tauron.Application
             Contract.Requires<ArgumentNullException>(module != null, "module");
 
             module.Initialize(this);
+            ModuleHandlerRegistry.Progress(module);
         }
 
         /// <summary>The perform startup.</summary>

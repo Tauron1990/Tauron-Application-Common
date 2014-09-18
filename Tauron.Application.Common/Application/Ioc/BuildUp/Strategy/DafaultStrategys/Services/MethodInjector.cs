@@ -119,6 +119,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <summary>The _event manager.</summary>
         private readonly IEventManager _eventManager;
 
+        private readonly IResolverExtension[] _resolverExtensions;
+
         /// <summary>The _metadata factory.</summary>
         private readonly IMetadataFactory _metadataFactory;
 
@@ -143,7 +145,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <param name="eventManager">
         ///     The event manager.
         /// </param>
-        public MethodInjector(MethodInfo method, IMetadataFactory metadataFactory, IEventManager eventManager)
+        public MethodInjector(MethodInfo method, IMetadataFactory metadataFactory, IEventManager eventManager, IResolverExtension[] resolverExtensions)
         {
             Contract.Requires<ArgumentNullException>(method != null, "method");
             Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
@@ -152,6 +154,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _method = method;
             _metadataFactory = metadataFactory;
             _eventManager = eventManager;
+            _resolverExtensions = resolverExtensions;
         }
 
         #endregion
@@ -200,7 +203,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             {
                 Contract.Assume(parameterInfo != null);
 
-                new ParameterHelper(_metadataFactory, parameterInfo, args).Inject(target, container, metadata, interceptor, errorTracer, parameters);
+                new ParameterHelper(_metadataFactory, parameterInfo, args, _resolverExtensions).Inject(target, container, metadata, interceptor, errorTracer, parameters);
             }
 
             _method.Invoke(target, args.ToArray());
@@ -220,22 +223,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             #region Constructors and Destructors
 
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="ParameterHelper" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="ParameterHelper" /> Klasse.
-            ///     Initializes a new instance of the <see cref="ParameterHelper" /> class.
-            /// </summary>
-            /// <param name="metadataFactory">
-            ///     The metadata factory.
-            /// </param>
-            /// <param name="parameter">
-            ///     The parameter.
-            /// </param>
-            /// <param name="parameters">
-            ///     The parameters.
-            /// </param>
-            public ParameterHelper([NotNull] IMetadataFactory metadataFactory, [NotNull] ParameterMemberInfo parameter, [NotNull] List<object> parameters)
-                : base(metadataFactory, parameter)
+            public ParameterHelper([NotNull] IMetadataFactory metadataFactory, [NotNull] ParameterMemberInfo parameter, 
+                [NotNull] List<object> parameters, [NotNull]IResolverExtension[] resolverExtensions)
+                : base(metadataFactory, parameter, resolverExtensions)
             {
                 Contract.Requires<ArgumentNullException>(parameter != null, "parameter");
                 Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");

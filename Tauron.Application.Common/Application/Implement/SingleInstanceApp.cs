@@ -40,10 +40,10 @@ namespace Tauron.Application.Implement
         #region Constants
 
         /// <summary>Suffix to the channel name.</summary>
-        private const string ChannelNameSuffix = "SingeInstanceIPCChannel";
+        public const string ChannelNameSuffix = "SingeInstanceIPCChannel";
 
         /// <summary>String delimiter used in channel names.</summary>
-        private const string Delimiter = ":";
+        public const string Delimiter = ":";
 
         /// <summary>IPC protocol used (string).</summary>
         private const string IpcProtocol = "ipc://";
@@ -184,7 +184,7 @@ namespace Tauron.Application.Implement
         /// <param name="channelName">
         ///     Application's IPC channel name.
         /// </param>
-        private static void CreateRemoteService([NotNull] string channelName)
+        public static void CreateRemoteService([NotNull] string channelName)
         {
             var serverProvider = new BinaryServerFormatterSinkProvider {TypeFilterLevel = TypeFilterLevel.Full};
             IDictionary props = new Dictionary<string, string>();
@@ -215,7 +215,7 @@ namespace Tauron.Application.Implement
         ///     List of command line arg strings.
         /// </returns>
         [NotNull]
-        private static IList<string> GetCommandLineArgs([NotNull] string uniqueApplicationName)
+        public static IList<string> GetCommandLineArgs([NotNull] string uniqueApplicationName)
         {
             Contract.Requires<ArgumentNullException>(uniqueApplicationName != null, "uniqueApplicationName");
 
@@ -265,7 +265,7 @@ namespace Tauron.Application.Implement
         /// <param name="args">
         ///     Command line arguments for the second instance, passed to the first instance to take appropriate action.
         /// </param>
-        private static void SignalFirstInstance([NotNull] string channelName, [NotNull] IList<string> args)
+        public static void SignalFirstInstance([NotNull] string channelName, [NotNull] IList<string> args)
         {
             var secondInstanceChannel = new IpcClientChannel();
             ChannelServices.RegisterChannel(secondInstanceChannel, true);
@@ -321,6 +321,13 @@ namespace Tauron.Application.Implement
             }
 
             #endregion
+        }
+
+        public static void InitializeAsFirstInstance(Mutex mutex, string channelName, TApplication app)
+        {
+            _app = app;
+            singleInstanceMutex = mutex;
+            CreateRemoteService(channelName);
         }
     }
 }

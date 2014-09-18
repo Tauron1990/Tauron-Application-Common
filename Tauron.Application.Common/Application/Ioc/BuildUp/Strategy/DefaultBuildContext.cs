@@ -58,7 +58,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         /// <param name="errorTracer"></param>
         [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1027:TabsMustNotBeUsed",
             Justification = "Reviewed. Suppression is OK here.")]
-        public DefaultBuildContext(IExport targetExport, BuildMode mode, IContainer container, string contractName, ErrorTracer errorTracer, BuildParameter[] parameters)
+        public DefaultBuildContext(IExport targetExport, BuildMode mode, IContainer container, string contractName, 
+            ErrorTracer errorTracer, BuildParameter[] parameters, IResolverExtension[] resolverExtensions)
         {
             Contract.Requires<ArgumentNullException>(targetExport != null, "targetExport");
             Contract.Requires<ArgumentNullException>(container != null, "container");
@@ -74,6 +75,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             Container = container;
             ErrorTracer = errorTracer;
             Parameters = parameters;
+            ResolverExtensions = resolverExtensions;
         }
 
         /// <summary>
@@ -139,6 +141,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         public ErrorTracer ErrorTracer { get; private set; }
         public BuildParameter[] Parameters { get; private set; }
+        public IResolverExtension[] ResolverExtensions { get; set; }
 
         #endregion
 

@@ -104,7 +104,7 @@ namespace Tauron.Application
         /// </returns>
         [NotNull,SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         [PublicAPI]
-        IProgressDialog CreateProgressDialog([NotNull] string text, [NotNull] string title, [NotNull] IWindow owner, [NotNull] Action<IProgress<ActiveProgress>> worker);
+        IProgressDialog CreateProgressDialog([NotNull] string text, [NotNull] string title, [CanBeNull] IWindow owner, [NotNull] Action<IProgress<ActiveProgress>> worker);
 
         /// <summary>
         ///     The format exception.

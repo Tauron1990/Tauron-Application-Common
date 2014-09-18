@@ -51,6 +51,8 @@ namespace Tauron.Application.Ioc.BuildUp
         /// <summary>The _container.</summary>
         private readonly IContainer container;
 
+        private readonly ComponentRegistry _componentRegistry;
+
         private readonly Pipeline pipeline;
 
         private readonly RebuildManager rebuildManager;
@@ -83,6 +85,7 @@ namespace Tauron.Application.Ioc.BuildUp
             Contract.Requires<ArgumentNullException>(componentRegistry != null, "componentRegistry");
 
             this.container = container;
+            _componentRegistry = componentRegistry;
             _factory =
                 componentRegistry.GetAll<IExportFactory>()
                                  .First(fac => fac.TechnologyName == AopConstants.DefaultExportFactoryName)
@@ -147,7 +150,8 @@ namespace Tauron.Application.Ioc.BuildUp
                 try
                 {
                     tracer.Phase = "Begin Building Up";
-                    var context = new DefaultBuildContext(export, BuildMode.Resolve, container, contractName, tracer, buildParameters);
+                    var context = new DefaultBuildContext(export, BuildMode.Resolve, container, contractName, 
+                        tracer, buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
                     var buildObject = new BuildObject(export.ImportMetadata, context.Metadata, buildParameters);
                     Pipeline.Build(context);
                     if (tracer.Exceptional) return null;
@@ -193,7 +197,7 @@ namespace Tauron.Application.Ioc.BuildUp
                         BuildMode.BuildUpObject,
                         container,
                         toBuild.GetType().Name, errorTracer,
-                        buildParameters);
+                        buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
                     Pipeline.Build(context);
                     Contract.Assume(context.Target != null);
                     return context.Target;
@@ -235,7 +239,7 @@ namespace Tauron.Application.Ioc.BuildUp
                     BuildMode.BuildUpObject,
                     container,
                     type.Name, errorTracer,
-                    buildParameters);
+                    buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
                 Pipeline.Build(context);
                 Contract.Assume(context.Target != null);
                 return context.Target;

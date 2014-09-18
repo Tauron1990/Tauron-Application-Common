@@ -40,6 +40,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
     {
         #region Public Properties
 
+        IResolverExtension[] ResolverExtensions { get; }
+
         /// <summary>Gets or sets a value indicating whether build compled.</summary>
         /// <value>The build compled.</value>
         bool BuildCompled { get; set; }
@@ -86,6 +88,16 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
     internal abstract class BuildContextContracts : IBuildContext
     {
         #region Public Properties
+
+        public IResolverExtension[] ResolverExtensions
+        {
+            get
+            {
+                Contract.Ensures(Contract.Result<IResolverExtension[]>() != null);
+
+                return null;
+            }
+        }
 
         /// <summary>Gets or sets a value indicating whether build compled.</summary>
         /// <value>The build compled.</value>

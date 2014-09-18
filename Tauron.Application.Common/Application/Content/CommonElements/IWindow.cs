@@ -74,6 +74,8 @@ namespace Tauron.Application
         object TranslateForTechnology();
 
         #endregion
+
+        void Focus();
     }
 
     [ContractClassFor(typeof (IWindow))]
@@ -157,6 +159,11 @@ namespace Tauron.Application
         {
             Contract.Ensures(Contract.Result<object>() != null);
             return null;
+        }
+
+        public void Focus()
+        {
+        
         }
 
         #endregion
