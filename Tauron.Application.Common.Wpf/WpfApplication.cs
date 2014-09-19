@@ -156,6 +156,11 @@ namespace Tauron.Application
         protected override void MainWindowClosed(object sender, EventArgs e)
         {
             Shutdown();
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
             System.Windows.Application.Current.Shutdown();
             Container.Dispose();
         }

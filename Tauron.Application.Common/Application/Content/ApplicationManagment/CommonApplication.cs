@@ -284,7 +284,7 @@ namespace Tauron.Application
         }
 
         /// <summary>The shutdown.</summary>
-        protected virtual void Shutdown()
+        public virtual void Shutdown()
         {
             Scheduler.Dispose();
         }
