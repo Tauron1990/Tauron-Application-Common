@@ -21,7 +21,7 @@ namespace Tauron.Application
 
         private bool _canClose;
 
-        private string _tile;
+        private string _title;
 
         #endregion
 
@@ -36,7 +36,7 @@ namespace Tauron.Application
         /// </param>
         protected TabWorkspace([NotNull] string title)
         {
-            _tile = title;
+            _title = title;
             _canClose = true;
             CloseWorkspace = new SimpleCommand(obj => CanClose, obj => InvokeClose());
         }
@@ -76,11 +76,11 @@ namespace Tauron.Application
         /// <summary>Gets or sets the title.</summary>
         public string Title
         {
-            get { return _tile; }
+            get { return _title; }
 
             set
             {
-                _tile = value;
+                _title = value;
                 OnPropertyChanged();
             }
         }

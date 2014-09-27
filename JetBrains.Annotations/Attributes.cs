@@ -795,7 +795,7 @@ namespace Tauron.JetBrains.Annotations
     /// <summary>
     ///     This attribute is intended to mark publicly available API which should not be removed and so is treated as used.
     /// </summary>
-    [MeansImplicitUse(ImplicitUseTargetFlags.WithMembers)]
+    [MeansImplicitUse(ImplicitUseTargetFlags.Members)]
     public sealed class PublicAPIAttribute : Attribute
     {
         #region Constructors and Destructors

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Windows;
+using Tauron.Application.Models;
 using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Views.Core
@@ -29,6 +30,8 @@ namespace Tauron.Application.Views.Core
         [NotNull]
         IEnumerable<DependencyObject> GetAllViews([NotNull] string name);
 
+        [CanBeNull]
+        string GetName([NotNull] ViewModelBase model);
     }
 
     [ContractClassFor(typeof(IViewLocator))]
@@ -82,6 +85,12 @@ namespace Tauron.Application.Views.Core
             Contract.Ensures(Contract.Result<IEnumerable<DependencyObject>>() != null);
             return null;
 
+        }
+
+        public string GetName(ViewModelBase model)
+        {
+            Contract.Requires<ArgumentNullException>(model != null, "model");
+            return null;
         }
     }
 }

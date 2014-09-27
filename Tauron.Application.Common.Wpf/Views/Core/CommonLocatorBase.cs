@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Tauron.Application.Ioc;
+using Tauron.Application.Models;
 using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Views.Core
@@ -78,6 +79,11 @@ namespace Tauron.Application.Views.Core
         public IEnumerable<DependencyObject> GetAllViews(string name)
         {
             return GetAllViewsImpl(name).OrderBy(meta => meta.Metadata.Order).Select(i => i.Resolve());
+        }
+
+        public string GetName(ViewModelBase model)
+        {
+            return GetName(model.GetType());
         }
     }
 
