@@ -1,6 +1,7 @@
 ﻿#region
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
@@ -14,7 +15,7 @@ namespace Tauron.Application
 {
     /// <summary>The tauron profile.</summary>
     [PublicAPI]
-    public abstract class TauronProfile : ObservableObject
+    public abstract class TauronProfile : ObservableObject, IEnumerable<string>
     {
         #region Static Fields
 
@@ -105,18 +106,7 @@ namespace Tauron.Application
 
         #region Indexers
 
-        /// <summary>
-        ///     The this.
-        /// </summary>
-        /// <param name="key">
-        ///     The key.
-        /// </param>
-        /// <exception cref="InvalidOperationException">
-        /// </exception>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
-        protected virtual string this[[NotNull]string key]
+        public virtual string this[[NotNull]string key]
         {
             get
             {
@@ -214,7 +204,7 @@ namespace Tauron.Application
         ///     The <see cref="string" />.
         /// </returns>
         [NotNull]
-        protected virtual string GetValue([NotNull] string key, [NotNull] string defaultValue)
+        public virtual string GetValue([NotNull] string key, [NotNull] string defaultValue)
         {
             Contract.Requires<ArgumentNullException>(key != null, "key");
 
@@ -232,7 +222,7 @@ namespace Tauron.Application
         /// <param name="value">
         ///     The value.
         /// </param>
-        protected virtual void SetVaue([NotNull] string key, [NotNull] object value)
+        public virtual void SetVaue([NotNull] string key, [NotNull] object value)
         {
             Contract.Requires<ArgumentNullException>(key != null, "key");
             IlligalCharCheck(key);
@@ -249,5 +239,15 @@ namespace Tauron.Application
         }
 
         #endregion
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            return _settings.Select(k => k.Key).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }
