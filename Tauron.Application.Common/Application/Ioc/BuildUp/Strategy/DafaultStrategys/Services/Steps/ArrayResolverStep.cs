@@ -20,7 +20,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
 
         protected override IResolver CreateResolver(IEnumerable<IResolver> resolvers, Type listType)
         {
-            return new ArrayResolver(resolvers, listType);
+            return new ArrayResolver(resolvers, listType.GetElementType());
         }
     }
 }

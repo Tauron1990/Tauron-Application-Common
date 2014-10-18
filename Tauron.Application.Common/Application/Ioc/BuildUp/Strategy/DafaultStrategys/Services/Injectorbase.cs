@@ -66,9 +66,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
                 var start = InitializeMachine(out fac);
 
-                fac.Beginn(start, InjectorContext);
-
                 InjectorContext.Machine = fac;
+
+                fac.Beginn(start, InjectorContext);
 
                 if (InjectorContext.Resolver == null) throw new InvalidOperationException("No Resolver Created");
 
