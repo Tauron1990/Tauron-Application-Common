@@ -44,17 +44,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// </param>
         public override void OnPerpare(IBuildContext context)
         {
-            if (context.CanHandleLiftime())
-            {
-                context.ErrorTracer.Phase = "Reciving Liftime Informations for " + context.Metadata;
+            if (!context.CanHandleLiftime()) return;
+            context.ErrorTracer.Phase = "Reciving Liftime Informations for " + context.Metadata;
 
-                context.Policys.Add(
-                    new LifetimeTimePolicy
-                    {
-                        LiftimeType = context.Metadata.Lifetime,
-                        ShareLiftime = context.Metadata.Export.ShareLifetime
-                    });
-            }
+            context.Policys.Add(
+                new LifetimeTimePolicy
+                {
+                    LiftimeType = context.Metadata.Lifetime,
+                    ShareLiftime = context.Metadata.Export.ShareLifetime
+                });
         }
 
         /// <summary>

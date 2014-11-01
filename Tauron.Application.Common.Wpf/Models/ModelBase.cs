@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using Tauron.Application.Ioc;
 using Tauron.JetBrains.Annotations;
+using PropertyDescriptor = System.ComponentModel.PropertyDescriptor;
 
 namespace Tauron.Application.Models
 {
-    public class ModelBase : ObservableObject, IModel, ICustomTypeDescriptor
+    public class ModelBase : ObservableObject, IModel, ICustomTypeDescriptor, INotifyDataErrorInfo, INotifyBuildCompled
     {
         [NotNull]
         public static ModelBase ResolveModel([NotNull] string name)
@@ -30,10 +33,14 @@ namespace Tauron.Application.Models
                        : Enumerable.Empty<ObservableProperty>();
         }
 
+        [NotNull]
+        protected ValidatorContext ValidatorContext { get; private set; }
+
         public ModelBase()
         {
             _changedActions = new GroupDictionary<string, WeakAction>();
             _values = new Dictionary<string, object>();
+            ValidatorContext = new ValidatorContext(this);
         }
 
         [NotNull]
@@ -142,18 +149,30 @@ namespace Tauron.Application.Models
 
             _values[property.Name] = value;
 
+            var rules = property.Metadata.ModelRules;
+            if (rules != null)
+            {
+                ValidatorContext.Property = property;
+                SetIssues(property.Name,
+                    rules.Where(r => !r.IsValidValue(value, ValidatorContext))
+                        .Select(r => new PropertyIssue(property.Name, value, string.Format(r.Message(), value)))
+                        .ToArray());
+                ValidatorContext.Property = null;
+            }
+
             if (property.Metadata.PropertyChanged != null) property.Metadata.PropertyChanged(property, this, value);
 
-            OnPropertyChangedExplicit(property.Name);
+            InvokePropertyChanged(property, value);
         }
 
-        private void InvokePropertyChanged([NotNull] ObservableProperty prop, [NotNull] object value)
+        private void InvokePropertyChanged([NotNull] ObservableProperty prop, [CanBeNull] object value)
         {
             OnPropertyChangedExplicit(prop.Name);
 
             ICollection<WeakAction> changedActions;
             if (_changedActions.TryGetValue(prop.Name, out changedActions)) return;
 
+            // ReSharper disable once PossibleNullReferenceException
             foreach (var changedAction in changedActions)
             {
                 if (changedAction.ParameterCount == 0) changedAction.Invoke();
@@ -163,6 +182,20 @@ namespace Tauron.Application.Models
         }
 
         #region CustomTypeDescriptor
+
+        private sealed class MemberDescriptorEqualityComparer : IEqualityComparer<MemberDescriptor>
+        {
+            public static readonly MemberDescriptorEqualityComparer Comparer = new MemberDescriptorEqualityComparer();
+            public bool Equals([NotNull] MemberDescriptor x, [NotNull] MemberDescriptor y)
+            {
+                return string.Equals(x.Name, y.Name);
+            }
+
+            public int GetHashCode([NotNull] MemberDescriptor obj)
+            {
+                return obj.Name.GetHashCode();
+            }
+        }
 
         private class ObservablePropertyDescriptor : PropertyDescriptor
         {
@@ -286,9 +319,12 @@ namespace Tauron.Application.Models
                 _properties.AllValues.Select(property => new ObservablePropertyDescriptor(property, type))
                            .Cast<PropertyDescriptor>()
                            .ToList();
-            props.AddRange(coll.Cast<PropertyDescriptor>());
 
-            return new PropertyDescriptorCollection(props.ToArray(), true);
+            return
+                new PropertyDescriptorCollection(
+                    props.Union(coll.Cast<MemberDescriptor>(), MemberDescriptorEqualityComparer.Comparer)
+                        .Cast<PropertyDescriptor>()
+                        .ToArray(), true);
         }
 
         [NotNull]
@@ -299,5 +335,35 @@ namespace Tauron.Application.Models
 
         #endregion CustomTypeDescriptor
 
+        private GroupDictionary<string, PropertyIssue> _propertyIssues;
+
+        private void SetIssues([NotNull] string propertyName, [NotNull] PropertyIssue[] issues)
+        {
+            if (_propertyIssues.ContainsKey(propertyName))
+                _propertyIssues.Remove(propertyName);
+            if (issues.Length == 0)
+                return;
+
+            _propertyIssues.AddRange(propertyName, issues);
+        }
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            return !_propertyIssues.ContainsKey(propertyName) ? null : _propertyIssues[propertyName];
+        }
+
+        public bool HasErrors { get { return _propertyIssues.Count != 0; } }
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+        private void OnErrorsChanged([NotNull] string propertyName)
+        {
+            EventHandler<DataErrorsChangedEventArgs> handler = ErrorsChanged;
+            if (handler != null) handler(this, new DataErrorsChangedEventArgs(propertyName));
+        }
+
+        public virtual void BuildCompled()
+        {
+        
+        }
     }
 }

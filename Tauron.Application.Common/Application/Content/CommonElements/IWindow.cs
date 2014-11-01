@@ -37,6 +37,8 @@ namespace Tauron.Application
 
         IntPtr Handle { get; }
 
+        bool? DialogResult { set; get; }
+
         #endregion
 
         #region Public Methods and Operators
@@ -76,6 +78,9 @@ namespace Tauron.Application
         #endregion
 
         void Focus();
+
+        [CanBeNull]
+        object Result { get; }
     }
 
     [ContractClassFor(typeof (IWindow))]
@@ -100,6 +105,8 @@ namespace Tauron.Application
                 return IntPtr.Zero;
             }
         }
+
+        public bool? DialogResult { get; set; }
 
         /// <summary>Gets or sets the title.</summary>
         public string Title
@@ -165,6 +172,8 @@ namespace Tauron.Application
         {
         
         }
+
+        public object Result { get; private set; }
 
         #endregion
     }
