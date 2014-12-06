@@ -38,7 +38,7 @@ namespace Tauron.Application
             Contract.Requires<ArgumentNullException>(propertyExpression != null, "propertyExpression");
 
             var memberExpression = (MemberExpression) propertyExpression.Body;
-
+            
             return memberExpression.Member.Name;
         }
 

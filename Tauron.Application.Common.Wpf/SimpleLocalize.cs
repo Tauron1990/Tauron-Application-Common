@@ -84,13 +84,13 @@ namespace Tauron.Application
         {
             var provider = serviceProvider.GetService(typeof (IRootObjectProvider)) as IRootObjectProvider;
 
-            if (provider == null || provider.RootObject == null) return "null"; // "IRootObjectProvider oder das RootObject existieren nicht!";
+            if (provider == null || provider.RootObject == null) return Name; // "IRootObjectProvider oder das RootObject existieren nicht!";
 
             ResourceManager manager;
 
             return Resources.TryGetValue(provider.RootObject.GetType().Assembly, out manager)
                        ? manager.GetObject(Name)
-                       : "null";
+                       : Name;
         }
 
         #endregion
