@@ -19,7 +19,7 @@ namespace Tauron.Application.Models.Rules
             
             if (str == null || AllowStringEmpty) return true;
 
-            return string.IsNullOrWhiteSpace(str);
+            return !string.IsNullOrWhiteSpace(str);
         }
     }
 }

@@ -75,5 +75,8 @@ namespace Tauron.Application.Models
         {
             get { return CommonApplication.Current.MainWindow; }
         }
+
+        [NotNull]
+        public IUISynchronize Synchronize { get { return UiSynchronize.Synchronize;} }
     }
 }

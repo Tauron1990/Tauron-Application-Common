@@ -149,16 +149,8 @@ namespace Tauron.Application.Models
 
             _values[property.Name] = value;
 
-            var rules = property.Metadata.ModelRules;
-            if (rules != null)
-            {
-                ValidatorContext.Property = property;
-                SetIssues(property.Name,
-                    rules.Where(r => !r.IsValidValue(value, ValidatorContext))
-                        .Select(r => new PropertyIssue(property.Name, value, string.Format(r.Message(), value)))
-                        .ToArray());
-                ValidatorContext.Property = null;
-            }
+            //ValidateProperty(property, value);
+            ValidateAll();
 
             if (property.Metadata.PropertyChanged != null) property.Metadata.PropertyChanged(property, this, value);
 
@@ -170,9 +162,10 @@ namespace Tauron.Application.Models
             OnPropertyChangedExplicit(prop.Name);
 
             ICollection<WeakAction> changedActions;
-            if (_changedActions.TryGetValue(prop.Name, out changedActions)) return;
+            if (!_changedActions.TryGetValue(prop.Name, out changedActions)) return;
 
-            // ReSharper disable once PossibleNullReferenceException
+            if(changedActions == null) return;
+            
             foreach (var changedAction in changedActions)
             {
                 if (changedAction.ParameterCount == 0) changedAction.Invoke();
@@ -335,24 +328,54 @@ namespace Tauron.Application.Models
 
         #endregion CustomTypeDescriptor
 
-        private GroupDictionary<string, PropertyIssue> _propertyIssues;
+        public void ValidateAll()
+        {
+            var props = _properties[GetType()];
+            if(props == null) return;
+
+            foreach (var property in props)
+            {
+                ValidateProperty(property, GetValue(property));
+            }
+        }
+
+        private void ValidateProperty([NotNull] ObservableProperty property, [CanBeNull] object value)
+        {
+            var rules = property.Metadata.ModelRules;
+            if (rules == null) return;
+            
+            ValidatorContext.Property = property;
+            SetIssues(property.Name,
+                rules.Where(r => !r.IsValidValue(value, ValidatorContext))
+                    .Select(r => new PropertyIssue(property.Name, value, string.Format(r.Message(), value)))
+                    .ToArray());
+            ValidatorContext.Property = null;
+
+            OnErrorsChanged(property.Name);
+            OnPropertyChanged(() => HasNoErrors);
+            OnPropertyChanged(() => HasErrors);
+        }
+
+        private GroupDictionary<string, PropertyIssue> _propertyIssues = new GroupDictionary<string, PropertyIssue>();
 
         private void SetIssues([NotNull] string propertyName, [NotNull] PropertyIssue[] issues)
         {
-            if (_propertyIssues.ContainsKey(propertyName))
-                _propertyIssues.Remove(propertyName);
-            if (issues.Length == 0)
-                return;
+                if (_propertyIssues.ContainsKey(propertyName))
+                    _propertyIssues.Remove(propertyName);
+                if (issues.Length == 0)
+                    return;
 
-            _propertyIssues.AddRange(propertyName, issues);
+                _propertyIssues.AddRange(propertyName, issues);
         }
 
-        public IEnumerable GetErrors(string propertyName)
+        [CanBeNull]
+        public IEnumerable GetErrors([NotNull] string propertyName)
         {
             return !_propertyIssues.ContainsKey(propertyName) ? null : _propertyIssues[propertyName];
         }
 
         public bool HasErrors { get { return _propertyIssues.Count != 0; } }
+        public bool HasNoErrors { get { return !HasErrors; } }
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
         private void OnErrorsChanged([NotNull] string propertyName)
