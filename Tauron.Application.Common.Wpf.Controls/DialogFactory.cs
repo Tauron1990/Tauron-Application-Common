@@ -27,6 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows;
 using Ookii.Dialogs.Wpf;
 using Tauron.Application.Controls;
@@ -140,30 +141,7 @@ namespace Tauron.Application
                 });
         }
 
-        /// <summary>
-        ///     The show message box.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="text">
-        ///     The text.
-        /// </param>
-        /// <param name="caption">
-        ///     The caption.
-        /// </param>
-        /// <param name="button">
-        ///     The button.
-        /// </param>
-        /// <param name="icon">
-        ///     The icon.
-        /// </param>
-        /// <param name="custumIcon">
-        ///     The custum icon.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="MsgBoxResult" />.
-        /// </returns>
+
         public MsgBoxResult ShowMessageBox(
             IWindow owner,
             string text,
@@ -189,45 +167,9 @@ namespace Tauron.Application
                                          custumIcon));
         }
 
-        /// <summary>
-        ///     The show open file dialog.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="checkFileExists">
-        ///     The check file exists.
-        /// </param>
-        /// <param name="defaultExt">
-        ///     The default ext.
-        /// </param>
-        /// <param name="dereferenceLinks">
-        ///     The dereference links.
-        /// </param>
-        /// <param name="filter">
-        ///     The filter.
-        /// </param>
-        /// <param name="multiSelect">
-        ///     The multi select.
-        /// </param>
-        /// <param name="title">
-        ///     The title.
-        /// </param>
-        /// <param name="validateNames">
-        ///     The validate names.
-        /// </param>
-        /// <param name="checkPathExists">
-        ///     The check path exists.
-        /// </param>
-        /// <param name="result">
-        ///     The result.
-        /// </param>
-        /// <returns>
-        ///     The <see>
-        ///         <cref>IEnumerable</cref>
-        ///     </see>
-        ///     .
-        /// </returns>
+
+
+
         public IEnumerable<string> ShowOpenFileDialog(
             IWindow owner,
             bool checkFileExists,
@@ -260,6 +202,8 @@ namespace Tauron.Application
                             CheckPathExists = checkPathExists
                         };
 
+                        TranslateDefaultExt(dialog);
+
                         tempresult = owner != null
                                          ? dialog.ShowDialog(
                                              (Window)
@@ -269,7 +213,7 @@ namespace Tauron.Application
                                          : dialog.ShowDialog();
 
                         return tempresult == false
-                                   ? null
+                                   ? Enumerable.Empty<string>()
                                    : dialog.FileNames;
                     });
             }
@@ -279,30 +223,6 @@ namespace Tauron.Application
             }
         }
 
-        /// <summary>
-        ///     The show open folder dialog.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="description">
-        ///     The description.
-        /// </param>
-        /// <param name="rootFolder">
-        ///     The root folder.
-        /// </param>
-        /// <param name="showNewFolderButton">
-        ///     The show new folder button.
-        /// </param>
-        /// <param name="useDescriptionForTitle">
-        ///     The use description for title.
-        /// </param>
-        /// <param name="result">
-        ///     The result.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
         public string ShowOpenFolderDialog(
             IWindow owner,
             string description,
@@ -347,48 +267,6 @@ namespace Tauron.Application
             }
         }
 
-        /// <summary>
-        ///     The show save file dialog.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="addExtension">
-        ///     The add extension.
-        /// </param>
-        /// <param name="checkFileExists">
-        ///     The check file exists.
-        /// </param>
-        /// <param name="checkPathExists">
-        ///     The check path exists.
-        /// </param>
-        /// <param name="defaultExt">
-        ///     The default ext.
-        /// </param>
-        /// <param name="dereferenceLinks">
-        ///     The dereference links.
-        /// </param>
-        /// <param name="filter">
-        ///     The filter.
-        /// </param>
-        /// <param name="createPrompt">
-        ///     The create prompt.
-        /// </param>
-        /// <param name="overwritePrompt">
-        ///     The overwrite prompt.
-        /// </param>
-        /// <param name="title">
-        ///     The title.
-        /// </param>
-        /// <param name="initialDirectory">
-        ///     The initial directory.
-        /// </param>
-        /// <param name="result">
-        ///     The result.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
         public string ShowSaveFileDialog(
             IWindow owner,
             bool addExtension,
@@ -426,6 +304,8 @@ namespace Tauron.Application
                                 initialDirectory
                         };
 
+                        TranslateDefaultExt(dialog);
+
                         tempresult = owner != null
                                          ? dialog.ShowDialog(
                                              (Window)
@@ -443,32 +323,6 @@ namespace Tauron.Application
             }
         }
 
-        /// <summary>
-        ///     The show task dialog.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="text">
-        ///     The text.
-        /// </param>
-        /// <param name="caption">
-        ///     The caption.
-        /// </param>
-        /// <param name="button">
-        ///     The button.
-        /// </param>
-        /// <param name="icon">
-        ///     The icon.
-        /// </param>
-        /// <param name="custumIcon">
-        ///     The custum icon.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="MsgBoxResult" />.
-        /// </returns>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// </exception>
         public MsgBoxResult ShowTaskDialog(
             IWindow owner,
             string text,
@@ -525,6 +379,16 @@ namespace Tauron.Application
         #endregion
 
         #region Methods
+
+        private void TranslateDefaultExt([NotNull] VistaFileDialog dialog)
+        {
+            if(string.IsNullOrWhiteSpace(dialog.DefaultExt)) return;
+
+            var ext = "*." + dialog.DefaultExt;
+            var filter = dialog.Filter;
+            var filters = filter.Split('|');
+            for (int i = 1; i < filters.Length; i += 2) if (filters[i] == ext) dialog.FilterIndex = 1 + (i - 1)/2;
+        }
 
         private void TranslateButtons(MsgBoxButton button, [NotNull] TaskDialogItemCollection<TaskDialogButton> buttons)
         {

@@ -2,6 +2,7 @@
 
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Markup;
 using Tauron.JetBrains.Annotations;
 
 #endregion
@@ -10,6 +11,7 @@ namespace Tauron.Application.Converter
 {
     /// <summary>The bool to visibility converter.</summary>
     [PublicAPI]
+    [MarkupExtensionReturnType(typeof(IValueConverter))]
     public class BoolToVisibilityConverter : ValueConverterFactoryBase
     {
         #region Public Properties

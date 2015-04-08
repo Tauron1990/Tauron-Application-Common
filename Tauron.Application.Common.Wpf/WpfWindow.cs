@@ -75,6 +75,12 @@ namespace Tauron.Application
             }
         }
 
+        public bool? DialogResult
+        {
+            get { return UiSynchronize.Synchronize.Invoke(() => _window.DialogResult); }
+            set { UiSynchronize.Synchronize.Invoke(() => _window.DialogResult = value); }
+        }
+
         /// <summary>Gets or sets the title.</summary>
         public string Title
         {
@@ -154,6 +160,18 @@ namespace Tauron.Application
         public void Focus()
         {
             UiSynchronize.Synchronize.BeginInvoke(() => _window.Focus());
+        }
+
+        public object Result
+        {
+            get
+            {
+                return UiSynchronize.Synchronize.Invoke(() =>
+                {
+                    var temp = _window.DataContext as IResultProvider;
+                    return temp == null ? null : temp.Result;
+                });
+            }
         }
 
         #endregion

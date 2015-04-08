@@ -24,14 +24,23 @@ namespace Tauron.Application.Models
         [CanBeNull]
         public ObservablePropertyChanged PropertyChanged { get; private set; }
 
+        [CanBeNull]
+        public ModelRule[] ModelRules { get; private set; }
+
         internal bool Prepare([NotNull] Type targetType)
         {
             Contract.Requires<ArgumentNullException>(targetType != null, "targetType");
 
             if (DefaultValue != null && targetType != DefaultValue.GetType()) return false;
 
-            if (DefaultValue != null && targetType.BaseType == typeof (ValueType)) DefaultValue = targetType.GetConstructor(Type.EmptyTypes).Invoke(null);
-
+            try
+            {
+                if (DefaultValue != null && targetType.BaseType == typeof (ValueType)) DefaultValue = targetType.GetConstructor(Type.EmptyTypes).Invoke(null);
+            }
+            catch (NullReferenceException)
+            {
+                return false;
+            }
             return true;
         }
 
@@ -76,6 +85,16 @@ namespace Tauron.Application.Models
         public ObservablePropertyMetadata()
         {
             
+        }
+
+        [NotNull]
+        public ObservablePropertyMetadata SetValidationRules([NotNull] params ModelRule[] rules)
+        {
+            if (rules == null) throw new ArgumentNullException("rules");
+
+            ModelRules = rules;
+
+            return this;
         }
     }
 

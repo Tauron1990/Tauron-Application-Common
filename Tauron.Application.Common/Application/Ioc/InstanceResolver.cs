@@ -5,7 +5,7 @@ using Tauron.JetBrains.Annotations;
 namespace Tauron.Application.Ioc
 {
     [PublicAPI]
-    public class InstanceResolver<TExport, TMetadata>
+    public sealed class InstanceResolver<TExport, TMetadata>
         where TMetadata : class
     {
         private readonly Func<BuildParameter[], object> _resolver;
@@ -54,9 +54,9 @@ namespace Tauron.Application.Ioc
 
         public TExport Resolve(bool uiSync, [CanBeNull] BuildParameter[] buildParameters = null)
         {
-            if (uiSync)
-                return UiSynchronize.Synchronize.Invoke(() => Resolve(buildParameters));
-            return Resolve(buildParameters);
+            return uiSync 
+                ? UiSynchronize.Synchronize.Invoke(() => Resolve(buildParameters)) 
+                : Resolve(buildParameters);
         }
     }
 }

@@ -202,7 +202,7 @@
     <Compile Include="Application\Ioc\ContextScopeAttribute.cs" />
     <Compile Include="Application\Ioc\ErrorTracer.cs" />
     <Compile Include="Application\Ioc\ExportDescriptor.cs" />
-    <Compile Include="Application\Ioc\ExportFactory.cs" />
+    <Compile Include="Application\Ioc\InstanceResolver.cs" />
     <Compile Include="Application\Ioc\ExportLevelAttribute.cs" />
     <Compile Include="Application\Ioc\LevelSpecificImport.cs" />
     <Compile Include="Application\Ioc\LevelSpecificInject.cs" />

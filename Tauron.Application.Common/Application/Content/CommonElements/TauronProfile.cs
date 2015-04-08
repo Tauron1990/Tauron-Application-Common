@@ -63,6 +63,8 @@ namespace Tauron.Application
 
         #region Public Properties
 
+        public int Count { get { return _settings.Count; } }
+
         /// <summary>Gets the application.</summary>
         /// <value>The application.</value>
         [NotNull]

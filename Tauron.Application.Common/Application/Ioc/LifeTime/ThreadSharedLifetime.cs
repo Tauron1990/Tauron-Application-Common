@@ -63,18 +63,7 @@ namespace Tauron.Application.Ioc.LifeTime
         public object GetValue()
         {
             object value;
-            _objects.TryGetValue(Thread.CurrentThread, out value);
-
-            foreach (Thread source in _objects.Keys.ToArray())
-            {
-                Contract.Assume(source != null);
-
-                if (source.IsAlive) continue;
-
-                _objects.Remove(source);
-            }
-
-            return value;
+            return _objects.TryGetValue(Thread.CurrentThread, out value) ? value : null;
         }
 
         /// <summary>
