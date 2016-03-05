@@ -105,9 +105,11 @@ namespace Tauron.Application.Ioc.BuildUp
 
             return (build, service) =>
             {
-                Contract.Requires<ArgumentNullException>(build != null, "build");
-                Contract.Requires<ArgumentNullException>(service != null, "service");
-                Contract.Ensures(Contract.Result<object>() != null);
+                if(build == null)
+                    throw new ArgumentNullException(nameof(build));
+                //Contract.Requires<ArgumentNullException>(build != null, "build");
+                //Contract.Requires<ArgumentNullException>(service != null, "service");
+                //Contract.Ensures(Contract.Result<object>() != null);
 
                 IEnumerable<object> parameters = from parm in MapParameters(constructor)
                                                  select

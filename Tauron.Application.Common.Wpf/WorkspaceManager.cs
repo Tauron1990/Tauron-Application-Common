@@ -73,7 +73,7 @@ namespace Tauron.Application
         /// <param name="items">
         ///     The items.
         /// </param>
-        public void AddRange([NotNull] IEnumerable<TWorkspace> items)
+        public new void AddRange([NotNull] IEnumerable<TWorkspace> items)
         {
             Contract.Requires<ArgumentNullException>(items != null, "items");
 

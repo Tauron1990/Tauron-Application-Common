@@ -287,8 +287,8 @@ namespace Tauron
         {
             Contract.Requires<ArgumentNullException>(con != null, "con");
 
-            //Contract.Ensures(Contract.Result<IEnumerable<object>>() != null, ErrorMessage);
-            //Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<object>>(), obj => obj != null), ErrorMessage);
+            Contract.Ensures(Contract.Result<IEnumerable<TType>>() != null, ErrorMessage);
+            Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<TType>>(), obj => obj != null), ErrorMessage);
 
             return ResolveAll(con, typeof(TType), name).Cast<TType>();
         }

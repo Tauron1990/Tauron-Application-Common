@@ -39,10 +39,7 @@ namespace Tauron.Application.Files.Ini
         {
         }
 
-        public ReadOnlyEnumerator<IniEntry> Entries
-        {
-            get { return new ReadOnlyEnumerator<IniEntry>(_entries.Values); }
-        }
+        public ReadOnlyEnumerator<IniEntry> Entries => new ReadOnlyEnumerator<IniEntry>(_entries.Values);
 
         public string Name { get; private set; }
 

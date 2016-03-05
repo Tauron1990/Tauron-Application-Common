@@ -1,28 +1,4 @@
-﻿// The file PolicyList.cs is part of Tauron.Application.Common.
-// 
-// CoreEngine is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// CoreEngine is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//  
-// You should have received a copy of the GNU General Public License
-//  along with Tauron.Application.Common If not, see <http://www.gnu.org/licenses/>.
-
-#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PolicyList.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The policy list.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -70,20 +46,12 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public TPolicy Get<TPolicy>()
         {
             ICollection<IPolicy> policies;
-            if (_list.TryGetValue(typeof (TPolicy), out policies))
-            {
-                Contract.Assume(policies != null);
-                return (TPolicy) policies.Single();
-            }
+            if (!_list.TryGetValue(typeof (TPolicy), out policies)) return default(TPolicy);
 
-            return default(TPolicy);
+            Contract.Assume(policies != null);
+            return (TPolicy) policies.Last();
         }
 
-        /// <summary>The get all.</summary>
-        /// <typeparam name="TPolicy"></typeparam>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
         public IEnumerable<TPolicy> GetAll<TPolicy>()
         {
             Contract.Ensures(Contract.Result<IEnumerable<TPolicy>>() != null);

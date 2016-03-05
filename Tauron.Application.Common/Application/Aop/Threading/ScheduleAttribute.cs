@@ -115,13 +115,13 @@ namespace Tauron.Application.Aop.Threading
             switch (TaskOption)
             {
                 case TaskOption.Worker:
-                    CommonApplication.QueueWorkitem(invocation.Proceed, false);
+                    CommonApplication.QueueWorkitemAsync(invocation.Proceed, false);
                     break;
                 case TaskOption.Task:
                     Task.Factory.StartNew(invocation.Proceed, CreationOptions);
                     break;
                 case TaskOption.UIThread:
-                    CommonApplication.QueueWorkitem(invocation.Proceed, true);
+                    CommonApplication.QueueWorkitemAsync(invocation.Proceed, true);
                     break;
                 default:
                     CommonConstants.LogCommon(false, "Invalid Schedule TaskOption: {0}.{1}", invocation.TargetType, invocation.Method);

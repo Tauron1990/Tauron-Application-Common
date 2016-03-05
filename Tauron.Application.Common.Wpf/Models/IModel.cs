@@ -2,7 +2,7 @@
 
 namespace Tauron.Application.Models
 {
-    public interface IModel : INotifyPropertyChanged
+    public interface IModel : INotifyPropertyChanged, IEditableObject
     {
     }
 }

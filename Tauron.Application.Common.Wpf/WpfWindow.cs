@@ -99,6 +99,15 @@ namespace Tauron.Application
             Dispose(true);
         }
 
+        public bool? IsVisible
+        {
+            get
+            {
+                if (_disposed) return null;
+                return _window.Dispatcher.Invoke(() => _window.IsVisible);
+            }
+        }
+
         /// <summary>
         ///     The add hook.
         /// </summary>
@@ -116,7 +125,7 @@ namespace Tauron.Application
         /// <summary>The close.</summary>
         public void Close()
         {
-            UiSynchronize.Synchronize.Invoke(_window.Close);
+            UiSynchronize.Synchronize.Invoke(() => { Dispose(); _window.Close(); });
         }
 
         /// <summary>
@@ -139,11 +148,11 @@ namespace Tauron.Application
             UiSynchronize.Synchronize.Invoke(_window.Show);
         }
 
-        public Task ShowDialog(IWindow window)
+        public Task ShowDialogAsync(IWindow window)
         {
             return UiSynchronize.Synchronize.BeginInvoke(() =>
             {
-                _window.Owner = window == null ? null : window.TranslateForTechnology() as Window;
+                _window.Owner = window?.TranslateForTechnology() as Window;
                 _window.ShowDialog();
             });
         }
@@ -162,6 +171,11 @@ namespace Tauron.Application
             UiSynchronize.Synchronize.BeginInvoke(() => _window.Focus());
         }
 
+        public void Hide()
+        {
+            UiSynchronize.Synchronize.Invoke(() => _window.Hide());
+        }
+
         public object Result
         {
             get
@@ -169,7 +183,7 @@ namespace Tauron.Application
                 return UiSynchronize.Synchronize.Invoke(() =>
                 {
                     var temp = _window.DataContext as IResultProvider;
-                    return temp == null ? null : temp.Result;
+                    return temp?.Result;
                 });
             }
         }
@@ -193,7 +207,7 @@ namespace Tauron.Application
         {
             if (disposing) GC.SuppressFinalize(this);
 
-            if (_source != null) _source.Dispose();
+            _source?.Dispose();
 
             _disposed = true;
         }

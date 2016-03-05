@@ -36,7 +36,7 @@ namespace Tauron.Application.Ioc
     /// <summary>The inject attribute.</summary>
     [AttributeUsage(
         AttributeTargets.Constructor | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Parameter
-        | AttributeTargets.Property, AllowMultiple = false)]
+        | AttributeTargets.Property)]
     [PublicAPI]
     [MeansImplicitUse(ImplicitUseKindFlags.Assign)]
     public class InjectAttribute : Attribute

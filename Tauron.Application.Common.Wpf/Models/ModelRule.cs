@@ -15,7 +15,7 @@ namespace Tauron.Application.Models
 
         public override int GetHashCode()
         {
-            return (Id != null ? Id.GetHashCode() : RuntimeHelpers.GetHashCode(this));
+            return Id?.GetHashCode() ?? RuntimeHelpers.GetHashCode(this);
         }
 
         public static bool operator ==(ModelRule left, ModelRule right)
@@ -45,7 +45,7 @@ namespace Tauron.Application.Models
 
         public ModelRule([NotNull] Func<object, ValidatorContext, bool> validator)
         {
-            if (validator == null) throw new ArgumentNullException("validator");
+            if (validator == null) throw new ArgumentNullException(nameof(validator));
             Validator = validator;
         }
 

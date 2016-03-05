@@ -25,7 +25,12 @@ namespace Tauron.Application.Models
         public ObservablePropertyChanged PropertyChanged { get; private set; }
 
         [CanBeNull]
+        public Func<ObservableProperty, object> CustomGetter { get; set; }
+
+        [CanBeNull]
         public ModelRule[] ModelRules { get; private set; }
+
+        public bool ForceAllValidation { get; set; }
 
         internal bool Prepare([NotNull] Type targetType)
         {
@@ -35,7 +40,12 @@ namespace Tauron.Application.Models
 
             try
             {
-                if (DefaultValue != null && targetType.BaseType == typeof (ValueType)) DefaultValue = targetType.GetConstructor(Type.EmptyTypes).Invoke(null);
+                if (DefaultValue != null && targetType.BaseType == typeof (ValueType))
+                {
+                    var constructorInfo = targetType.GetConstructor(Type.EmptyTypes);
+                    if (constructorInfo != null)
+                        DefaultValue = constructorInfo.Invoke(null);
+                }
             }
             catch (NullReferenceException)
             {
@@ -90,7 +100,7 @@ namespace Tauron.Application.Models
         [NotNull]
         public ObservablePropertyMetadata SetValidationRules([NotNull] params ModelRule[] rules)
         {
-            if (rules == null) throw new ArgumentNullException("rules");
+            if (rules == null) throw new ArgumentNullException(nameof(rules));
 
             ModelRules = rules;
 

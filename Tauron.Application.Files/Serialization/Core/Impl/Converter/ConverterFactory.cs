@@ -14,8 +14,8 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
         [NotNull]
         public static SimpleConverter<string> CreateConverter([CanBeNull] MemberInfo member, [CanBeNull] Type targetType)
         {
-            if (member == null) throw new ArgumentNullException("member");
-            if (targetType == null) throw new ArgumentNullException("targetType");
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (targetType == null) throw new ArgumentNullException(nameof(targetType));
 
             if (targetType == typeof (string)) return new StringCnverter();
             if (targetType.BaseType == typeof (Enum)) return new GenericEnumConverter(targetType);
@@ -27,8 +27,8 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
         public static SimpleConverter<IEnumerable<string>> CreateListConverter([NotNull] MemberInfo member,
             [NotNull] Type targeType)
         {
-            if (member == null) throw new ArgumentNullException("member");
-            if (targeType == null) throw new ArgumentNullException("targeType");
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (targeType == null) throw new ArgumentNullException(nameof(targeType));
 
             var builder = new ListBuilder(targeType);
 

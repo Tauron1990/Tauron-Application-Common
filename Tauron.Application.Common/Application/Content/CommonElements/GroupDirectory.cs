@@ -118,6 +118,14 @@ namespace Tauron.Application
             _listType = singleList ? typeof (HashSet<TValue>) : typeof (List<TValue>);
         }
 
+        public GroupDictionary(GroupDictionary<TKey, TValue> groupDictionary)
+            : base(groupDictionary)
+        {
+            _listType = groupDictionary._listType;
+            _genericTemp = groupDictionary._genericTemp;
+            
+        }
+
         /// <summary>Gibt eine Collection zurück die Alle in den Listen enthaltenen Werte Darstellen.</summary>
         /// <value>The all values.</value>
         [NotNull]

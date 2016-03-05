@@ -426,7 +426,7 @@ namespace Tauron.Application
                 else
                 {
                     _searcher.CustomName = customProperty;
-                    _searcher.Command = _factory.GetCommand();
+                    _searcher.Command = _factory.GetCommand(); //TODO GetCommand Not Correct
                 }
 
                 _searcher.SetCommand();
@@ -613,14 +613,14 @@ namespace Tauron.Application
                 [CanBeNull]
                 public ICommand GetCommand()
                 {
-                    if (Target == null) return null;
+                    return LastCommand;
 
-                    object target = Target.Target;
-                    if (target == null) return null;
+                    //object target = Target?.Target;
+                    //if (target == null) return null;
 
-                    Type targetType = target.GetType();
+                    //Type targetType = target.GetType();
 
-                    return FindCommandToDelegate(targetType, target);
+                    //return FindCommandToDelegate(targetType, target);
                 }
 
                 #endregion

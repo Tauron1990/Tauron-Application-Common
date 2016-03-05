@@ -145,7 +145,7 @@ namespace Tauron.Application
         ///     The <see cref="Task" />.
         /// </returns>
         [NotNull]
-        public static Task QueueWorkitem([NotNull] Action action, bool withDispatcher)
+        public static Task QueueWorkitemAsync([NotNull] Action action, bool withDispatcher)
         {
             Contract.Requires<ArgumentNullException>(action != null, "action");
 
@@ -220,6 +220,8 @@ namespace Tauron.Application
 
             if(string.IsNullOrWhiteSpace(CatalogList))
                 CommonConstants.LogCommon(false, "Common Application: CatalogList Empty");
+
+            if (CatalogList == null) return;
 
             var coll = XamlServices.Load(CatalogList) as CatalogCollection;
             try

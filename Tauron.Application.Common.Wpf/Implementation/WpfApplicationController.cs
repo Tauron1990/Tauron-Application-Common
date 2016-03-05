@@ -15,15 +15,6 @@
 
 #region
 
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="WpfApplicationController.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   Defines the WpfApplication type.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -116,9 +107,9 @@ namespace Tauron.Application.Implementation
             _waiter = new ManualResetEventSlim();
             var runner = new Thread(RunApplication) {IsBackground = false};
             runner.SetApartmentState(ApartmentState.STA);
-            runner.Start();
             lock (_waiterLock)
             {
+                runner.Start();
                 _waiter.Wait();
             }
         }

@@ -13,14 +13,14 @@ namespace Tauron.Application.Models
         public ObservableProperty Property { get; internal set; }
 
         [NotNull]
-        public Type ModelType { get { return Model.GetType(); } }
+        public Type ModelType => Model.GetType();
 
         [NotNull]
         public IDictionary<object, object> Items { get; private set; }
 
         public ValidatorContext([NotNull] ModelBase model)
         {
-            if (model == null) throw new ArgumentNullException("model");
+            if (model == null) throw new ArgumentNullException(nameof(model));
             Model = model;
             Items = new Dictionary<object, object>();
         }

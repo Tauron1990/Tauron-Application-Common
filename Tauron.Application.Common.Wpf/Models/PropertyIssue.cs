@@ -16,8 +16,8 @@ namespace Tauron.Application.Models
 
         public PropertyIssue([NotNull] string propertyName, [CanBeNull] object value, [NotNull] string message)
         {
-            if (propertyName == null) throw new ArgumentNullException("propertyName");
-            if (message == null) throw new ArgumentNullException("message");
+            if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
             PropertyName = propertyName;
             Value = value;

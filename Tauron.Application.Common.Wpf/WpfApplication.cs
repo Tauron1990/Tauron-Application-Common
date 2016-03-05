@@ -16,18 +16,14 @@
 #region
 using System;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Reflection;
 using System.Windows;
 using Microsoft.Practices.EnterpriseLibrary.Common.Configuration;
 using Microsoft.Practices.EnterpriseLibrary.Common.Configuration.Fluent;
 using Microsoft.Practices.EnterpriseLibrary.Logging.Configuration;
 using Microsoft.Practices.EnterpriseLibrary.Logging.TraceListeners;
-using Tauron.Application.Aop.Model;
 using Tauron.Application.Composition;
 using Tauron.Application.Implementation;
 using Tauron.Application.Ioc;
-using Tauron.Application.Models;
 using Tauron.JetBrains.Annotations;
 
 #endregion
@@ -90,10 +86,7 @@ namespace Tauron.Application
         public string ThemeDictionary { get; set; }
 
         [NotNull]
-        public static System.Windows.Application CurrentWpfApplication
-        {
-            get { return System.Windows.Application.Current; }
-        }
+        public static System.Windows.Application CurrentWpfApplication => System.Windows.Application.Current;
 
         #endregion
 
@@ -104,8 +97,7 @@ namespace Tauron.Application
         {
             WpfApplicationController.Initialize();
             var app = new TApp();
-            if(runBeforStart != null)
-                runBeforStart(app);
+            runBeforStart?.Invoke(app);
             UiSynchronize.Synchronize.Invoke(app.ConfigSplash);
             app.OnStartup(Environment.GetCommandLineArgs());
         }
@@ -124,18 +116,14 @@ namespace Tauron.Application
         {
             if (string.IsNullOrEmpty(ThemeDictionary)) return;
 
-            QueueWorkitem(
+            QueueWorkitemAsync(
                 () =>
                 WpfApplicationController.Application.Resources.MergedDictionaries.Add(
                     System.Windows.Application
                           .LoadComponent(
                               new Uri
                                   (
-                                  string
-                                      .Format
-                                      (@"/{0};component/{1}",
-                                       SourceAssembly,
-                                       ThemeDictionary),
+                                  $@"/{SourceAssembly};component/{ThemeDictionary}",
                                   UriKind
                                       .Relative))
                           .CastObj

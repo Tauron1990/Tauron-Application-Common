@@ -2,7 +2,6 @@
 
 using System;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Reflection;
 using Tauron.JetBrains.Annotations;
 
@@ -31,13 +30,13 @@ namespace Tauron.Application.Commands
         ///     Die Ereignis Daten
         /// </summary>
         [NotNull]
-        public EventArgs EventArgs { get; private set; }
+        public EventArgs EventArgs { get; }
 
         /// <summary>
         ///     Das Objekt, an das der Ereignishandler angefügt wird.
         /// </summary>
         [NotNull]
-        public object Sender { get; private set; }
+        public object Sender { get; }
 
         #endregion
     }
@@ -73,7 +72,7 @@ namespace Tauron.Application.Commands
             _method = method;
             _context = context;
 
-            _methodType = (MethodType) method.GetParameters().Count();
+            _methodType = (MethodType) method.GetParameters().Length;
             if (_methodType != MethodType.One) return;
             if (_method.GetParameters()[0].ParameterType != typeof (EventData)) _methodType = MethodType.EventArgs;
         }
@@ -103,10 +102,7 @@ namespace Tauron.Application.Commands
 
         /// <summary>Gets the context.</summary>
         [CanBeNull]
-        public object Context
-        {
-            get { return _context == null ? null : _context.Target; }
-        }
+        public object Context => _context?.Target;
 
         #endregion
 

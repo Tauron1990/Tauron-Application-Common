@@ -26,7 +26,6 @@
 
 using System.Linq;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -68,7 +67,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             context.ErrorTracer.Phase = "Contruct Object for " + context.Metadata;
 
-            context.Target = policy.Constructor(context, policy.Generator);
+            context.Target = policy.Constructor.Invoke(context, policy.Generator);  //(context, policy.Generator);
         }
 
         /// <summary>

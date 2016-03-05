@@ -39,6 +39,8 @@ namespace Tauron.Application
 
         bool? DialogResult { set; get; }
 
+        bool? IsVisible { get; }
+
         #endregion
 
         #region Public Methods and Operators
@@ -66,7 +68,7 @@ namespace Tauron.Application
         void Show();
 
         [NotNull]
-        Task ShowDialog([CanBeNull] IWindow window);
+        Task ShowDialogAsync([CanBeNull] IWindow window);
 
         /// <summary>The translate for technology.</summary>
         /// <returns>
@@ -78,6 +80,8 @@ namespace Tauron.Application
         #endregion
 
         void Focus();
+
+        void Hide();
 
         [CanBeNull]
         object Result { get; }
@@ -120,6 +124,8 @@ namespace Tauron.Application
 
         #region Public Methods and Operators
 
+        public bool? IsVisible { get; }
+
         /// <summary>
         ///     The add hook.
         /// </summary>
@@ -152,7 +158,7 @@ namespace Tauron.Application
         {
         }
 
-        public Task ShowDialog(IWindow window)
+        public Task ShowDialogAsync(IWindow window)
         {
             
             return null;
@@ -171,6 +177,11 @@ namespace Tauron.Application
         public void Focus()
         {
         
+        }
+
+        public void Hide()
+        {
+            
         }
 
         public object Result { get; private set; }

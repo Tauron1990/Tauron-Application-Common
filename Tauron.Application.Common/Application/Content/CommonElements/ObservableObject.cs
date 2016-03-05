@@ -84,6 +84,11 @@ namespace Tauron.Application
 
         #endregion
 
+        protected ObservableObject()
+        {
+            Category = GetType().ToString();
+        }
+
         #region Public Properties
 
         private LogHelper _logHelper;
@@ -91,16 +96,10 @@ namespace Tauron.Application
         /// <summary>Gets the current dispatcher.</summary>
         /// <value>The current dispatcher.</value>
         [NotNull]
-        public static IUISynchronize CurrentDispatcher
-        {
-            get { return UiSynchronize.Synchronize; }
-        }
+        public static IUISynchronize CurrentDispatcher => UiSynchronize.Synchronize;
 
         [NotNull]
-        protected LogHelper Log
-        {
-            get { return _logHelper ?? (_logHelper = new LogHelper(this)); }
-        }
+        protected LogHelper Log => _logHelper ?? (_logHelper = new LogHelper(this));
 
         [CanBeNull]
         protected string Category { get; set; }
