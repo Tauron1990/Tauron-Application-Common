@@ -45,21 +45,9 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
         }
 
 
-        public override DateTime LastModified
-        {
-            get
-            {
-                return InfoObject.LastModified;
-            }
-        }
+        public override DateTime LastModified => InfoObject.LastModified;
 
-        public override bool Exist
-        {
-            get
-            {
-                return InfoObject == null;
-            }
-        }
+        public override bool Exist => InfoObject == null;
 
         protected override void DeleteImpl()
         {
@@ -90,13 +78,7 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
             set { InfoObject.FileName = value; }
         }
 
-        public override long Size
-        {
-            get
-            {
-                return InfoObject.UncompressedSize;
-            }
-        }
+        public override long Size => InfoObject.UncompressedSize;
 
         protected override Stream CreateStream(FileAccess access, InternalFileMode mode)
         {

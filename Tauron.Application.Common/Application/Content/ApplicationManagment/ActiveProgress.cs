@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Tauron.Application
 {
@@ -8,16 +6,6 @@ namespace Tauron.Application
     [PublicAPI]
     public class ActiveProgress
     {
-        #region Fields
-
-        private string _message;
-
-        private double _overAllProgress;
-
-        private double _percent;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -50,65 +38,24 @@ namespace Tauron.Application
 
         #endregion
 
+        #region Fields
+
+        #endregion
+
         #region Public Properties
 
         /// <summary>Gets the message.</summary>
         /// <value>The message.</value>
         [NotNull]
-        public string Message
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-
-                return _message;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _message = value;
-            }
-        }
+        public string Message { get; private set; }
 
         /// <summary>Gets or sets the over all progress.</summary>
         /// <value>The over all progress.</value>
-        public double OverAllProgress
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<double>() >= 0 && Contract.Result<double>() <= 100);
-
-                return _overAllProgress;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentException>(value >= 0 && value <= 100, "OverAllProgress");
-
-                _overAllProgress = value;
-            }
-        }
+        public double OverAllProgress { get; set; }
 
         /// <summary>Gets the percent.</summary>
         /// <value>The percent.</value>
-        public double Percent
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<double>() >= 0 && Contract.Result<double>() <= 100);
-
-                return _percent;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentException>(value >= 0 && value <= 100, "Percent");
-
-                _percent = value;
-            }
-        }
+        public double Percent { get; private set; }
 
         #endregion
     }

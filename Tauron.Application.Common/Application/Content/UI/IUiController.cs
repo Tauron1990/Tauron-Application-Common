@@ -1,8 +1,6 @@
 ﻿#region
 
-using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -19,7 +17,7 @@ namespace Tauron.Application
         OnMainWindowClose,
 
         /// <summary>The on explicit shutdown.</summary>
-        OnExplicitShutdown,
+        OnExplicitShutdown
     }
 
     /// <summary>The UIController interface.</summary>

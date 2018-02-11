@@ -11,11 +11,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -65,13 +63,10 @@ namespace Tauron
         ///     Weiter informationen stehen dann in der Inner Exceptionzur verfügung.
         /// </exception>
         [NotNull]
-        public static TType Resolve<TType>([NotNull] this IContainer con) where TType : class
+        public static TType Resolve<TType>([NotNull] this IContainer con, params BuildParameter[] parameters) where TType : class
         {
-            Contract.Requires<ArgumentNullException>(con != null, "con");
-
-            Contract.Ensures(Contract.Result<TType>() != null, ErrorMessage);
-
-            return (TType) con.Resolve(typeof (TType), null);
+            if (con == null) throw new ArgumentNullException(nameof(con));
+            return (TType) con.Resolve(typeof(TType), null, parameters);
         }
 
         /// <summary>
@@ -91,13 +86,10 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="TType" />.
         /// </returns>
-        public static TType Resolve<TType>(this IContainer con, string name, bool optional, params BuildParameter[] buildParameters) where TType : class
+        public static TType Resolve<TType>([NotNull] this IContainer con, string name, bool optional, params BuildParameter[] buildParameters) where TType : class
         {
-            Contract.Requires<ArgumentNullException>(con != null, "con");
-
-            Contract.Ensures(optional || Contract.Result<TType>() != null, ErrorMessage);
-
-            return con.Resolve(typeof (TType), name, optional, buildParameters) as TType;
+            if (con == null) throw new ArgumentNullException(nameof(con));
+            return con.Resolve(typeof(TType), name, optional, buildParameters) as TType;
         }
 
         /// <summary>
@@ -130,13 +122,10 @@ namespace Tauron
         ///     Wird geworfen wenn ein Export nicht gefunden wurde.
         ///     Weiter informationen stehen dann in der Inner Exceptionzur verfügung.
         /// </exception>
-        public static object Resolve(this IContainer con, Type @interface, string name, params BuildParameter[] buildParameters)
+        public static object Resolve([NotNull] this IContainer con, [NotNull] Type @interface, string name, params BuildParameter[] buildParameters)
         {
-            Contract.Requires<ArgumentNullException>(con != null, "con");
-            Contract.Requires<ArgumentNullException>(@interface != null, "interface");
-
-            Contract.Ensures(Contract.Result<object>() != null, ErrorMessage);
-
+            if (con == null) throw new ArgumentNullException(nameof(con));
+            if (@interface == null) throw new ArgumentNullException(nameof(@interface));
             var tracer = new ErrorTracer();
 
             try
@@ -146,7 +135,7 @@ namespace Tauron
             }
             finally
             {
-                if(tracer.Exceptional)
+                if (tracer.Exceptional)
                     throw new BuildUpException(tracer);
             }
         }
@@ -185,16 +174,15 @@ namespace Tauron
         ///     Wird geworfen wenn ein Export nicht gefunden wurde.
         ///     Weiter informationen stehen dann in der Inner Exceptionzur verfügung.
         /// </exception>
-        public static object Resolve(this IContainer con, Type @interface, string name, bool optional, BuildParameter[] buildParameters)
+        public static object Resolve([NotNull] this IContainer con, [NotNull] Type @interface, string name, bool optional, BuildParameter[] buildParameters)
         {
-            Contract.Requires<ArgumentNullException>(con != null, "con");
-            Contract.Requires<ArgumentNullException>(@interface != null, "interface");
-
+            if (con == null) throw new ArgumentNullException(nameof(con));
+            if (@interface == null) throw new ArgumentNullException(nameof(@interface));
             var tracer = new ErrorTracer();
 
             try
             {
-                ExportMetadata data = con.FindExport(@interface, name, tracer, optional);
+                var data = con.FindExport(@interface, name, tracer, optional);
 
                 if (tracer.Exceptional) return null;
                 if (data != null) return con.BuildUp(data, tracer, buildParameters);
@@ -204,7 +192,7 @@ namespace Tauron
             }
             finally
             {
-                if(tracer.Exceptional)
+                if (tracer.Exceptional)
                     throw new BuildUpException(tracer);
             }
         }
@@ -239,33 +227,24 @@ namespace Tauron
         ///     Wird geworfen wenn ein Export nicht gefunden wurde.
         ///     Weiter informationen stehen dann in der Inner Exceptionzur verfügung.
         /// </exception>
-        public static IEnumerable<object> ResolveAll(this IContainer con, Type @interface, string name, params BuildParameter[] buildParameters)
+        public static IEnumerable<object> ResolveAll([NotNull] this IContainer con, [NotNull] Type @interface, string name, params BuildParameter[] buildParameters)
         {
-            Contract.Requires<ArgumentNullException>(con != null, "con");
-            Contract.Requires<ArgumentNullException>(@interface != null, "interface");
-
-            Contract.Ensures(Contract.Result<IEnumerable<object>>() != null, ErrorMessage);
-            Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<object>>(), obj => obj != null), ErrorMessage);
-
+            if (con == null) throw new ArgumentNullException(nameof(con));
+            if (@interface == null) throw new ArgumentNullException(nameof(@interface));
             var tracer = new ErrorTracer();
 
             try
             {
                 var temp = con.FindExports(@interface, name, tracer);
-                if(tracer.Exceptional) yield break;
+                if (tracer.Exceptional) yield break;
 
-                foreach (var exportMetadata in temp)
-                {
-                    var tempBuild = con.BuildUp(exportMetadata, tracer, buildParameters);
-                    if(tracer.Exceptional) yield break;
-
+                foreach (var tempBuild in temp.Select(exportMetadata => con.BuildUp(exportMetadata, tracer, buildParameters)).TakeWhile(tempBuild => !tracer.Exceptional))
                     yield return tempBuild;
-                }
             }
             finally
             {
-                if(tracer.Exceptional)
-                    throw  new BuildUpException(tracer);
+                if (tracer.Exceptional)
+                    throw new BuildUpException(tracer);
             }
         }
 
@@ -283,13 +262,9 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="IEnumerable" />.
         /// </returns>
-        public static IEnumerable<TType> ResolveAll<TType>(this IContainer con, string name)
+        public static IEnumerable<TType> ResolveAll<TType>([NotNull] this IContainer con, string name)
         {
-            Contract.Requires<ArgumentNullException>(con != null, "con");
-
-            Contract.Ensures(Contract.Result<IEnumerable<TType>>() != null, ErrorMessage);
-            Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<TType>>(), obj => obj != null), ErrorMessage);
-
+            if (con == null) throw new ArgumentNullException(nameof(con));
             return ResolveAll(con, typeof(TType), name).Cast<TType>();
         }
 

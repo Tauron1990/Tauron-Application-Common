@@ -1,17 +1,13 @@
 ﻿#region
 
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Threading;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application
 {
-    /// <summary>The ApplicationHelper interface.</summary>
-    [ContractClass(typeof (ApplicationHelperContracts))]
     public interface IApplicationHelper
     {
         #region Public Methods and Operators
@@ -25,7 +21,8 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="Thread" />.
         /// </returns>
-        [NotNull,PublicAPI]
+        [NotNull]
+        [PublicAPI]
         Thread CreateUIThread([NotNull] ThreadStart start);
 
         /// <summary>The run anonymous application.</summary>
@@ -33,7 +30,8 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="IWindow" />.
         /// </returns>
-        [NotNull,SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
+        [NotNull]
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         [PublicAPI]
         IWindow RunAnonymousApplication<T>() where T : class, IWindow;
 
@@ -54,64 +52,6 @@ namespace Tauron.Application
         /// </param>
         [PublicAPI]
         void RunUIThread([NotNull] ThreadStart start);
-
-        #endregion
-    }
-
-    /// <summary>The application helper contracts.</summary>
-    [ContractClassFor(typeof (IApplicationHelper))]
-    internal abstract class ApplicationHelperContracts : IApplicationHelper
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The create ui thread.
-        /// </summary>
-        /// <param name="start">
-        ///     The start.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="Thread" />.
-        /// </returns>
-        public Thread CreateUIThread(ThreadStart start)
-        {
-            Contract.Requires<ArgumentNullException>(start != null, "start");
-            Contract.Ensures(Contract.Result<Thread>() != null);
-            return null;
-        }
-
-        /// <summary>The run anonymous application.</summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns>
-        ///     The <see cref="IWindow" />.
-        /// </returns>
-        public IWindow RunAnonymousApplication<T>() where T : class, IWindow
-        {
-            Contract.Ensures(Contract.Result<IWindow>() != null);
-            return null;
-        }
-
-        /// <summary>
-        ///     The run anonymous application.
-        /// </summary>
-        /// <param name="window">
-        ///     The window.
-        /// </param>
-        public void RunAnonymousApplication(IWindow window)
-        {
-            Contract.Requires<ArgumentNullException>(window != null, "window");
-        }
-
-        /// <summary>
-        ///     The run ui thread.
-        /// </summary>
-        /// <param name="start">
-        ///     The start.
-        /// </param>
-        public void RunUIThread(ThreadStart start)
-        {
-            Contract.Requires<ArgumentNullException>(start != null, "start");
-        }
 
         #endregion
     }

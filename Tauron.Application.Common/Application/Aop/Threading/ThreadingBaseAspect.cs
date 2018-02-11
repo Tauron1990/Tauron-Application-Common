@@ -1,7 +1,7 @@
 ﻿#region
 
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -55,7 +55,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="contextName">
         ///     The context name.
         /// </param>
-        protected internal override void Initialize( object target,  ObjectContext context,  string contextName)
+        protected internal override void Initialize(object target, ObjectContext context, string contextName)
         {
             base.Initialize(target, context, contextName);
 

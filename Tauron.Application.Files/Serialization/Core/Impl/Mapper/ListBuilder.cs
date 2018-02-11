@@ -25,7 +25,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
         private Type _elemenType;
 
         [NotNull]
-        public object[] Objects { get { return _enumerable.Cast<object>().ToArray(); } }
+        public object[] Objects => _enumerable.Cast<object>().ToArray();
 
         [CanBeNull]
         public Type ElemenType

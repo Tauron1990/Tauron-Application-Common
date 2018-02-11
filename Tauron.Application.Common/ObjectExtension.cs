@@ -1,10 +1,10 @@
 ﻿#region
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Globalization;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -25,7 +25,7 @@ namespace Tauron
         HalfHour = 30,
 
         /// <summary>15 Miniutes.</summary>
-        QuaterHour = 15,
+        QuaterHour = 15
     }
 
     /// <summary>The object extension.</summary>
@@ -48,8 +48,6 @@ namespace Tauron
         [CanBeNull]
         public static T As<T>([CanBeNull] this object value) where T : class
         {
-            if (value == null) return default(T);
-
             return value as T;
         }
 
@@ -87,9 +85,8 @@ namespace Tauron
 
         public static T GetService<T>([NotNull] this IServiceProvider provider)
         {
-            Contract.Requires<ArgumentNullException>(provider != null, "provider");
-
-            object temp = provider.GetService(typeof (T));
+            if (provider == null) throw new ArgumentNullException(nameof(provider));
+            var temp = provider.GetService(typeof(T));
             if (temp == null) return default(T);
 
             return (T) temp;
@@ -108,8 +105,7 @@ namespace Tauron
         /// </returns>
         public static bool IsAlive<TType>([NotNull] this WeakReference<TType> reference) where TType : class
         {
-            Contract.Requires<ArgumentNullException>(reference != null, "reference");
-
+            if (reference == null) throw new ArgumentNullException(nameof(reference));
             TType o;
             return reference.TryGetTarget(out o);
         }
@@ -128,7 +124,10 @@ namespace Tauron
         /// </returns>
         public static DateTime Round(this DateTime source, RoundType type)
         {
-            Contract.Requires<ArgumentException>((double) type != 0, "type");
+            if (!Enum.IsDefined(typeof(RoundType), type))
+                throw new InvalidEnumArgumentException(nameof(type), (int) type, typeof(RoundType));
+            if (type == RoundType.None)
+                throw new ArgumentNullException(nameof(type));
 
             return Round(source, (double) type);
         }
@@ -147,20 +146,21 @@ namespace Tauron
         /// </returns>
         public static DateTime Round(this DateTime source, double type)
         {
-            Contract.Requires<ArgumentException>((int) type != 0, "type");
+            if (type == 0)
+                throw new ArgumentNullException(nameof(type));
 
-            DateTime result = source;
+            var result = source;
 
-            double minutes = type;
+            var minutes = type;
             int modulo;
 
             Math.DivRem(source.Minute, (int) minutes, out modulo);
 
             if (modulo <= 0) return result;
 
-            result = modulo >= (minutes/2) ? source.AddMinutes(minutes - modulo) : source.AddMinutes(modulo*-1);
+            result = modulo >= minutes / 2 ? source.AddMinutes(minutes - modulo) : source.AddMinutes(modulo * -1);
 
-            result = result.AddSeconds(source.Second*-1);
+            result = result.AddSeconds(source.Second * -1);
 
             return result;
         }
@@ -177,12 +177,12 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        [NotNull, StringFormatMethod("format")]
+        [NotNull]
+        [StringFormatMethod("format")]
         public static string SFormat([NotNull] this string format, [NotNull] params object[] args)
         {
-            Contract.Requires<ArgumentNullException>(format != null, "format");
-            Contract.Requires<ArgumentNullException>(args != null, "args");
-
+            if (format == null) throw new ArgumentNullException(nameof(format));
+            if (args == null) throw new ArgumentNullException(nameof(args));
             return string.Format(CultureInfo.InvariantCulture, format, args);
         }
 
@@ -200,8 +200,7 @@ namespace Tauron
         [CanBeNull]
         public static TType TypedTarget<TType>([NotNull] this WeakReference<TType> reference) where TType : class
         {
-            Contract.Requires<ArgumentNullException>(reference != null, "reference");
-
+            if (reference == null) throw new ArgumentNullException(nameof(reference));
             TType obj;
             return reference.TryGetTarget(out obj) ? obj : null;
         }

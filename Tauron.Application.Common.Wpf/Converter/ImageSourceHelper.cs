@@ -1,10 +1,9 @@
 ﻿#region
 
 using System;
-using System.Diagnostics;
 using System.Windows.Markup;
-using Microsoft.Practices.EnterpriseLibrary.Logging;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
+using NLog;
 
 #endregion
 
@@ -12,24 +11,17 @@ namespace Tauron.Application.Converter
 {
     internal static class ImageSourceHelper
     {
+        private static Logger GetLogger() => LogManager.GetLogger(nameof(ImageSourceHelper), typeof(ImageSourceHelper));
+
         #region Public Methods and Operators
 
         public static bool Enter([CanBeNull] string imageSource, [NotNull] IServiceProvider provider)
         {
             if (imageSource != null) return false;
 
-            if (Logger.IsLoggingEnabled())
-            {
-                Logger.Write(
-                    new LogEntry
-                    {
-                        Severity = TraceEventType.Warning,
-                        Message =
-                            string.Format(
-                                "InmageSource are null. {0}",
-                                provider.GetService<IProvideValueTarget>().TargetObject)
-                    });
-            }
+            GetLogger().Warn("InmageSource are null. {0}",
+                provider.GetService<IProvideValueTarget>().TargetObject);
+
 
             return true;
         }
@@ -38,15 +30,7 @@ namespace Tauron.Application.Converter
         {
             if (!isNull) return false;
 
-            if (Logger.IsLoggingEnabled())
-            {
-                Logger.Write(
-                    new LogEntry
-                    {
-                        Severity = TraceEventType.Warning,
-                        Message = string.Format("Inmage not Found: {0}.", imageSource)
-                    });
-            }
+            GetLogger().Warn("Inmage not Found: {0}.", imageSource);
 
             return true;
         }

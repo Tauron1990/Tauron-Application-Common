@@ -1,17 +1,16 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Aop
 {
     /// <summary>The method aspect attribute.</summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method)]
     public abstract class MethodAspectAttribute : AspectBaseAttribute
     {
         #region Methods
@@ -27,8 +26,8 @@ namespace Tauron.Application.Aop
         /// </param>
         protected virtual void EnterMethod([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
-            Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+            if (context == null) throw new ArgumentNullException(nameof(context));
         }
 
         /// <summary>
@@ -42,8 +41,8 @@ namespace Tauron.Application.Aop
         /// </param>
         protected virtual void ExecuteMethod([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
-            Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+            if (context == null) throw new ArgumentNullException(nameof(context));
 
             invocation.Proceed();
         }
@@ -59,8 +58,8 @@ namespace Tauron.Application.Aop
         /// </param>
         protected virtual void ExitMethod([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
-            Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+            if (context == null) throw new ArgumentNullException(nameof(context));
         }
 
         /// <summary>
@@ -74,8 +73,8 @@ namespace Tauron.Application.Aop
         /// </param>
         protected virtual void FinallyMethod([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
-            Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+            if (context == null) throw new ArgumentNullException(nameof(context));
         }
 
         /// <summary>
@@ -97,7 +96,7 @@ namespace Tauron.Application.Aop
             }
             catch (Exception e)
             {
-                if(MethodException(invocation, e, context))
+                if (MethodException(invocation, e, context))
                     throw;
             }
             finally
@@ -118,11 +117,12 @@ namespace Tauron.Application.Aop
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected virtual bool MethodException([NotNull] IInvocation invocation, [NotNull] Exception exception, [NotNull] ObjectContext context)
+        protected virtual bool MethodException([NotNull] IInvocation invocation, [NotNull] Exception exception,
+            [NotNull] ObjectContext context)
         {
-            Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            Contract.Requires<ArgumentNullException>(exception != null, "exception");
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+            if (exception == null) throw new ArgumentNullException(nameof(exception));
+            if (context == null) throw new ArgumentNullException(nameof(context));
 
             return true;
         }

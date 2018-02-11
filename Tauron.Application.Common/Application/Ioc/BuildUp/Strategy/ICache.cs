@@ -24,8 +24,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Diagnostics.Contracts;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.LifeTime;
 
@@ -34,7 +32,6 @@ using Tauron.Application.Ioc.LifeTime;
 namespace Tauron.Application.Ioc.BuildUp.Strategy
 {
     /// <summary>The Cache interface.</summary>
-    [ContractClass(typeof (CacheContracts))]
     public interface ICache
     {
         #region Public Methods and Operators
@@ -63,54 +60,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         ///     The <see cref="ILifetimeContext" />.
         /// </returns>
         ILifetimeContext GetContext(ExportMetadata metadata);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (ICache))]
-    internal abstract class CacheContracts : ICache
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The add.
-        /// </summary>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <param name="metadata">
-        ///     The metadata.
-        /// </param>
-        /// <param name="shareLifetime">
-        ///     The share lifetime.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void Add(ILifetimeContext context, ExportMetadata metadata, bool shareLifetime)
-        {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The get context.
-        /// </summary>
-        /// <param name="metadata">
-        ///     The metadata.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="ILifetimeContext" />.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public ILifetimeContext GetContext(ExportMetadata metadata)
-        {
-            Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
-
-            throw new NotImplementedException();
-        }
 
         #endregion
     }

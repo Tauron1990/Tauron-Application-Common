@@ -27,10 +27,9 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -40,43 +39,45 @@ namespace Tauron.Application.Controls
     [PublicAPI]
     public class EditableTextBlock : TextBlock
     {
-        #region Static Fields
-
-        public static readonly DependencyProperty IsInEditModeProperty = DependencyProperty.Register(
-            "IsInEditMode",
-            typeof (bool),
-            typeof (
-                EditableTextBlock
-                ),
-            new UIPropertyMetadata
-                (false,
-                 IsInEditModeUpdate));
-
-        // Using a DependencyProperty as the backing store for MaxLength.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty MaxLengthProperty = DependencyProperty.Register(
-            "MaxLength",
-            typeof (int),
-            typeof (
-                EditableTextBlock),
-            new UIPropertyMetadata
-                (0));
-
-        #endregion
-
         #region Fields
 
         private EditableTextBlockAdorner _adorner;
 
         #endregion
 
+        #region Static Fields
+
+        public static readonly DependencyProperty IsInEditModeProperty = DependencyProperty.Register(
+            "IsInEditMode",
+            typeof(bool),
+            typeof(
+                EditableTextBlock
+            ),
+            new UIPropertyMetadata
+            (false,
+                IsInEditModeUpdate));
+
+        // Using a DependencyProperty as the backing store for MaxLength.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty MaxLengthProperty = DependencyProperty.Register(
+            "MaxLength",
+            typeof(int),
+            typeof(
+                EditableTextBlock),
+            new UIPropertyMetadata
+                (0));
+
+        #endregion
+
+        // Using a DependencyProperty as the backing store for IsInEditMode.  This enables animation, styling, binding, etc...
+
         #region Public Properties
 
         /// <summary>Gets or sets a value indicating whether is in edit mode.</summary>
         public bool IsInEditMode
         {
-            get { return (bool) GetValue(IsInEditModeProperty); }
+            get => (bool) GetValue(IsInEditModeProperty);
 
-            set { SetValue(IsInEditModeProperty, value); }
+            set => SetValue(IsInEditModeProperty, value);
         }
 
         /// <summary>
@@ -85,9 +86,9 @@ namespace Tauron.Application.Controls
         /// <value>The length of the max.</value>
         public int MaxLength
         {
-            get { return (int) GetValue(MaxLengthProperty); }
+            get => (int) GetValue(MaxLengthProperty);
 
-            set { SetValue(MaxLengthProperty, value); }
+            set => SetValue(MaxLengthProperty, value);
         }
 
         #endregion
@@ -127,7 +128,7 @@ namespace Tauron.Application.Controls
             if (null == textBlock) return;
 
             // Get the adorner layer of the uielement (here TextBlock)
-            AdornerLayer layer = AdornerLayer.GetAdornerLayer(textBlock);
+            var layer = AdornerLayer.GetAdornerLayer(textBlock);
 
             // If the IsInEditMode set to true means the user has enabled the edit mode then
             // add the adorner to the adorner layer of the TextBlock.
@@ -147,12 +148,12 @@ namespace Tauron.Application.Controls
             else
             {
                 // Remove the adorner from the adorner layer.
-                Adorner[] adorners = layer.GetAdorners(textBlock);
-                if (adorners != null) foreach (EditableTextBlockAdorner adorner in adorners.OfType<EditableTextBlockAdorner>()) layer.Remove(adorner);
+                var adorners = layer.GetAdorners(textBlock);
+                if (adorners != null) foreach (var adorner in adorners.OfType<EditableTextBlockAdorner>()) layer.Remove(adorner);
 
                 // Update the textblock's text binding.
-                BindingExpression expression = textBlock.GetBindingExpression(TextProperty);
-                if (null != expression) expression.UpdateTarget();
+                var expression = textBlock.GetBindingExpression(TextProperty);
+                expression?.UpdateTarget();
             }
         }
 
@@ -176,7 +177,5 @@ namespace Tauron.Application.Controls
         }
 
         #endregion
-
-        // Using a DependencyProperty as the backing store for IsInEditMode.  This enables animation, styling, binding, etc...
     }
 }

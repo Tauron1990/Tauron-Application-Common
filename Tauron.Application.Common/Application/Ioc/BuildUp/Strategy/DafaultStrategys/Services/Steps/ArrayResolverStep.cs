@@ -6,12 +6,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
 {
     public class ArrayResolverStep : ManyResolverStep
     {
-
-
-        public override StepId Id
-        {
-            get { return StepIds.ArrayResolver; }
-        }
+        public override StepId Id => StepIds.ArrayResolver;
 
         protected override Type GetCurrentType(ReflectionContext context)
         {

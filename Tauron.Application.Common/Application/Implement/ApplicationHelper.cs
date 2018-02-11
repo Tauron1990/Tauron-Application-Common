@@ -2,10 +2,9 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Threading;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -13,13 +12,77 @@ namespace Tauron.Application.Implement
 {
     /// <summary>The application helper.</summary>
     [PublicAPI]
-    [Export(typeof (IApplicationHelper))]
+    [Export(typeof(IApplicationHelper))]
     public class ApplicationHelper : IApplicationHelper
     {
+        /// <summary>
+        ///     The start up helper.
+        /// </summary>
+        /// <typeparam name="T">
+        /// </typeparam>
+        private class StartUpHelper<T>
+            where T : class, IWindow
+        {
+            #region Constructors and Destructors
+
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="StartUpHelper{T}" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="StartUpHelper{T}" /> Klasse.
+            ///     Initializes a new instance of the <see cref="StartUpHelper{T}" /> class.
+            /// </summary>
+            /// <param name="helper">
+            ///     The helper.
+            /// </param>
+            public StartUpHelper([NotNull] ApplicationHelper helper)
+            {
+                if (helper == null) throw new ArgumentNullException(nameof(helper));
+                _helper = helper;
+            }
+
+            #endregion
+
+            #region Public Methods and Operators
+
+            /// <summary>The start.</summary>
+            /// <returns>
+            ///     The <see cref="T" />.
+            /// </returns>
+            [NotNull]
+            public T Start()
+            {
+                _helper.RunUIThread(Starthelper);
+                return _temp;
+            }
+
+            #endregion
+
+            #region Methods
+
+            /// <summary>The starthelper.</summary>
+            private void Starthelper()
+            {
+                _temp = Activator.CreateInstance<T>();
+                _helper.RunAnonymousApplication(_temp);
+            }
+
+            #endregion
+
+            #region Fields
+
+            /// <summary>The _helper.</summary>
+            private readonly ApplicationHelper _helper;
+
+            /// <summary>The _temp.</summary>
+            private T _temp;
+
+            #endregion
+        }
+
         #region Fields
 
         /// <summary>The _factory.</summary>
-        [Inject] private IUIControllerFactory _factory;
+        [Inject]
+        private IUIControllerFactory _factory;
 
         #endregion
 
@@ -60,7 +123,7 @@ namespace Tauron.Application.Implement
         /// </param>
         public void RunAnonymousApplication(IWindow window)
         {
-            IUIController app = _factory.CreateController();
+            var app = _factory.CreateController();
             app.MainWindow = window;
             app.ShutdownMode = ShutdownMode.OnMainWindowClose;
             app.Run(window);
@@ -78,73 +141,5 @@ namespace Tauron.Application.Implement
         }
 
         #endregion
-
-        /// <summary>
-        ///     The start up helper.
-        /// </summary>
-        /// <typeparam name="T">
-        /// </typeparam>
-        private class StartUpHelper<T>
-            where T : class, IWindow
-        {
-            #region Fields
-
-            /// <summary>The _helper.</summary>
-            private readonly ApplicationHelper _helper;
-
-            /// <summary>The _temp.</summary>
-            private T _temp;
-
-            #endregion
-
-            #region Constructors and Destructors
-
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="StartUpHelper{T}" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="StartUpHelper{T}" /> Klasse.
-            ///     Initializes a new instance of the <see cref="StartUpHelper{T}" /> class.
-            /// </summary>
-            /// <param name="helper">
-            ///     The helper.
-            /// </param>
-            public StartUpHelper([NotNull] ApplicationHelper helper)
-            {
-                Contract.Requires<ArgumentNullException>(helper != null, "helper");
-
-                _helper = helper;
-            }
-
-            #endregion
-
-            #region Public Methods and Operators
-
-            /// <summary>The start.</summary>
-            /// <returns>
-            ///     The <see cref="T" />.
-            /// </returns>
-            [NotNull]
-            public T Start()
-            {
-                Contract.Ensures(Contract.Result<T>() != null);
-
-                _helper.RunUIThread(Starthelper);
-                return _temp;
-            }
-
-            #endregion
-
-            #region Methods
-
-            /// <summary>The starthelper.</summary>
-            private void Starthelper()
-            {
-                Contract.Requires(_helper != null);
-
-                _temp = Activator.CreateInstance<T>();
-                _helper.RunAnonymousApplication(_temp);
-            }
-
-            #endregion
-        }
     }
 }

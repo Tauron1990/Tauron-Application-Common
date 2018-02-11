@@ -14,17 +14,18 @@
 //  along with Tauron.Application.Common.Wpf If not, see <http://www.gnu.org/licenses/>.
 
 #region
+
 using System;
-using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.Threading;
 using System.Windows;
-using Microsoft.Practices.EnterpriseLibrary.Common.Configuration;
-using Microsoft.Practices.EnterpriseLibrary.Common.Configuration.Fluent;
-using Microsoft.Practices.EnterpriseLibrary.Logging.Configuration;
-using Microsoft.Practices.EnterpriseLibrary.Logging.TraceListeners;
+using JetBrains.Annotations;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 using Tauron.Application.Composition;
 using Tauron.Application.Implementation;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -34,26 +35,6 @@ namespace Tauron.Application
     [PublicAPI]
     public class WpfApplication : CommonApplication
     {
-        protected class InternalLoggerDefaultFormatter : IFormatterBuilder
-        {
-            private readonly string _pattern;
-
-            public InternalLoggerDefaultFormatter([NotNull] string pattern)
-            {
-                Contract.Requires<ArgumentNullException>(pattern != null, "pattern");
-
-                _pattern = pattern;
-            }
-
-            [NotNull]
-            public FormatterData GetFormatterData()
-            {
-                return new TextFormatterData(_pattern);
-            }
-        }
-
-        private string _defaultFormatterPattern = "{message}{newline}";
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -68,6 +49,32 @@ namespace Tauron.Application
         {
             CatalogList = "Catalogs.xaml";
         }
+        public WpfApplication(bool doStartup, System.Windows.Application app)
+            : base(doStartup, new SplashService(), new WpfIuiControllerFactory(app))
+        {
+            CatalogList = "Catalogs.xaml";
+        }
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>The run.</summary>
+        public static void Run<TApp>(Action<TApp> runBeforStart = null, CultureInfo info = null) where TApp : WpfApplication, new()
+        {
+            WpfApplicationController.Initialize(info);
+
+            if (info != null && !info.Equals(CultureInfo.InvariantCulture))
+            {
+                Thread.CurrentThread.CurrentCulture = info;
+                Thread.CurrentThread.CurrentUICulture = info;
+            }
+
+            var app = new TApp();
+            runBeforStart?.Invoke(app);
+            UiSynchronize.Synchronize.Invoke(app.ConfigSplash);
+            app.OnStartup(Environment.GetCommandLineArgs());
+        }
 
         #endregion
 
@@ -76,9 +83,9 @@ namespace Tauron.Application
         /// <summary>Gets or sets the container.</summary>
         public override IContainer Container
         {
-            get { return CompositionServices.Container; }
+            get => CompositionServices.Container;
 
-            set { CompositionServices.Container = value; }
+            set => CompositionServices.Container = value;
         }
 
         /// <summary>Gets or sets the theme dictionary.</summary>
@@ -87,20 +94,6 @@ namespace Tauron.Application
 
         [NotNull]
         public static System.Windows.Application CurrentWpfApplication => System.Windows.Application.Current;
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>The run.</summary>
-        public static void Run<TApp>(Action<TApp> runBeforStart = null) where TApp : WpfApplication, new()
-        {
-            WpfApplicationController.Initialize();
-            var app = new TApp();
-            runBeforStart?.Invoke(app);
-            UiSynchronize.Synchronize.Invoke(app.ConfigSplash);
-            app.OnStartup(Environment.GetCommandLineArgs());
-        }
 
         #endregion
 
@@ -118,29 +111,21 @@ namespace Tauron.Application
 
             QueueWorkitemAsync(
                 () =>
-                WpfApplicationController.Application.Resources.MergedDictionaries.Add(
-                    System.Windows.Application
-                          .LoadComponent(
-                              new Uri
-                                  (
-                                  $@"/{SourceAssembly};component/{ThemeDictionary}",
-                                  UriKind
-                                      .Relative))
-                          .CastObj
-                        <ResourceDictionary>
-                        ()),
+                    WpfApplicationController.Application.Resources.MergedDictionaries.Add(
+                        System.Windows.Application
+                            .LoadComponent(
+                                new Uri
+                                (
+                                    $@"/{SourceAssembly};component/{ThemeDictionary}",
+                                    UriKind
+                                        .Relative))
+                            .CastObj
+                            <ResourceDictionary>
+                            ()),
                 true);
         }
 
-        /// <summary>
-        ///     The main window closed.
-        /// </summary>
-        /// <param name="sender">
-        ///     The sender.
-        /// </param>
-        /// <param name="e">
-        ///     The e.
-        /// </param>
+
         protected override void MainWindowClosed(object sender, EventArgs e)
         {
             Shutdown();
@@ -153,71 +138,21 @@ namespace Tauron.Application
             Container.Dispose();
         }
 
-        [NotNull]
-        public string DefaultFormatterPattern
+        protected override void ConfigurateLagging(LoggingConfiguration config)
         {
-            get { return _defaultFormatterPattern; }
-            set
+            var filetarget = new FileTarget
             {
-                if(string.IsNullOrWhiteSpace(value)) return;
-                _defaultFormatterPattern = value;
-            }
-        }
+                Name = "CommonFile",
+                Layout = "${log4jxmlevent}",
+                ArchiveAboveSize = 10485760,
+                MaxArchiveFiles = 10,
+                ArchiveFileName = GetdefaultFileLocation().CombinePath("Logs\\Tauron.Application.Common.{##}.log"),
+                FileName = GetdefaultFileLocation().CombinePath("Logs\\Tauron.Application.Common.log"),
+                ArchiveNumbering = ArchiveNumberingMode.Rolling
+            };
+            config.AddTarget(filetarget);
 
-        protected override IConfigurationSource CreateConfiguration()
-        {
-            var builder = new ConfigurationSourceBuilder();
-            var source = new DictionaryConfigurationSource();
-
-            var exConfig = builder.ConfigureExceptionHandling();
-            exConfig.GivenPolicyWithName(CommonConstants.CommonExceptionPolicy)
-                    .ForExceptionType<Exception>()
-                    .LogToCategory(CommonConstants.CommonCategory)
-                    .ThenNotifyRethrow();
-            exConfig.GivenPolicyWithName(CommonWpfConstans.CommonExceptionPolicy)
-                .ForExceptionType<Exception>()
-                .LogToCategory(CommonWpfConstans.CommonCategory)
-                .ThenNotifyRethrow();
-            ConfigureExceptionHandling(exConfig);
-
-            var logConfig = builder.ConfigureLogging();
-
-            "Logs".ClearDirectory();
-
-            CrateDefaultRollingFile(logConfig.LogToCategoryNamed(CommonConstants.CommonCategory).SendTo
-                                             .RollingFile("Tauron.Application.Common.File"), "Logs\\Tauron.Application.Common.log");
-            CrateDefaultRollingFile(logConfig.LogToCategoryNamed(CommonWpfConstans.CommonCategory).SendTo
-                                 .RollingFile("Tauron.Application.Common.Wpf.File"), "Logs\\Tauron.Application.Common.Wpf.log");
-            
-            ConfigureLogging(logConfig);
-
-            builder.UpdateConfigurationWithReplace(source);
-
-            return source;
-        }
-
-        protected void CrateDefaultRollingFile([NotNull] ILoggingConfigurationSendToRollingFileTraceListener listener, [NotNull] string path)
-        {
-            Contract.Requires<ArgumentNullException>(listener != null, "listener");
-            Contract.Requires<ArgumentNullException>(path != null, "path");
-
-            path.GetFullPath().CreateDirectoryIfNotExis();
-
-            listener.ToFile(path)
-                    .WhenRollFileExists(RollFileExistsBehavior.Increment)
-                    .CleanUpArchivedFilesWhenMoreThan(4)
-                    .FormatWith(new InternalLoggerDefaultFormatter(DefaultFormatterPattern));
-        }
-
-        protected virtual void ConfigureExceptionHandling(
-            [NotNull] IExceptionConfigurationGivenPolicyWithName exceptionConfiguration)
-        {
-            Contract.Requires<ArgumentNullException>(exceptionConfiguration != null, "exceptionConfiguration");
-        }
-
-        protected virtual void ConfigureLogging([NotNull] ILoggingConfigurationStart loggingConfiguration)
-        {
-            Contract.Requires<ArgumentNullException>(loggingConfiguration != null, "loggingConfiguration");
+            config.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, filetarget));
         }
 
         protected override IContainer CreateContainer()

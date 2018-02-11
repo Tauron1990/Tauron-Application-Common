@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using Tauron.JetBrains.Annotations;
+using System.Text;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -14,18 +14,72 @@ namespace Tauron.Application.Implement
     [PublicAPI]
     public class CommandLineProcessor
     {
-        #region Fields
+        /// <summary>The command.</summary>
+        public class Command : IEquatable<Command>
+        {
+            #region Constructors and Destructors
 
-        /// <summary>The _application.</summary>
-        private readonly CommonApplication _application;
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="Command" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="Command" /> Klasse.
+            ///     Initializes a new instance of the <see cref="Command" /> class.
+            /// </summary>
+            /// <param name="name">
+            ///     The name.
+            /// </param>
+            public Command([NotNull] string name)
+            {
+                if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
+                Name = name;
+                Parms = new List<string>();
+            }
 
-        /// <summary>The _commands.</summary>
-        private List<Command> _commands = new List<Command>();
+            #endregion
 
-        /// <summary>The _factory.</summary>
-        private IShellFactory _factory;
+            #region Public Properties
 
-        #endregion
+            /// <summary>Gets the name.</summary>
+            /// <value>The name.</value>
+            [NotNull]
+            public string Name { get; }
+
+            /// <summary>Gets the parms.</summary>
+            /// <value>The parms.</value>
+            [NotNull]
+            public List<string> Parms { get; }
+
+            #endregion
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((Command) obj);
+            }
+
+            public bool Equals(Command other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return string.Equals(Name, other.Name);
+            }
+
+            public override int GetHashCode()
+            {
+                return Name.GetHashCode();
+            }
+
+            public static bool operator ==(Command left, Command right)
+            {
+                return Equals(left, right);
+            }
+
+            public static bool operator !=(Command left, Command right)
+            {
+                return !Equals(left, right);
+            }
+        }
 
         #region Constructors and Destructors
 
@@ -39,10 +93,22 @@ namespace Tauron.Application.Implement
         /// </param>
         public CommandLineProcessor([NotNull] CommonApplication application)
         {
-            Contract.Requires<ArgumentNullException>(application != null, "application");
-            _application = application;
+            _application = application ?? throw new ArgumentNullException(nameof(application));
             ParseCommandLine();
         }
+
+        #endregion
+
+        #region Fields
+
+        /// <summary>The _application.</summary>
+        private readonly CommonApplication _application;
+
+        /// <summary>The _commands.</summary>
+        private HashSet<Command> _commands;
+
+        /// <summary>The _factory.</summary>
+        private IShellFactory _factory;
 
         #endregion
 
@@ -56,29 +122,29 @@ namespace Tauron.Application.Implement
         public object CreateShellView()
         {
             SelectViewFacotry();
-            return _factory == null ? null : _factory.CreateView();
+            return _factory?.CreateView();
         }
 
         /// <summary>The execute commands.</summary>
         public void ExecuteCommands()
         {
-            foreach (Command fileCommand in
+            foreach (var fileCommand in
                 _commands.Where(com => com.Name == "FileCommand").ToArray())
             {
                 var commandPrcessor = _application.Container.Resolve<IFileCommand>(null, true);
                 if (commandPrcessor == null) break;
 
-                string file = fileCommand.Parms[0];
+                var file = fileCommand.Parms[0];
 
                 commandPrcessor.ProcessFile(file);
                 _factory = commandPrcessor.ProvideFactory();
             }
 
-            foreach (ICommandLineCommand command in
+            foreach (var command in
                 _application.Container.Resolve<ICommandLineService>().Commands)
             {
-                ICommandLineCommand command1 = command;
-                Command temp = _commands.FirstOrDefault(arg => arg.Name == command1.CommandName);
+                var command1 = command;
+                var temp = _commands.FirstOrDefault(arg => arg.Name == command1.CommandName);
                 if (temp == null) continue;
 
                 command.Execute(temp.Parms.ToArray(), _application.Container);
@@ -94,11 +160,14 @@ namespace Tauron.Application.Implement
         /// <summary>The parse command line.</summary>
         private void ParseCommandLine()
         {
-            Contract.Requires(_application != null);
+            _commands = new HashSet<Command>(ParseCommandLine(_application.GetArgs()).Where(c => c != null));
+        }
 
+        public static IEnumerable<Command> ParseCommandLine(IEnumerable<string> args, bool skipfirst = true)
+        {
             Command current = null;
-            bool first = true;
-            foreach (string arg in _application.GetArgs())
+            var first = skipfirst;
+            foreach (var arg in args)
             {
                 if (first)
                 {
@@ -110,75 +179,38 @@ namespace Tauron.Application.Implement
                 {
                     var temp = new Command("FileCommand");
                     temp.Parms.Add(arg);
-                    _commands.Add(temp);
+                    yield return temp;
                 }
 
                 if (arg.StartsWith("-", StringComparison.Ordinal))
                 {
-                    if (current != null) _commands.Add(current);
+                    if (current != null) yield return current;
 
                     current = new Command(arg.TrimStart('-'));
                 }
-                else if (current != null) current.Parms.Add(arg);
+                else
+                {
+                    current?.Parms.Add(arg);
+                }
             }
 
-            if (current != null && !_commands.Contains(current)) _commands.Add(current);
+            yield return current;
         }
 
         /// <summary>The select view facotry.</summary>
         private void SelectViewFacotry()
         {
-            Contract.Requires(_application != null);
-
             if (_factory != null) return;
 
-            foreach (ICommandLineCommand command in
+            foreach (var command in
                 _application.Container.Resolve<ICommandLineService>()
-                           .Commands.Where(
-                               command =>
-                               command.Factory != null &&
-                               _commands.Any(com => com.Name == command.CommandName))
-                ) _factory = command.Factory;
+                    .Commands.Where(
+                        command =>
+                            command.Factory != null &&
+                            _commands.Any(com => com.Name == command.CommandName))
+            ) _factory = command.Factory;
         }
 
         #endregion
-
-        /// <summary>The command.</summary>
-        private class Command
-        {
-            #region Constructors and Destructors
-
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="Command" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="Command" /> Klasse.
-            ///     Initializes a new instance of the <see cref="Command" /> class.
-            /// </summary>
-            /// <param name="name">
-            ///     The name.
-            /// </param>
-            public Command([NotNull] string name)
-            {
-                Contract.Requires<ArgumentNullException>(name != null, "name");
-
-                Name = name;
-                Parms = new List<string>();
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            /// <summary>Gets the name.</summary>
-            /// <value>The name.</value>
-            [NotNull]
-            public string Name { get; private set; }
-
-            /// <summary>Gets the parms.</summary>
-            /// <value>The parms.</value>
-            [NotNull]
-            public List<string> Parms { get; private set; }
-
-            #endregion
-        }
     }
 }

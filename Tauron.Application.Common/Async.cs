@@ -1,9 +1,8 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -36,10 +35,9 @@ namespace Tauron
         /// <returns>
         ///     Der erstellte <see cref="Task" />.
         /// </returns>
-        public static Task StartNew(this Action method)
+        public static Task StartNew([NotNull] this Action method)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
             return Task.Factory.StartNew(method);
         }
 
@@ -60,10 +58,9 @@ namespace Tauron
         /// <returns>
         ///     Der erstellte <see cref="Task" />.
         /// </returns>
-        public static Task StartNewLong(this Action method)
+        public static Task StartNewLong([NotNull] this Action method)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
             return Task.Factory.StartNew(method, TaskCreationOptions.LongRunning);
         }
 

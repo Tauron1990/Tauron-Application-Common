@@ -25,8 +25,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -47,13 +46,12 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool CanCache(this IBuildContext context)
+        public static bool CanCache([NotNull] this IBuildContext context)
         {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-
+            if (context == null) throw new ArgumentNullException(nameof(context));
             return context.Mode != BuildMode.BuildUpObject || context.Target != null
-                   || (context.Metadata.Export.ExternalInfo.External
-                       && !context.Metadata.Export.ExternalInfo.HandlesLiftime);
+                   || context.Metadata.Export.ExternalInfo.External
+                   && !context.Metadata.Export.ExternalInfo.HandlesLiftime;
         }
 
         /// <summary>
@@ -65,10 +63,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool CanHandleLiftime(this IBuildContext context)
+        public static bool CanHandleLiftime([NotNull] this IBuildContext context)
         {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-
+            if (context == null) throw new ArgumentNullException(nameof(context));
             return !context.Metadata.Export.ExternalInfo.External
                    && !context.Metadata.Export.ExternalInfo.HandlesLiftime;
         }
@@ -82,10 +79,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool CanUseBuildUp(this IBuildContext context)
+        public static bool CanUseBuildUp([NotNull] this IBuildContext context)
         {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-
+            if (context == null) throw new ArgumentNullException(nameof(context));
             return !context.Metadata.Export.ExternalInfo.External || context.Metadata.Export.ExternalInfo.CanUseBuildup;
         }
 
@@ -98,10 +94,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool IsBuildExport(this IBuildContext context)
+        public static bool IsBuildExport([NotNull] this IBuildContext context)
         {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-
+            if (context == null) throw new ArgumentNullException(nameof(context));
             return context.Mode != BuildMode.BuildUpObject;
         }
 
@@ -114,10 +109,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool IsResolving(this IBuildContext context)
+        public static bool IsResolving([NotNull] this IBuildContext context)
         {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-
+            if (context == null) throw new ArgumentNullException(nameof(context));
             return context.Mode == BuildMode.Resolve;
         }
 
@@ -130,10 +124,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool UseInternalInstantiation(this IBuildContext context)
+        public static bool UseInternalInstantiation([NotNull] this IBuildContext context)
         {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-
+            if (context == null) throw new ArgumentNullException(nameof(context));
             return !context.Metadata.Export.ExternalInfo.External;
         }
 

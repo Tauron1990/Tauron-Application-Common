@@ -26,11 +26,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -40,17 +39,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     [PublicAPI]
     public sealed class BuildCache : ICache, IDisposable
     {
-        #region Fields
-
-        /// <summary>The _global.</summary>
-        private readonly Dictionary<IExport, ILifetimeContext> _global = new Dictionary<IExport, ILifetimeContext>();
-
-        /// <summary>The _local.</summary>
-        private readonly Dictionary<ExportMetadata, ILifetimeContext> _local =
-            new Dictionary<ExportMetadata, ILifetimeContext>();
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -62,6 +50,17 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         {
             WeakCleanUp.RegisterAction(OnCleanUp);
         }
+
+        #endregion
+
+        #region Fields
+
+        /// <summary>The _global.</summary>
+        private readonly Dictionary<IExport, ILifetimeContext> _global = new Dictionary<IExport, ILifetimeContext>();
+
+        /// <summary>The _local.</summary>
+        private readonly Dictionary<ExportMetadata, ILifetimeContext> _local =
+            new Dictionary<ExportMetadata, ILifetimeContext>();
 
         #endregion
 
@@ -114,10 +113,10 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         {
             lock (this)
             {
-                foreach (IDisposable disposable in
+                foreach (var disposable in
                     _global.Values.Concat(_local.Values)
-                           .Select(lifetimeContext => lifetimeContext.GetValue())
-                           .OfType<IDisposable>()) disposable.Dispose();
+                        .Select(lifetimeContext => lifetimeContext.GetValue())
+                        .OfType<IDisposable>()) disposable.Dispose();
 
                 _global.Clear();
                 _local.Clear();
@@ -132,7 +131,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// </param>
         //public void Free(ExportMetadata metadata)
         //{
-        //    Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
+        //    CContract.Requires<ArgumentNullException>(metadata != null, "metadata");
 
         //    lock (this)
         //    {
@@ -154,9 +153,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <summary>The on clean up.</summary>
         private void OnCleanUp()
         {
-            Contract.Requires(_global != null);
-            Contract.Requires(_local != null);
-
             lock (this)
             {
                 IEnumerable<IExport> deadKeysOne =
@@ -164,9 +160,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 IEnumerable<ExportMetadata> deadkeysTwo =
                     (from ent in _local where ent.Value.IsAlive select ent.Key).ToArray();
 
-                foreach (IExport export in deadKeysOne) _global.Remove(export);
+                foreach (var export in deadKeysOne) _global.Remove(export);
 
-                foreach (ExportMetadata exportMetadata in deadkeysTwo) _local.Remove(exportMetadata);
+                foreach (var exportMetadata in deadkeysTwo) _local.Remove(exportMetadata);
             }
         }
 

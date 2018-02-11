@@ -13,21 +13,9 @@ namespace Tauron.Application.Files.VirtualFiles.LocalFileSystem
         }
 
 
-        public override DateTime LastModified
-        {
-            get
-            {
-                return InfoObject.LastWriteTime;
-            }
-        }
+        public override DateTime LastModified => InfoObject.LastWriteTime;
 
-        public override bool Exist
-        {
-            get
-            {
-                return InfoObject.Exists;
-            }
-        }
+        public override bool Exist => InfoObject.Exists;
 
         protected override void DeleteImpl()
         {
@@ -64,13 +52,7 @@ namespace Tauron.Application.Files.VirtualFiles.LocalFileSystem
             }
         }
 
-        public override long Size
-        {
-            get
-            {
-                return InfoObject.Length;
-            }
-        }
+        public override long Size => InfoObject.Length;
 
         protected override Stream CreateStream(FileAccess access, InternalFileMode mode)
         {

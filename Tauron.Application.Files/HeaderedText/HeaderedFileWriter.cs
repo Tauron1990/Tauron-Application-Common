@@ -39,12 +39,9 @@ namespace Tauron.Application.Files.HeaderedText
         }
 
         [NotNull]
-        public IEnumerable<ContextEnry> Enries { get { return _context; } } 
+        public IEnumerable<ContextEnry> Enries => _context;
 
-        public IEnumerable<ContextEnry> this[string key]
-        {
-            get { return _context[key]; }
-        }
+        public IEnumerable<ContextEnry> this[string key] => _context[key];
 
         public bool Remove([NotNull] ContextEnry entry)
         {

@@ -1,9 +1,8 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -15,9 +14,7 @@ namespace Tauron.Application.Commands
 
         internal EventData([NotNull] object sender, [NotNull] EventArgs eventArgs)
         {
-            Contract.Requires<ArgumentNullException>(sender != null, "sender");
-            Contract.Requires<ArgumentNullException>(eventArgs != null, "eventArgs");
-
+            if (sender == null) throw new ArgumentNullException(nameof(sender));
             Sender = sender;
             EventArgs = eventArgs;
         }
@@ -44,13 +41,22 @@ namespace Tauron.Application.Commands
     /// <summary>The method command.</summary>
     public sealed class MethodCommand : CommandBase
     {
-        #region Fields
+        #region Enums
 
-        private readonly WeakReference _context;
+        private enum MethodType
+        {
+            /// <summary>The zero.</summary>
+            Zero = 0,
 
-        private readonly MethodInfo _method;
+            /// <summary>The one.</summary>
+            One,
 
-        private readonly MethodType _methodType;
+            /// <summary>The two.</summary>
+            Two,
+
+            /// <summary>The event args.</summary>
+            EventArgs
+        }
 
         #endregion
 
@@ -67,33 +73,14 @@ namespace Tauron.Application.Commands
         /// </param>
         public MethodCommand([NotNull] MethodInfo method, [NotNull] WeakReference context)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (context == null) throw new ArgumentNullException(nameof(context));
             _method = method;
             _context = context;
 
             _methodType = (MethodType) method.GetParameters().Length;
             if (_methodType != MethodType.One) return;
-            if (_method.GetParameters()[0].ParameterType != typeof (EventData)) _methodType = MethodType.EventArgs;
-        }
-
-        #endregion
-
-        #region Enums
-
-        private enum MethodType
-        {
-            /// <summary>The zero.</summary>
-            Zero = 0,
-
-            /// <summary>The one.</summary>
-            One,
-
-            /// <summary>The two.</summary>
-            Two,
-
-            /// <summary>The event args.</summary>
-            EventArgs,
+            if (_method.GetParameters()[0].ParameterType != typeof(EventData)) _methodType = MethodType.EventArgs;
         }
 
         #endregion
@@ -134,6 +121,16 @@ namespace Tauron.Application.Commands
                     break;
             }
         }
+
+        #endregion
+
+        #region Fields
+
+        private readonly WeakReference _context;
+
+        private readonly MethodInfo _method;
+
+        private readonly MethodType _methodType;
 
         #endregion
     }

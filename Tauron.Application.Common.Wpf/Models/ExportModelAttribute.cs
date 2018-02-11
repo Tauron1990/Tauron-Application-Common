@@ -1,27 +1,23 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Models
 {
-    [PublicAPI ,BaseTypeRequired(typeof(IModel))]
+    [PublicAPI]
+    [BaseTypeRequired(typeof(IModel))]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     public class ExportModelAttribute : ExportAttribute, INameExportMetadata
     {
         public ExportModelAttribute([NotNull] string name)
             : base(typeof(IModel))
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-
+            if (name == null) throw new ArgumentNullException(nameof(name));
             ContractName = name;
         }
 
-        public string Name { get { return ContractName; } }
+        protected override bool HasMetadata => true;
 
-        protected override bool HasMetadata
-        {
-            get { return true; }
-        }
+        public string Name => ContractName;
     }
 }

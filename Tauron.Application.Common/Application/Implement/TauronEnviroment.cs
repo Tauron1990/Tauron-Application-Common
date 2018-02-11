@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
 using Tauron.Interop;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -16,7 +16,7 @@ namespace Tauron.Application.Implement
 
     /// <summary>The tauron enviroment.</summary>
     [PublicAPI]
-    [Export(typeof (ITauronEnviroment))]
+    [Export(typeof(ITauronEnviroment))]
     public class TauronEnviroment : ITauronEnviroment
     {
         #region Constants
@@ -48,33 +48,20 @@ namespace Tauron.Application.Implement
                 return _defaultPath;
             }
 
-            set { _defaultPath = value; }
+            set => _defaultPath = value;
         }
 
         /// <summary>Gets the local application data.</summary>
         /// <value>The local application data.</value>
-        public string LocalApplicationData
-        {
-            get
-            {
-                return
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData).CombinePath(AppRepository);
-            }
-        }
+        public string LocalApplicationData => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData).CombinePath(AppRepository);
 
         /// <summary>Gets the local application temp folder.</summary>
         /// <value>The local application temp folder.</value>
-        public string LocalApplicationTempFolder
-        {
-            get { return LocalApplicationData.CombinePath("Temp"); }
-        }
+        public string LocalApplicationTempFolder => LocalApplicationData.CombinePath("Temp");
 
         /// <summary>Gets the local download folder.</summary>
         /// <value>The local download folder.</value>
-        public string LocalDownloadFolder
-        {
-            get { return SearchForFolder(KnownFolder.Downloads); }
-        }
+        public string LocalDownloadFolder => SearchForFolder(KnownFolder.Downloads);
 
         #endregion
 
@@ -84,8 +71,8 @@ namespace Tauron.Application.Implement
         {
             return
                 DefaultProfilePath.CombinePath(application)
-                                  .EnumerateDirectorys()
-                                  .Select(ent => ent.Split('\\').Last());
+                    .EnumerateDirectorys()
+                    .Select(ent => ent.Split('\\').Last());
         }
 
         /// <summary>
@@ -102,7 +89,7 @@ namespace Tauron.Application.Implement
             IntPtr pPath;
             if (NativeMethods.SHGetKnownFolderPath(id, 0, IntPtr.Zero, out pPath) == 0)
             {
-                string s = Marshal.PtrToStringUni(pPath);
+                var s = Marshal.PtrToStringUni(pPath);
                 Marshal.FreeCoTaskMem(pPath);
                 return s;
             }

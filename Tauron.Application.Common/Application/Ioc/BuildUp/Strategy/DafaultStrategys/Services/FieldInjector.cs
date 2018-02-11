@@ -16,8 +16,8 @@
 #region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
 #endregion
@@ -40,11 +40,12 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <param name="member">
         ///     The member.
         /// </param>
-        public FieldInjector(IMetadataFactory metadataFactory, FieldInfo member, IResolverExtension[] resolverExtensions)
+        public FieldInjector([NotNull] IMetadataFactory metadataFactory, [NotNull] FieldInfo member, [NotNull] [ItemNotNull] IResolverExtension[] resolverExtensions)
             : base(metadataFactory, member, resolverExtensions)
         {
-            Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
-            Contract.Requires<ArgumentNullException>(member != null, "member");
+            if (metadataFactory == null) throw new ArgumentNullException(nameof(metadataFactory));
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (resolverExtensions == null) throw new ArgumentNullException(nameof(resolverExtensions));
         }
 
         #endregion
@@ -56,10 +57,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         ///     The <see cref="Type" />.
         /// </returns>
         /// <value>The member type.</value>
-        protected override Type MemberType
-        {
-            get { return Member.FieldType; }
-        }
+        protected override Type MemberType => Member.FieldType;
 
         #endregion
 

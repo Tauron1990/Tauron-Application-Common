@@ -24,10 +24,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -35,7 +33,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 {
     /// <summary>The ImportSelector interface.</summary>
     [PublicAPI]
-    [ContractClass(typeof (ImportSelectorContracts))]
     public interface IImportSelector
     {
         #region Public Methods and Operators
@@ -51,31 +48,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </returns>
         [NotNull]
         IEnumerable<ImportMetadata> SelectImport([NotNull] IExport exportType);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (IImportSelector))]
-    internal abstract class ImportSelectorContracts : IImportSelector
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The select import.
-        /// </summary>
-        /// <param name="exportType">
-        ///     The export type.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
-        public IEnumerable<ImportMetadata> SelectImport(IExport exportType)
-        {
-            Contract.Requires<ArgumentNullException>(exportType != null, "exportType");
-            Contract.Ensures(Contract.Result<IEnumerable<ImportMetadata>>() != null);
-
-            return null;
-        }
 
         #endregion
     }

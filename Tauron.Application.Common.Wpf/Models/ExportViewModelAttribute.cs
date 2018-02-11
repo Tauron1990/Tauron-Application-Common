@@ -1,39 +1,28 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Models
 {
-    [PublicAPI, BaseTypeRequired(typeof(ViewModelBase))]
+    [PublicAPI]
+    [BaseTypeRequired(typeof(ViewModelBase))]
     public class ExportViewModelAttribute : ExportAttribute, INameExportMetadata
     {
         public ExportViewModelAttribute([NotNull] string name) : base(typeof(ViewModelBase))
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-
-            ContractName = name;
+            ContractName = name ?? throw new ArgumentNullException(nameof(name));
             IgnoreIntercepion = true;
         }
 
-        public string Name { get { return ContractName; } }
-
         public bool IgnoreIntercepion { get; set; }
 
-        protected override bool HasMetadata
-        {
-            get { return true; }
-        }
+        protected override bool HasMetadata => true;
 
-        public override string DebugName
-        {
-            get { return Name; }
-        }
+        public override string DebugName => Name;
 
-        protected override LifetimeContextAttribute OverrideDefaultPolicy
-        {
-            get { return new NotSharedAttribute(); }
-        }
+        protected override LifetimeContextAttribute OverrideDefaultPolicy => new NotSharedAttribute();
+
+        public string Name => ContractName;
     }
 }

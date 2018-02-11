@@ -1,19 +1,26 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
 {
     public class InjectorContext
     {
+        public InjectorContext([NotNull] IMetadataFactory metadataFactory, [NotNull] object memberInfo,
+            [NotNull] Type memberType, [CanBeNull] IResolverExtension[] resolverExtensions)
+        {
+            ReflectionContext = new ReflectionContext(metadataFactory, memberType, this, resolverExtensions ?? new IResolverExtension[0]);
+            MemberInfo = memberInfo;
+        }
+
         [NotNull]
-        public ReflectionContext ReflectionContext { get; private set; }
+        public ReflectionContext ReflectionContext { get; }
 
         [CanBeNull]
         public BuildParameter[] BuildParameters { get; set; }
 
         [NotNull]
-        public object MemberInfo { get; private set; }
+        public object MemberInfo { get; }
 
         [NotNull]
         public ErrorTracer Tracer { get; set; }
@@ -35,12 +42,5 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
 
         [NotNull]
         public object Target { get; set; }
-
-        public InjectorContext([NotNull] IMetadataFactory metadataFactory, [NotNull] object memberInfo, 
-            [NotNull] Type memberType, [CanBeNull] IResolverExtension[] resolverExtensions)
-        {
-            ReflectionContext = new ReflectionContext(metadataFactory, memberType, this, resolverExtensions ?? new IResolverExtension[0]);
-            MemberInfo = memberInfo;
-        }
     }
 }

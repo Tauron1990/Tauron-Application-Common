@@ -2,14 +2,13 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Xml.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Controls;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -29,23 +28,6 @@ namespace Tauron.Application.Help.ViewModels
 
         #endregion
 
-        #region Public Properties
-
-        /// <summary>Gets the name.</summary>
-        [NotNull]
-        public string Name { get; private set; }
-
-        /// <summary>Gets the tocken.</summary>
-        [CanBeNull]
-        public string Tocken
-        {
-            get { return (string) ToggleButtonList.GetTopic(this); }
-
-            private set { if (value != null) ToggleButtonList.SetTopic(this, value); }
-        }
-
-        #endregion
-
         #region Public Methods and Operators
 
         /// <summary>The to string.</summary>
@@ -58,19 +40,31 @@ namespace Tauron.Application.Help.ViewModels
         }
 
         #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets the name.</summary>
+        [NotNull]
+        public string Name { get; private set; }
+
+        /// <summary>Gets the tocken.</summary>
+        [CanBeNull]
+        public string Tocken
+        {
+            get { return (string) ToggleButtonList.GetTopic(this); }
+
+            private set
+            {
+                if (value != null) ToggleButtonList.SetTopic(this, value);
+            }
+        }
+
+        #endregion
     }
 
     /// <summary>The help group.</summary>
     public sealed class HelpGroup : IHeaderProvider
     {
-        #region Fields
-
-        private readonly string _content;
-
-        private readonly string _titel;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -95,25 +89,27 @@ namespace Tauron.Application.Help.ViewModels
 
         #endregion
 
+        #region Fields
+
+        private readonly string _content;
+
+        private readonly string _titel;
+
+        #endregion
+
         #region Public Properties
 
         /// <summary>Gets the content.</summary>
         [CanBeNull]
-        public FlowDocument Content
-        {
-            get { return XamlReader.Parse(_content) as FlowDocument; }
-        }
+        public FlowDocument Content => XamlReader.Parse(_content) as FlowDocument;
 
         /// <summary>Gets the id.</summary>
         [NotNull]
-        public string Id { get; private set; }
+        public string Id { get; }
 
         /// <summary>Gets the header.</summary>
         [NotNull]
-        public object Header
-        {
-            get { return _titel; }
-        }
+        public object Header => _titel;
 
         #endregion
     }
@@ -140,15 +136,13 @@ namespace Tauron.Application.Help.ViewModels
         {
             if (fileName.ExisFile()) _database = XElement.Load(fileName);
             else if (fileName.ExisDirectory())
-            {
-                foreach (string file in fileName.GetFiles())
+                foreach (var file in fileName.GetFiles())
                 {
                     _database = new XElement("dataBase");
 
-                    XElement ele = XElement.Load(file);
-                    foreach (XElement element in ele.Elements()) _database.Add(element);
+                    var ele = XElement.Load(file);
+                    foreach (var element in ele.Elements()) _database.Add(element);
                 }
-            }
             else _database = new XElement("help");
         }
 
@@ -158,14 +152,8 @@ namespace Tauron.Application.Help.ViewModels
 
         /// <summary>Gets the topics.</summary>
         [NotNull]
-        public IEnumerable<HelpTopic> Topics
-        {
-            get
-            {
-                return from ele in _database.Elements()
-                       select new HelpTopic(ele.Attribute("Name").Value, ele.Attribute("Tocken").Value);
-            }
-        }
+        public IEnumerable<HelpTopic> Topics => from ele in _database.Elements()
+            select new HelpTopic(ele.Attribute("Name").Value, ele.Attribute("Tocken").Value);
 
         #endregion
 
@@ -182,18 +170,16 @@ namespace Tauron.Application.Help.ViewModels
         /// </param>
         public void Fill([NotNull] ICollection<HelpGroup> groups, [CanBeNull] string token)
         {
-            XElement groupsContent =
+            var groupsContent =
                 _database.Elements().FirstOrDefault(ele => ele.Attribute("Tocken").Value == token);
             if (groupsContent == null) return;
 
-            foreach (XElement group in groupsContent.Elements())
-            {
+            foreach (var group in groupsContent.Elements())
                 groups.Add(
                     new HelpGroup(
                         group.Attribute("Name").Value,
                         group.Elements().First().ToString(),
                         group.Attribute("Id").Value));
-            }
         }
 
         #endregion
@@ -203,22 +189,6 @@ namespace Tauron.Application.Help.ViewModels
     [PublicAPI]
     public sealed class HelpViewModel : ObservableObject
     {
-        #region Fields
-
-        private readonly HelpDatabase _database;
-
-        private readonly ObservableCollection<HelpGroup> _groups;
-
-        private HelpGroup _activeGroup;
-
-        private HelpTopic _activeTopic;
-
-        private double _height;
-
-        private double _width;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -233,76 +203,8 @@ namespace Tauron.Application.Help.ViewModels
             _groups = new ObservableCollection<HelpGroup>();
             _database = new HelpDatabase(helpfilePath);
 
-            Height = SystemParameters.MaximumWindowTrackHeight/3*2;
-            Width = SystemParameters.MaximumWindowTrackWidth/3*2;
-        }
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets the active group.</summary>
-        [NotNull]
-        public HelpGroup ActiveGroup
-        {
-            get { return _activeGroup; }
-
-            private set
-            {
-                _activeGroup = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>Gets the active topic.</summary>
-        [NotNull]
-        public HelpTopic ActiveTopic
-        {
-            get { return _activeTopic; }
-
-            private set
-            {
-                _activeTopic = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>Gets or sets the height.</summary>
-        public double Height
-        {
-            get { return _height; }
-
-            set
-            {
-                _height = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>Gets the help groups.</summary>
-        [NotNull]
-        public IEnumerable<HelpGroup> HelpGroups
-        {
-            get { return _groups; }
-        }
-
-        /// <summary>Gets the help topics.</summary>
-        [NotNull]
-        public IEnumerable<HelpTopic> HelpTopics
-        {
-            get { return _database.Topics; }
-        }
-
-        /// <summary>Gets or sets the width.</summary>
-        public double Width
-        {
-            get { return _width; }
-
-            set
-            {
-                _width = value;
-                OnPropertyChanged();
-            }
+            Height = SystemParameters.MaximumWindowTrackHeight / 3 * 2;
+            Width = SystemParameters.MaximumWindowTrackWidth / 3 * 2;
         }
 
         #endregion
@@ -322,14 +224,92 @@ namespace Tauron.Application.Help.ViewModels
         {
             if (string.IsNullOrWhiteSpace(topic)) return;
 
-            HelpTopic htopic = HelpTopics.FirstOrDefault(top => top.Tocken == topic);
+            var htopic = HelpTopics.FirstOrDefault(top => top.Tocken == topic);
             ActiveTopic = htopic;
             if (ActiveTopic == null) return;
 
             if (string.IsNullOrWhiteSpace(group)) return;
 
-            HelpGroup hGroup = HelpGroups.FirstOrDefault(gr => gr.Id == group);
+            var hGroup = HelpGroups.FirstOrDefault(gr => gr.Id == group);
             ActiveGroup = hGroup;
+        }
+
+        #endregion
+
+        #region Fields
+
+        private readonly HelpDatabase _database;
+
+        private readonly ObservableCollection<HelpGroup> _groups;
+
+        private HelpGroup _activeGroup;
+
+        private HelpTopic _activeTopic;
+
+        private double _height;
+
+        private double _width;
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets the active group.</summary>
+        [NotNull]
+        public HelpGroup ActiveGroup
+        {
+            get => _activeGroup;
+
+            private set
+            {
+                _activeGroup = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>Gets the active topic.</summary>
+        [NotNull]
+        public HelpTopic ActiveTopic
+        {
+            get => _activeTopic;
+
+            private set
+            {
+                _activeTopic = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>Gets or sets the height.</summary>
+        public double Height
+        {
+            get => _height;
+
+            set
+            {
+                _height = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>Gets the help groups.</summary>
+        [NotNull]
+        public IEnumerable<HelpGroup> HelpGroups => _groups;
+
+        /// <summary>Gets the help topics.</summary>
+        [NotNull]
+        public IEnumerable<HelpTopic> HelpTopics => _database.Topics;
+
+        /// <summary>Gets or sets the width.</summary>
+        public double Width
+        {
+            get => _width;
+
+            set
+            {
+                _width = value;
+                OnPropertyChanged();
+            }
         }
 
         #endregion

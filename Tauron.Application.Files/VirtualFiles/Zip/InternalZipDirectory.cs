@@ -20,10 +20,10 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
         public ZipEntry ZipEntry { get; private set; }
 
         [NotNull]
-        public List<ZipEntry> Files { get { return _files; } }
- 
+        public List<ZipEntry> Files => _files;
+
         [NotNull]
-        public List<InternalZipDirectory> Directorys { get { return _directories; } }
+        public List<InternalZipDirectory> Directorys => _directories;
 
         private InternalZipDirectory([NotNull] string name)
         {

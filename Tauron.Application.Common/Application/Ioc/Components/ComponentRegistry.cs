@@ -17,9 +17,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -29,148 +28,9 @@ namespace Tauron.Application.Ioc.Components
     [PublicAPI]
     public sealed class ComponentRegistry : IDisposable
     {
-        #region Fields
-
-        /// <summary>The _dictionary.</summary>
-        private readonly GroupDictionary<Type, LazyLoad> _dictionary = new GroupDictionary<Type, LazyLoad>();
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>The dispose.</summary>
-        public void Dispose()
-        {
-            foreach (LazyLoad value in _dictionary.AllValues) value.Dispose();
-
-            _dictionary.Clear();
-        }
-
-        /// <summary>The get.</summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <returns>
-        ///     The <see cref="TInterface" />.
-        /// </returns>
-        [System.Diagnostics.Contracts.Pure]
-        public TInterface Get<TInterface>() where TInterface : class
-        {
-            Contract.Ensures(Contract.Result<TInterface>() != null);
-
-            lock (_dictionary)
-            {
-                Type type = typeof (TInterface);
-                ICollection<LazyLoad> list;
-                if (_dictionary.TryGetValue(type, out list))
-                {
-                    Contract.Assume(list != null);
-                    return (TInterface) list.Single().Object;
-                }
-            }
-
-            throw new KeyNotFoundException();
-        }
-
-        /// <summary>The get all.</summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
-        public IEnumerable<TInterface> GetAll<TInterface>() where TInterface : class
-        {
-            Contract.Ensures(Contract.Result<IEnumerable<TInterface>>() != null);
-            //Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<TInterface>>(), mem => mem != null));
-
-            lock (_dictionary)
-            {
-                Type type = typeof (TInterface);
-                ICollection<LazyLoad> list;
-                if (!_dictionary.TryGetValue(type, out list)) yield break;
-
-                foreach (LazyLoad lazyLoad in list) yield return (TInterface) lazyLoad.Object;
-            }
-        }
-
-        /// <summary>The register.</summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <typeparam name="TImplement"></typeparam>
-        public void Register<TInterface, TImplement>() where TImplement : TInterface, new()
-        {
-            lock (_dictionary)
-            {
-                _dictionary[typeof (TInterface)].Add(new LazyLoad(typeof (TImplement), this, null));
-            }
-        }
-
-        public void Register<TInterface, TImplement>(bool single) where TImplement : TInterface, new()
-        {
-            lock (_dictionary)
-            {
-                if (single)
-                {
-                    var temp = _dictionary[typeof (TInterface)];
-                    temp.Clear();
-                    temp.Add(new LazyLoad(typeof(TImplement), this, null));
-                    return;
-                }
-                _dictionary[typeof(TInterface)].Add(new LazyLoad(typeof(TImplement), this, null));
-            }
-        }
-
-        /// <summary>
-        ///     The register.
-        /// </summary>
-        /// <param name="instance">
-        ///     The instance.
-        /// </param>
-        /// <typeparam name="T">
-        /// </typeparam>
-        /// <typeparam name="T1">
-        /// </typeparam>
-        public void Register<T, T1>(T1 instance)
-        {
-            Contract.Requires<ArgumentNullException>(instance != null, "instance");
-
-            _dictionary[typeof (T)].Add(new LazyLoad(typeof (T1), this, instance));
-        }
-
-        public void Register<T, T1>(T1 instance, bool isSingle)
-            where T1 : T
-        {
-            Contract.Requires<ArgumentNullException>(instance != null, "instance");
-            lock (_dictionary)
-            {
-                if (isSingle)
-                {
-                    var temp = _dictionary[typeof(T)];
-                    temp.Clear();
-                    temp.Add(new LazyLoad(typeof(T1), this, instance));
-                }
-
-                _dictionary[typeof (T)].Add(new LazyLoad(typeof (T1), this, instance));
-            }
-        }
-
-        #endregion
-
         /// <summary>The lazy load.</summary>
         private class LazyLoad : IDisposable
         {
-            #region Fields
-
-            /// <summary>The _implement.</summary>
-            private readonly Type _implement;
-
-            /// <summary>The _registry.</summary>
-            private readonly ComponentRegistry _registry;
-
-            /// <summary>The _is initialized.</summary>
-            private bool _isInitialized;
-
-            /// <summary>The _object.</summary>
-            private object _object;
-
-            #endregion
-
             #region Constructors and Destructors
 
             /// <summary>
@@ -187,11 +47,10 @@ namespace Tauron.Application.Ioc.Components
             /// <param name="instance">
             ///     The instance.
             /// </param>
-            public LazyLoad(Type implement, ComponentRegistry registry, object instance)
+            public LazyLoad([NotNull] Type implement, [NotNull] ComponentRegistry registry, object instance)
             {
-                Contract.Requires<ArgumentNullException>(implement != null, "implement");
-                Contract.Requires<ArgumentNullException>(registry != null, "registry");
-
+                if (implement == null) throw new ArgumentNullException(nameof(implement));
+                if (registry == null) throw new ArgumentNullException(nameof(registry));
                 _implement = implement;
                 _registry = registry;
                 _object = instance;
@@ -203,17 +62,14 @@ namespace Tauron.Application.Ioc.Components
 
             /// <summary>Gets the object.</summary>
             /// <value>The object.</value>
-            [ContractVerification(false)]
             public object Object
             {
                 get
                 {
-                    Contract.Ensures(Contract.Result<object>() != null);
-
                     lock (this)
                     {
                         if (_isInitialized) return _object;
-                        
+
                         if (_object == null) _object = Activator.CreateInstance(_implement);
 
                         var init = _object as IInitializeable;
@@ -243,6 +99,139 @@ namespace Tauron.Application.Ioc.Components
             {
                 return _implement.ToString();
             }
+
+            #region Fields
+
+            /// <summary>The _implement.</summary>
+            private readonly Type _implement;
+
+            /// <summary>The _registry.</summary>
+            private readonly ComponentRegistry _registry;
+
+            /// <summary>The _is initialized.</summary>
+            private bool _isInitialized;
+
+            /// <summary>The _object.</summary>
+            private object _object;
+
+            #endregion
         }
+
+        #region Fields
+
+        /// <summary>The _dictionary.</summary>
+        private readonly GroupDictionary<Type, LazyLoad> _dictionary = new GroupDictionary<Type, LazyLoad>();
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>The dispose.</summary>
+        public void Dispose()
+        {
+            foreach (var value in _dictionary.AllValues) value.Dispose();
+
+            _dictionary.Clear();
+        }
+
+        /// <summary>The get.</summary>
+        /// <typeparam name="TInterface"></typeparam>
+        /// <returns>
+        ///     The <see cref="TInterface" />.
+        /// </returns>
+        [System.Diagnostics.Contracts.Pure]
+        public TInterface Get<TInterface>() where TInterface : class
+        {
+            lock (_dictionary)
+            {
+                var type = typeof(TInterface);
+                ICollection<LazyLoad> list;
+                if (_dictionary.TryGetValue(type, out list))
+                    return (TInterface) list.Single().Object;
+            }
+
+            throw new KeyNotFoundException();
+        }
+
+        /// <summary>The get all.</summary>
+        /// <typeparam name="TInterface"></typeparam>
+        /// <returns>
+        ///     The <see cref="IEnumerable" />.
+        /// </returns>
+        public IEnumerable<TInterface> GetAll<TInterface>() where TInterface : class
+        {
+            lock (_dictionary)
+            {
+                var type = typeof(TInterface);
+                ICollection<LazyLoad> list;
+                if (!_dictionary.TryGetValue(type, out list)) yield break;
+
+                foreach (var lazyLoad in list) yield return (TInterface) lazyLoad.Object;
+            }
+        }
+
+        /// <summary>The register.</summary>
+        /// <typeparam name="TInterface"></typeparam>
+        /// <typeparam name="TImplement"></typeparam>
+        public void Register<TInterface, TImplement>() where TImplement : TInterface, new()
+        {
+            lock (_dictionary)
+            {
+                _dictionary[typeof(TInterface)].Add(new LazyLoad(typeof(TImplement), this, null));
+            }
+        }
+
+        public void Register<TInterface, TImplement>(bool single) where TImplement : TInterface, new()
+        {
+            lock (_dictionary)
+            {
+                if (single)
+                {
+                    var temp = _dictionary[typeof(TInterface)];
+                    temp.Clear();
+                    temp.Add(new LazyLoad(typeof(TImplement), this, null));
+                    return;
+                }
+                _dictionary[typeof(TInterface)].Add(new LazyLoad(typeof(TImplement), this, null));
+            }
+        }
+
+        /// <summary>
+        ///     The register.
+        /// </summary>
+        /// <param name="instance">
+        ///     The instance.
+        /// </param>
+        /// <typeparam name="T">
+        /// </typeparam>
+        /// <typeparam name="T1">
+        /// </typeparam>
+        public void Register<T, T1>([NotNull] T1 instance)
+        {
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            lock (_dictionary)
+            {
+                _dictionary[typeof(T)].Add(new LazyLoad(typeof(T1), this, instance));
+            }
+        }
+
+        public void Register<T, T1>([NotNull] T1 instance, bool isSingle)
+            where T1 : T
+        {
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            lock (_dictionary)
+            {
+                if (isSingle)
+                {
+                    var temp = _dictionary[typeof(T)];
+                    temp.Clear();
+                    temp.Add(new LazyLoad(typeof(T1), this, instance));
+                }
+
+                _dictionary[typeof(T)].Add(new LazyLoad(typeof(T1), this, instance));
+            }
+        }
+
+        #endregion
     }
 }

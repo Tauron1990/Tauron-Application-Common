@@ -1,11 +1,18 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Modules
 {
     public sealed class AddinDescription
     {
+        public AddinDescription([NotNull] Version version, [NotNull] string description, [NotNull] string name)
+        {
+            if (version == null) throw new ArgumentNullException(nameof(version));
+            Version = version;
+            Description = description ?? throw new ArgumentNullException(nameof(description));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+        }
+
         [NotNull]
         public Version Version { get; set; }
 
@@ -14,16 +21,5 @@ namespace Tauron.Application.Modules
 
         [NotNull]
         public string Name { get; set; }
-
-        public AddinDescription([NotNull] Version version, [NotNull] string description, [NotNull] string name)
-        {
-            Contract.Requires<ArgumentNullException>(version != null, "version");
-            Contract.Requires<ArgumentNullException>(description != null, "description");
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-
-            Version = version;
-            Description = description;
-            Name = name;
-        }
     }
 }

@@ -25,21 +25,18 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc
 {
     /// <summary>The inject event attribute.</summary>
-    [AttributeUsage(AttributeTargets.Event | AttributeTargets.Method, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Event | AttributeTargets.Method)]
     [PublicAPI]
     public sealed class InjectEventAttribute : Attribute
     {
         #region Fields
-
-        private readonly string topic;
 
         #endregion
 
@@ -53,11 +50,9 @@ namespace Tauron.Application.Ioc
         /// <param name="topic">
         ///     The topic.
         /// </param>
-        public InjectEventAttribute(string topic)
+        public InjectEventAttribute([NotNull] string topic)
         {
-            Contract.Requires<ArgumentNullException>(topic != null, "topic");
-
-            this.topic = topic;
+            Topic = topic ?? throw new ArgumentNullException(nameof(topic));
         }
 
         #endregion
@@ -66,15 +61,7 @@ namespace Tauron.Application.Ioc
 
         /// <summary>Gets the topic.</summary>
         /// <value>The topic.</value>
-        public string Topic
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-
-                return topic;
-            }
-        }
+        public string Topic { get; }
 
         #endregion
     }

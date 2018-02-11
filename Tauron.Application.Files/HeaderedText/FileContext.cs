@@ -13,10 +13,10 @@ namespace Tauron.Application.Files.HeaderedText
         private List<ContextEnry> _contextEnries = new List<ContextEnry>();
 
         [NotNull]
-        internal FileDescription Description { get { return _description; } }
+        internal FileDescription Description => _description;
 
         [NotNull]
-        internal List<ContextEnry> ContextEnries { get { return _contextEnries; } } 
+        internal List<ContextEnry> ContextEnries => _contextEnries;
 
         internal FileContext([NotNull] FileDescription description)
         {

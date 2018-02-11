@@ -1,24 +1,24 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using Microsoft.Practices.EnterpriseLibrary.Logging;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
+using NLog;
 
 namespace Tauron.Application
 {
     public static class CommonConstants
     {
         public const string CommonCategory = "Tauron.Application.Common";
-        public const string CommonExceptionPolicy = "Tauron.Application.Common.Policy";
 
-        [PublicAPI, StringFormatMethod("format")]
+        [PublicAPI]
+        [StringFormatMethod("format")]
         public static void LogCommon(bool isError, [NotNull] string format, [NotNull] params object[] parmsObjects)
         {
-            Contract.Requires<ArgumentNullException>(format != null, "format");
-            Contract.Requires<ArgumentNullException>(parmsObjects != null, "parmsObjects");
+            if (format == null) throw new ArgumentNullException(nameof(format));
+            if (parmsObjects == null) throw new ArgumentNullException(nameof(parmsObjects));
 
-            string realMessage = parmsObjects.Length == 0 ? format : string.Format(format, parmsObjects);
-            Logger.Write(realMessage, CommonCategory, -1,-1, isError ? TraceEventType.Error : TraceEventType.Warning);
+            var logger = LogManager.GetLogger(CommonCategory, typeof(CommonConstants));
+
+            var realMessage = parmsObjects.Length == 0 ? format : string.Format(format, parmsObjects);
+            logger.Log(isError ? LogLevel.Error : LogLevel.Warn, realMessage, parmsObjects);
         }
     }
 }

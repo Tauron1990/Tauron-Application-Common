@@ -4,9 +4,8 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
-using Microsoft.Practices.EnterpriseLibrary.Logging;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -26,7 +25,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The schedule attribute.</summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method)]
     public sealed class ScheduleAttribute : AspectBaseAttribute
     {
         #region Fields
@@ -52,18 +51,6 @@ namespace Tauron.Application.Aop.Threading
 
         #endregion
 
-        #region Public Properties
-
-        /// <summary>Gets or sets the creation options.</summary>
-        /// <value>The creation options.</value>
-        public TaskCreationOptions CreationOptions { get; set; }
-
-        /// <summary>Gets or sets the task option.</summary>
-        /// <value>The task option.</value>
-        public TaskOption TaskOption { get; set; }
-
-        #endregion
-
         #region Public Methods and Operators
 
         /// <summary>
@@ -78,15 +65,12 @@ namespace Tauron.Application.Aop.Threading
         [NotNull]
         public override IInterceptor Create([NotNull] MemberInfo info)
         {
-            _isOk = ((MethodInfo) info).ReturnType == typeof (void);
+            _isOk = ((MethodInfo) info).ReturnType == typeof(void);
 
-            if (Logger.IsLoggingEnabled() && !_isOk)
-            {
-                CommonConstants.LogCommon(false,
-                                          "AOP Module: The member {0}.{1} has no Void Return",
-                                          info.DeclaringType.FullName,
-                                          info.Name);
-            }
+            CommonConstants.LogCommon(false,
+                "AOP Module: The member {0}.{1} has no Void Return",
+                info.DeclaringType.FullName,
+                info.Name);
 
             return base.Create(info);
         }
@@ -104,7 +88,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected override void Intercept( IInvocation invocation,  ObjectContext context)
+        protected override void Intercept(IInvocation invocation, ObjectContext context)
         {
             if (!_isOk)
             {
@@ -129,6 +113,18 @@ namespace Tauron.Application.Aop.Threading
                     break;
             }
         }
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets or sets the creation options.</summary>
+        /// <value>The creation options.</value>
+        public TaskCreationOptions CreationOptions { get; set; }
+
+        /// <summary>Gets or sets the task option.</summary>
+        /// <value>The task option.</value>
+        public TaskOption TaskOption { get; set; }
 
         #endregion
     }

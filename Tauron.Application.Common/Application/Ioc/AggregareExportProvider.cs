@@ -49,16 +49,10 @@ namespace Tauron.Application.Ioc
         #region Public Properties
 
         /// <summary>Gets a value indicating whether broadcast changes.</summary>
-        public override bool BroadcastChanges
-        {
-            get { return true; }
-        }
+        public override bool BroadcastChanges => true;
 
         /// <summary>Gets the technology.</summary>
-        public override string Technology
-        {
-            get { return AopConstants.DefaultExportFactoryName; }
-        }
+        public override string Technology => AopConstants.DefaultExportFactoryName;
 
         #endregion
 
@@ -76,12 +70,10 @@ namespace Tauron.Application.Ioc
             assemblys.Add(export);
 
             if (factory != null)
-            {
                 OnExportsChanged(
                     new ExportChangedEventArgs(
                         export.CreateExports(factory).SelectMany(ex => ex.Item1.ExportMetadata),
                         Enumerable.Empty<ExportMetadata>()));
-            }
         }
 
         /// <summary>
@@ -94,18 +86,16 @@ namespace Tauron.Application.Ioc
         {
             if (addAssemblys.Count() == 0) return;
 
-            ExportResolver.AssemblyExportProvider[] temp =
+            var temp =
                 addAssemblys.Select(asm => new ExportResolver.AssemblyExportProvider(asm)).ToArray();
             assemblys.AddRange(temp);
 
             if (factory != null)
-            {
                 OnExportsChanged(
                     new ExportChangedEventArgs(
                         temp.SelectMany(prov => prov.CreateExports(factory))
                             .SelectMany(ex => ex.Item1.ExportMetadata),
                         Enumerable.Empty<ExportMetadata>()));
-            }
         }
 
         /// <summary>
@@ -133,21 +123,22 @@ namespace Tauron.Application.Ioc
         {
             var export = new ExportResolver.AssemblyExportProvider(assembly);
 
-            int index = assemblys.IndexOf(export);
+            var index = assemblys.IndexOf(export);
             if (index != -1)
             {
                 export = assemblys[index];
                 if (!assemblys.Remove(export)) export = null;
             }
-            else export = null;
+            else
+            {
+                export = null;
+            }
 
             if (factory != null && export != null)
-            {
                 OnExportsChanged(
                     new ExportChangedEventArgs(
                         Enumerable.Empty<ExportMetadata>(),
                         export.CreateExports(factory).SelectMany(ex => ex.Item1.ExportMetadata)));
-            }
         }
 
         /// <summary>
@@ -161,26 +152,24 @@ namespace Tauron.Application.Ioc
             IEnumerable<Assembly> assemblies = removeAssemblys as Assembly[] ?? removeAssemblys.ToArray();
             if (!assemblies.Any()) return;
 
-            List<ExportResolver.AssemblyExportProvider> temp =
+            var temp =
                 assemblies.Select(asm => new ExportResolver.AssemblyExportProvider(asm)).ToList();
-            List<int> indiexes =
+            var indiexes =
                 temp.Select(provider => assemblys.IndexOf(provider)).Where(index => index != -1).ToList();
             temp.Clear();
 
-            foreach (int index in indiexes)
+            foreach (var index in indiexes)
             {
                 temp.Add(assemblys[index]);
                 assemblys.RemoveAt(index);
             }
 
             if (factory != null)
-            {
                 OnExportsChanged(
                     new ExportChangedEventArgs(
                         Enumerable.Empty<ExportMetadata>(),
                         temp.SelectMany(prov => prov.CreateExports(factory))
                             .SelectMany(ex => ex.Item1.ExportMetadata)));
-            }
         }
 
         #endregion

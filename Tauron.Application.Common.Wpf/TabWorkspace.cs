@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Windows.Input;
+using JetBrains.Annotations;
 using Tauron.Application.Commands;
 using Tauron.Application.Models;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application
 {
@@ -17,14 +17,6 @@ namespace Tauron.Application
 
         #endregion
 
-        #region Fields
-
-        private bool _canClose;
-
-        private string _title;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -34,9 +26,10 @@ namespace Tauron.Application
         /// <param name="title">
         ///     The title.
         /// </param>
-        protected TabWorkspace([NotNull] string title)
+        protected TabWorkspace([NotNull] string title, string name = null)
         {
             _title = title;
+            _name = name;
             _canClose = true;
             CloseWorkspace = new SimpleCommand(obj => CanClose, obj => InvokeClose());
         }
@@ -47,47 +40,7 @@ namespace Tauron.Application
 
         /// <summary>The close.</summary>
         [SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly")]
-        public event Action<ITabWorkspace> Close
-        {
-            add { AddEvent(CloseEventName, value); }
-
-            remove { RemoveEvent(CloseEventName, value); }
-        }
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets or sets a value indicating whether can close.</summary>
-        public bool CanClose
-        {
-            get { return _canClose; }
-
-            set
-            {
-                _canClose = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>Gets the close workspace.</summary>
-        public ICommand CloseWorkspace { get; private set; }
-
-        /// <summary>Gets or sets the title.</summary>
-        public string Title
-        {
-            get { return _title; }
-
-            set
-            {
-                _title = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public virtual void OnClose() { }
-        public virtual void OnActivate() { }
-        public virtual void OnDeactivate() { }
+        public event Action<ITabWorkspace> Close;
 
         #endregion
 
@@ -96,7 +49,58 @@ namespace Tauron.Application
         /// <summary>The invoke close.</summary>
         public virtual void InvokeClose()
         {
-            InvokeEvent(CloseEventName, this);
+            Close?.Invoke(this);
+        }
+
+        #endregion
+
+        #region Fields
+
+        private bool _canClose;
+
+        private string _title;
+        private readonly string _name;
+
+        #endregion
+
+        #region Public Properties
+        
+        public bool CanClose
+        {
+            get => _canClose;
+
+            set
+            {
+                _canClose = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public ICommand CloseWorkspace { get; private set; }
+        
+        public string Title
+        {
+            get => _title;
+
+            set
+            {
+                _title = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Name => _name ?? _title;
+
+        public virtual void OnClose()
+        {
+        }
+
+        public virtual void OnActivate()
+        {
+        }
+
+        public virtual void OnDeactivate()
+        {
         }
 
         #endregion

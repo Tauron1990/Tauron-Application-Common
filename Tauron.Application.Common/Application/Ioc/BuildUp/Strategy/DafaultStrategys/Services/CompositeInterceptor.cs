@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
@@ -12,23 +11,17 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     {
         private readonly List<IImportInterceptor> _interceptors;
 
-        public CompositeInterceptor([NotNull] List<IImportInterceptor> interceptors)
+        public CompositeInterceptor([NotNull] [ItemNotNull] List<IImportInterceptor> interceptors)
         {
-            Contract.Requires<ArgumentNullException>(interceptors != null, "interceptors");
-            Contract.Requires<ArgumentOutOfRangeException>(
-                Contract.ForAll(interceptors, interceptor => interceptor != null), "interceptors");
-
-            _interceptors = interceptors;
+            _interceptors = interceptors ?? throw new ArgumentNullException(nameof(interceptors));
         }
 
         public bool Intercept(MemberInfo member, ImportMetadata metadata, object target, ref object value)
         {
-            bool returnValue = true;
+            var returnValue = true;
 
             foreach (var importInterceptor in _interceptors.Where(importInterceptor => returnValue))
-            {
                 returnValue = importInterceptor.Intercept(member, metadata, target, ref value);
-            }
 
             return returnValue;
         }

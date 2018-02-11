@@ -1,9 +1,9 @@
 ﻿#region
 
 using System;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -15,7 +15,8 @@ namespace Tauron.Application
     {
         #region Fields
 
-        [NonSerialized] private ObjectContext _context;
+        [NonSerialized]
+        private ObjectContext _context;
 
         #endregion
 
@@ -26,9 +27,9 @@ namespace Tauron.Application
         [CanBeNull]
         ObjectContext IContextHolder.Context
         {
-            get { return _context; }
+            get => _context;
 
-            set { _context = value; }
+            set => _context = value;
         }
 
         #endregion

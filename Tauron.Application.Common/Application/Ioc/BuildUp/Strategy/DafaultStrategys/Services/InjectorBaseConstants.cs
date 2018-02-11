@@ -35,11 +35,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     {
         #region Static Fields
 
-        internal static readonly Type Lazy = typeof (Lazy<>);
+        internal static readonly Type Lazy = typeof(Lazy<>);
 
-        internal static readonly Type LazyWithMetadata = typeof (Lazy<,>);
+        internal static readonly Type LazyWithMetadata = typeof(Lazy<,>);
 
-        internal static readonly Type List = typeof (List<>);
+        internal static readonly Type List = typeof(List<>);
 
         #endregion
     }

@@ -1,9 +1,8 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -17,17 +16,22 @@ namespace Tauron.Application
     /// <param name="handled">The handled.</param>
     public delegate IntPtr WindowHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled);
 
-    /// <summary>The Window interface.</summary>
-    [ContractClass(typeof (WindowContracts))]
     [PublicAPI]
     public interface IWindow
     {
+        [CanBeNull]
+        object Result { get; }
+
         #region Public Events
 
         /// <summary>The closed.</summary>
         event EventHandler Closed;
 
         #endregion
+
+        void Focus();
+
+        void Hide();
 
         #region Public Properties
 
@@ -76,115 +80,6 @@ namespace Tauron.Application
         /// </returns>
         [NotNull]
         object TranslateForTechnology();
-
-        #endregion
-
-        void Focus();
-
-        void Hide();
-
-        [CanBeNull]
-        object Result { get; }
-    }
-
-    [ContractClassFor(typeof (IWindow))]
-    internal abstract class WindowContracts : IWindow
-    {
-        #region Public Events
-
-        /// <summary>The closed.</summary>
-        public event EventHandler Closed;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets the handle.</summary>
-        /// <value>The handle.</value>
-        public IntPtr Handle
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IntPtr>() != IntPtr.Zero);
-                return IntPtr.Zero;
-            }
-        }
-
-        public bool? DialogResult { get; set; }
-
-        /// <summary>Gets or sets the title.</summary>
-        public string Title
-        {
-            get { return null; }
-
-            set { }
-        }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        public bool? IsVisible { get; }
-
-        /// <summary>
-        ///     The add hook.
-        /// </summary>
-        /// <param name="winProc">
-        ///     The win proc.
-        /// </param>
-        public void AddHook(WindowHook winProc)
-        {
-            Contract.Requires<ArgumentNullException>(winProc != null, "winProc");
-        }
-
-        /// <summary>The close.</summary>
-        public void Close()
-        {
-        }
-
-        /// <summary>
-        ///     The remove hook.
-        /// </summary>
-        /// <param name="winProc">
-        ///     The win proc.
-        /// </param>
-        public void RemoveHook(WindowHook winProc)
-        {
-            Contract.Requires<ArgumentNullException>(winProc != null, "winProc");
-        }
-
-        /// <summary>The show.</summary>
-        public void Show()
-        {
-        }
-
-        public Task ShowDialogAsync(IWindow window)
-        {
-            
-            return null;
-        }
-
-        /// <summary>The translate for technology.</summary>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        public object TranslateForTechnology()
-        {
-            Contract.Ensures(Contract.Result<object>() != null);
-            return null;
-        }
-
-        public void Focus()
-        {
-        
-        }
-
-        public void Hide()
-        {
-            
-        }
-
-        public object Result { get; private set; }
 
         #endregion
     }

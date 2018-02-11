@@ -25,19 +25,17 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc
 {
     /// <summary>The build up exception.</summary>
-    [Serializable, PublicAPI]
+    [Serializable]
+    [PublicAPI]
     public sealed class BuildUpException : Exception
     {
-        [NotNull]
-        public ErrorTracer ErrorTracer { get; private set; }
-
         #region Constructors and Destructors
 
         public BuildUpException([NotNull] ErrorTracer errorTracer)
@@ -47,5 +45,8 @@ namespace Tauron.Application.Ioc
         }
 
         #endregion
+
+        [NotNull]
+        public ErrorTracer ErrorTracer { get; private set; }
     }
 }

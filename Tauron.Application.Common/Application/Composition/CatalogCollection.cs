@@ -4,10 +4,9 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Windows.Markup;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -19,12 +18,6 @@ namespace Tauron.Application.Composition
     [PublicAPI]
     public sealed class CatalogCollection
     {
-        #region Fields
-
-        private Collection<XamlCatalog> _catalogs;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -43,23 +36,9 @@ namespace Tauron.Application.Composition
 
         /// <summary>Gets or sets the catalogs.</summary>
         /// <value>The catalogs.</value>
-        [NotNull,SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public Collection<XamlCatalog> Catalogs
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Collection<XamlCatalog>>() != null);
-
-                return _catalogs;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _catalogs = value;
-            }
-        }
+        [NotNull]
+        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public Collection<XamlCatalog> Catalogs { get; set; }
 
         #endregion
 
@@ -73,21 +52,17 @@ namespace Tauron.Application.Composition
         /// </param>
         public void FillCatalag([NotNull] ExportResolver container)
         {
-            Contract.Requires<ArgumentNullException>(container != null, "container");
-
-            foreach (XamlCatalog xamlCatalog in Catalogs) xamlCatalog.FillContainer(container);
+            if (container == null) throw new ArgumentNullException(nameof(container));
+            foreach (var xamlCatalog in Catalogs) xamlCatalog.FillContainer(container);
         }
 
         #endregion
 
-        #region Methods
+        #region Fields
 
-        /// <summary>The object invariant.</summary>
-        [ContractInvariantMethod]
-        private void ObjectInvariant()
-        {
-            Contract.Invariant(Catalogs != null, "Catalog Collection: Catalog Null");
-        }
+        #endregion
+
+        #region Methods
 
         #endregion
     }

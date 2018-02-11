@@ -25,7 +25,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System.Collections.Generic;
-using System.Reflection;
 
 #endregion
 
@@ -47,11 +46,10 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </returns>
         public IEnumerable<ImportMetadata> SelectImport(IExport exportType)
         {
-            foreach (EventInfo eventInfo in exportType.ImplementType.GetEvents(AopConstants.DefaultBindingFlags))
+            foreach (var eventInfo in exportType.ImplementType.GetEvents(AopConstants.DefaultBindingFlags))
             {
                 var attr = eventInfo.GetCustomAttribute<InjectEventAttribute>();
                 if (attr != null)
-                {
                     yield return
                         new ImportMetadata(
                             eventInfo.EventHandlerType,
@@ -60,10 +58,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
                             eventInfo.Name,
                             true,
                             null);
-                }
             }
 
-            foreach (MethodInfo methodInfo in exportType.ImplementType.GetMethods(AopConstants.DefaultBindingFlags))
+            foreach (var methodInfo in exportType.ImplementType.GetMethods(AopConstants.DefaultBindingFlags))
             {
                 var attr = methodInfo.GetCustomAttribute<InjectEventAttribute>();
                 if (attr == null) continue;

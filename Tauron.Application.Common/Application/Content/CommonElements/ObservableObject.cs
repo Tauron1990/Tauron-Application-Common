@@ -1,15 +1,14 @@
 ﻿#region
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using Microsoft.Practices.EnterpriseLibrary.Logging;
+using JetBrains.Annotations;
+using NLog;
 using Tauron.Application.Aop.Model;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -31,14 +30,14 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        [NotNull,SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters")]
+        [NotNull]
+        [SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters")]
         [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         public static string ExtractPropertyName<T>([NotNull] Expression<Func<T>> propertyExpression)
         {
-            Contract.Requires<ArgumentNullException>(propertyExpression != null, "propertyExpression");
-
+            if (propertyExpression == null) throw new ArgumentNullException(nameof(propertyExpression));
             var memberExpression = (MemberExpression) propertyExpression.Body;
-            
+
             return memberExpression.Member.Name;
         }
 
@@ -46,48 +45,76 @@ namespace Tauron.Application
     }
 
     /// <summary>The observable object.</summary>
-    [Serializable, DebuggerNonUserCode]
+    [Serializable]
     [PublicAPI]
-    public abstract class ObservableObject : EventListManager, INotifyPropertyChangedMethod
+    public abstract class ObservableObject : BaseObject, INotifyPropertyChangedMethod
     {
         [PublicAPI]
         protected class LogHelper
         {
-            private readonly ObservableObject _target;
+            private readonly string _name;
+            private Logger _logger;
 
-            public LogHelper([NotNull] ObservableObject target)
+            public LogHelper(string name)
             {
-                _target = target;
+                _name = name;
             }
 
-            public void Write([CanBeNull] object message, TraceEventType type)
+            public Logger Logger => _logger ?? (_logger = LogManager.GetLogger(_name));
+
+            public void Write([CanBeNull] object message, LogLevel type)
             {
-                if (Logger.IsLoggingEnabled()) Logger.Write(message, _target.Category, -1, -1, type);
+                Logger.Log(type, message);
             }
 
             [StringFormatMethod("format")]
-            public void WriteFormat(TraceEventType type, [NotNull] string format, [NotNull] params object[] parms)
+            public void Write(LogLevel type, [NotNull] string format, [NotNull] params object[] parms)
             {
-                Write(string.Format(format, parms), type);
+                Logger.Log(type, format, parms);
             }
+
+            public void Error(Exception e, string messege)
+            {
+                Logger.Error(e, messege);
+            }
+        }
+
+        protected ObservableObject()
+        {
+            LogName = GetType().Name;
+            LogCategory = GetType().ToString();
         }
 
         #region Public Events
 
         /// <summary>The property changed.</summary>
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add { AddEvent("PropertyChangedEventHandler", value); }
-
-            remove { RemoveEvent("PropertyChangedEventHandler", value); }
-        }
+        public event PropertyChangedEventHandler PropertyChanged;
+//        {
+//            add => AddEvent("PropertyChangedEventHandler", value);
+//
+//            remove => RemoveEvent("PropertyChangedEventHandler", value);
+//        }
 
         #endregion
 
-        protected ObservableObject()
+        #region Methods
+
+        /// <summary>
+        ///     The queue workitem.
+        /// </summary>
+        /// <param name="action">
+        ///     The action.
+        /// </param>
+        /// <param name="withDispatcher">
+        ///     The with dispatcher.
+        /// </param>
+        protected static void QueueWorkitem([NotNull] Action action, bool withDispatcher)
         {
-            Category = GetType().ToString();
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            CommonApplication.Scheduler.QueueTask(new UserTask(action, withDispatcher));
         }
+
+        #endregion
 
         #region Public Properties
 
@@ -99,14 +126,33 @@ namespace Tauron.Application
         public static IUISynchronize CurrentDispatcher => UiSynchronize.Synchronize;
 
         [NotNull]
-        protected LogHelper Log => _logHelper ?? (_logHelper = new LogHelper(this));
+        protected LogHelper Log => _logHelper ?? (_logHelper = new LogHelper(LogName));
 
         [CanBeNull]
-        protected string Category { get; set; }
+        protected string LogCategory { get; set; }
+
+        public string LogName { get; set; }
 
         #endregion
 
         #region Public Methods and Operators
+
+        public void SetProperty<TType>(ref TType property, TType value, [CallerMemberName] string name = null)
+        {
+            if (EqualityComparer<TType>.Default.Equals(property, value)) return;
+
+            property = value;
+            OnPropertyChangedExplicit(name ?? throw new ArgumentNullException(nameof(name)));
+        }
+
+        public void SetProperty<TType>(ref TType property, TType value, Action changed, [CallerMemberName] string name = null)
+        {
+            if (EqualityComparer<TType>.Default.Equals(property, value)) return;
+
+            property = value;
+            OnPropertyChangedExplicit(name ?? throw new ArgumentNullException(nameof(name)));
+            changed();
+        }
 
         /// <summary>
         ///     The on property changed.
@@ -127,9 +173,16 @@ namespace Tauron.Application
         /// </param>
         public virtual void OnPropertyChanged([NotNull] PropertyChangedEventArgs eventArgs)
         {
-            Contract.Requires<ArgumentNullException>(eventArgs != null, "eventArgs");
+            if (eventArgs == null) throw new ArgumentNullException(nameof(eventArgs));
+            OnPropertyChanged(this, eventArgs);
+        }
 
-            InvokeEvent("PropertyChangedEventHandler", this, eventArgs);
+        public virtual void OnPropertyChanged([NotNull] object sender, [NotNull] PropertyChangedEventArgs eventArgs)
+        {
+            if (sender == null) throw new ArgumentNullException(nameof(sender));
+            if (eventArgs == null) throw new ArgumentNullException(nameof(eventArgs));
+
+            PropertyChanged?.Invoke(sender, eventArgs);
         }
 
         /// <summary>
@@ -143,37 +196,15 @@ namespace Tauron.Application
         [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         public virtual void OnPropertyChanged<T>([NotNull] Expression<Func<T>> eventArgs)
         {
-            Contract.Requires<ArgumentNullException>(eventArgs != null, "eventArgs");
-
+            if (eventArgs == null) throw new ArgumentNullException(nameof(eventArgs));
             OnPropertyChanged(new PropertyChangedEventArgs(PropertyHelper.ExtractPropertyName(eventArgs)));
         }
 
 
         public virtual void OnPropertyChangedExplicit([NotNull] string propertyName)
         {
-            Contract.Requires<ArgumentNullException>(propertyName != null, "propertyName");
-
+            if (string.IsNullOrWhiteSpace(propertyName)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(propertyName));
             OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        ///     The queue workitem.
-        /// </summary>
-        /// <param name="action">
-        ///     The action.
-        /// </param>
-        /// <param name="withDispatcher">
-        ///     The with dispatcher.
-        /// </param>
-        protected static void QueueWorkitem([NotNull] Action action, bool withDispatcher)
-        {
-            Contract.Requires<ArgumentNullException>(action != null, "action");
-
-            CommonApplication.Scheduler.QueueTask(new UserTask(action, withDispatcher));
         }
 
         #endregion

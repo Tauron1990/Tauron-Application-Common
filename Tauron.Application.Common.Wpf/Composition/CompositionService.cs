@@ -1,15 +1,13 @@
 ﻿#region
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Windows;
-using Microsoft.Practices.EnterpriseLibrary.ExceptionHandling;
+using JetBrains.Annotations;
+using NLog;
 using Tauron.Application.Ioc;
 using Tauron.Application.Models;
-using Tauron.JetBrains.Annotations;
 using IContainer = Tauron.Application.Ioc.IContainer;
 
 #endregion
@@ -20,11 +18,24 @@ namespace Tauron.Application.Composition
     [PublicAPI]
     public static class CompositionServices
     {
+        #region Public Properties
+
+        /// <summary>Gets or sets the container.</summary>
+        [NotNull]
+        public static IContainer Container
+        {
+            get => _container ?? (_container = new DefaultContainer());
+
+            set => _container = value;
+        }
+
+        #endregion
+
         #region Static Fields
 
         public static readonly DependencyProperty ImportViewModelProperty =
-            DependencyProperty.RegisterAttached("ImportViewModel", typeof (string), typeof (CompositionServices),
-                                                new PropertyMetadata(default(string), ImportViewModelPropertyChanged));
+            DependencyProperty.RegisterAttached("ImportViewModel", typeof(string), typeof(CompositionServices),
+                new PropertyMetadata(default(string), ImportViewModelPropertyChanged));
 
         public static void SetImportViewModel([NotNull] DependencyObject element, [CanBeNull] string value)
         {
@@ -39,28 +50,15 @@ namespace Tauron.Application.Composition
 
         public static readonly DependencyProperty ImportProperty = DependencyProperty.RegisterAttached(
             "Import",
-            typeof (Type),
-            typeof (
+            typeof(Type),
+            typeof(
                 CompositionServices
-                ),
+            ),
             new PropertyMetadata
-                (null,
-                 ImportPropertyChanged));
+            (null,
+                ImportPropertyChanged));
 
         private static IContainer _container;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets or sets the container.</summary>
-        [NotNull]
-        public static IContainer Container
-        {
-            get { return _container ?? (_container = new DefaultContainer()); }
-
-            set { _container = value; }
-        }
 
         #endregion
 
@@ -78,8 +76,7 @@ namespace Tauron.Application.Composition
         [CanBeNull]
         public static Type GetImport([NotNull] DependencyObject obj)
         {
-            Contract.Requires<ArgumentNullException>(obj != null, "obj");
-
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
             return (Type) obj.GetValue(ImportProperty);
         }
 
@@ -94,8 +91,7 @@ namespace Tauron.Application.Composition
         /// </param>
         public static void SetImport([NotNull] DependencyObject obj, [CanBeNull] Type value)
         {
-            Contract.Requires<ArgumentNullException>(obj != null, "obj");
-
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
             obj.SetValue(ImportProperty, value);
         }
 
@@ -109,13 +105,13 @@ namespace Tauron.Application.Composition
 
             try
             {
-                IEnumerable<IViewAggregatorAdapter> adapters = Container.ResolveAll<IViewAggregatorAdapter>(null);
-                IViewAggregatorAdapter adapter = adapters.FirstOrDefault(a => a.CanAdapt(d));
+                var adapters = Container.ResolveAll<IViewAggregatorAdapter>(null);
+                var adapter = adapters.FirstOrDefault(a => a.CanAdapt(d));
 
                 if (adapter == null)
                 {
                     var obj = new FrameworkObject(d);
-                    IEnumerable<object> views = Container.ResolveAll((Type) e.NewValue, null);
+                    var views = Container.ResolveAll((Type) e.NewValue, null);
                     obj.DataContext = views.FirstOrDefault();
                     return;
                 }
@@ -123,7 +119,7 @@ namespace Tauron.Application.Composition
                 lock (adapter)
                 {
                     adapter.Adapt(d);
-                    IEnumerable<object> views = Container.ResolveAll((Type) e.NewValue, null);
+                    var views = Container.ResolveAll((Type) e.NewValue, null);
 
                     adapter.AddViews(views);
 
@@ -132,24 +128,25 @@ namespace Tauron.Application.Composition
             }
             catch (Exception ex)
             {
-                if (ExceptionPolicy.HandleException(ex, CommonWpfConstans.CommonExceptionPolicy)) throw;
+                LogManager.GetLogger(nameof(CompositionServices), typeof(CompositionServices)).Error(ex);
+                throw;
             }
         }
 
         private static void ImportViewModelPropertyChanged([NotNull] DependencyObject d,
-                                                           DependencyPropertyChangedEventArgs e)
+            DependencyPropertyChangedEventArgs e)
         {
-            if(DesignerProperties.GetIsInDesignMode(d))
+            if (DesignerProperties.GetIsInDesignMode(d))
                 return;
 
             var name = e.NewValue as string;
-            
-            if(string.IsNullOrWhiteSpace(name)) return;
+
+            if (string.IsNullOrWhiteSpace(name)) return;
 
             // ReSharper disable once ObjectCreationAsStatement
             new FrameworkObject(d, false)
             {
-                DataContext = Container.Resolve(typeof (ViewModelBase), name, true, null)
+                DataContext = Container.Resolve(typeof(ViewModelBase), name, true, null)
             };
         }
 

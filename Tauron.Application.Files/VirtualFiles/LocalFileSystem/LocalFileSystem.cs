@@ -14,16 +14,10 @@ namespace Tauron.Application.Files.VirtualFiles.LocalFileSystem
             
         }
 
-        public bool IsRealTime { get { return true; } }
+        public bool IsRealTime => true;
         public bool SaveAfterDispose { get; set; }
 
-        public string Source
-        {
-            get
-            {
-                return OriginalPath;
-            }
-        }
+        public string Source => OriginalPath;
 
         public void Reload(string source)
         {

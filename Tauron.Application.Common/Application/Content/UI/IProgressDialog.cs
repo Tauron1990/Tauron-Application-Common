@@ -1,7 +1,7 @@
 #region
 
 using System;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -18,25 +18,25 @@ namespace Tauron.Application
         ProgressBar,
 
         /// <summary>The marquee progress bar.</summary>
-        MarqueeProgressBar,
+        MarqueeProgressBar
     }
 
     /// <summary>The ProgressDialog interface.</summary>
     [PublicAPI]
     public interface IProgressDialog : IDisposable
     {
-        #region Public Events
-
-        /// <summary>The completed.</summary>
-        event EventHandler Completed;
-
-        #endregion
-
         #region Public Properties
 
         /// <summary>Gets or sets the progress bar style.</summary>
         /// <value>The progress bar style.</value>
         ProgressStyle ProgressBarStyle { get; set; }
+
+        #endregion
+
+        #region Public Events
+
+        /// <summary>The completed.</summary>
+        event EventHandler Completed;
 
         #endregion
 

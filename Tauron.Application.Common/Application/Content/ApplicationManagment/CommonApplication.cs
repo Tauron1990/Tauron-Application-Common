@@ -1,47 +1,67 @@
-﻿
-using System;
-using System.Diagnostics.Contracts;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xaml;
-using Microsoft.Practices.EnterpriseLibrary.Common.Configuration;
-using Microsoft.Practices.EnterpriseLibrary.ExceptionHandling;
-using Microsoft.Practices.EnterpriseLibrary.Logging;
+using JetBrains.Annotations;
+using NLog;
+using NLog.Config;
 using Tauron.Application.Composition;
 using Tauron.Application.Implement;
 using Tauron.Application.Ioc;
 using Tauron.Application.Modules;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application
 {
     /// <summary>The common application.</summary>
     [PublicAPI]
-    [ContractClass(typeof (CommonApplicationContracts))]
     public abstract class CommonApplication
     {
-        #region Static Fields
+        /// <summary>The null splash.</summary>
+        private class NullSplash : ISplashService
+        {
+            #region Constructors and Destructors
 
-        /// <summary>The _current.</summary>
-        private static CommonApplication _current;
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="NullSplash" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="NullSplash" /> Klasse.
+            ///     Initializes a new instance of the <see cref="NullSplash" /> class.
+            /// </summary>
+            public NullSplash()
+            {
+                Listner = new SplashMessageListener();
+            }
+
+            #endregion
+
+            #region Public Properties
+
+            /// <summary>Gets the listner.</summary>
+            /// <value>The listner.</value>
+            public SplashMessageListener Listner { get; private set; }
+
+            #endregion
+
+            #region Public Methods and Operators
+
+            /// <summary>The close splash.</summary>
+            public void CloseSplash()
+            {
+            }
+
+            /// <summary>The show splash.</summary>
+            public void ShowSplash()
+            {
+            }
+
+            #endregion
+        }
+
+        #region Static Fields
 
         /// <summary>The _scheduler.</summary>
         private static TaskScheduler _scheduler;
-
-        #endregion
-
-        #region Fields
-
-        /// <summary>The _do startup.</summary>
-        private readonly bool _doStartup;
-
-        /// <summary>The _splash.</summary>
-        private readonly ISplashService _splash;
-
-        /// <summary>The _args.</summary>
-        private string[] _args;
 
         #endregion
 
@@ -61,9 +81,7 @@ namespace Tauron.Application
         /// </param>
         protected CommonApplication(bool doStartup, [CanBeNull] ISplashService service, [NotNull] IUIControllerFactory factory)
         {
-            Contract.Requires<ArgumentNullException>(factory != null, "factory");
-
-            Factory = factory;
+            Factory = factory ?? throw new ArgumentNullException(nameof(factory));
             Current = this;
             _scheduler = new TaskScheduler(UiSynchronize.Synchronize);
             _splash = service ?? new NullSplash();
@@ -73,34 +91,39 @@ namespace Tauron.Application
 
         #endregion
 
+        #region Properties
+
+        /// <summary>Gets or sets the source assembly.</summary>
+        /// <value>The source assembly.</value>
+        [NotNull]
+        protected static string SourceAssembly { get; set; }
+
+        #endregion
+
+        #region Fields
+
+        /// <summary>The _do startup.</summary>
+        private readonly bool _doStartup;
+
+        /// <summary>The _splash.</summary>
+        private readonly ISplashService _splash;
+
+        /// <summary>The _args.</summary>
+        private string[] _args;
+
+        #endregion
+
         #region Public Properties
 
         /// <summary>Gets the current.</summary>
         /// <value>The current.</value>
         [NotNull]
-        public static CommonApplication Current
-        {
-            get { return _current; }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-                _current = value;
-            }
-        }
+        public static CommonApplication Current { get; private set; }
 
         /// <summary>Gets the scheduler.</summary>
         /// <value>The scheduler.</value>
         [NotNull]
-        public static TaskScheduler Scheduler
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<TaskScheduler>() != null);
-
-                return _scheduler ?? (_scheduler = new TaskScheduler());
-            }
-        }
+        public static TaskScheduler Scheduler => _scheduler ?? (_scheduler = new TaskScheduler());
 
         /// <summary>Gets or sets the catalog list.</summary>
         /// <value>The catalog list.</value>
@@ -121,15 +144,6 @@ namespace Tauron.Application
 
         #endregion
 
-        #region Properties
-
-        /// <summary>Gets or sets the source assembly.</summary>
-        /// <value>The source assembly.</value>
-        [NotNull]
-        protected static string SourceAssembly { get; set; }
-
-        #endregion
-
         #region Public Methods and Operators
 
         /// <summary>
@@ -147,8 +161,7 @@ namespace Tauron.Application
         [NotNull]
         public static Task QueueWorkitemAsync([NotNull] Action action, bool withDispatcher)
         {
-            Contract.Requires<ArgumentNullException>(action != null, "action");
-
+            if (action == null) throw new ArgumentNullException(nameof(action));
             return Scheduler.QueueTask(new UserTask(action, withDispatcher));
         }
 
@@ -159,9 +172,6 @@ namespace Tauron.Application
         [NotNull]
         public string[] GetArgs()
         {
-            Contract.Ensures(Contract.Result<string[]>() != null);
-            Contract.Ensures(Contract.ForAll(Contract.Result<string[]>(), mem => mem != null));
-
             return (string[]) _args.Clone();
         }
 
@@ -169,14 +179,9 @@ namespace Tauron.Application
 
         #region Methods
 
-        /// <summary>The create configuration.</summary>
-        /// <returns>
-        ///     The <see cref="IConfigurationSource" />.
-        /// </returns>
-        [CanBeNull]
-        protected virtual IConfigurationSource CreateConfiguration()
+        protected virtual void ConfigurateLagging(LoggingConfiguration config)
         {
-            return null;
+            
         }
 
         /// <summary>The create container.</summary>
@@ -186,8 +191,6 @@ namespace Tauron.Application
         [NotNull]
         protected virtual IContainer CreateContainer()
         {
-            Contract.Ensures(Contract.Result<IContainer>() != null);
-
             return new DefaultContainer();
         }
 
@@ -203,8 +206,6 @@ namespace Tauron.Application
         [CanBeNull]
         protected virtual IWindow DoStartup([NotNull] CommandLineProcessor args)
         {
-            Contract.Requires<ArgumentNullException>(args != null, "args");
-
             return null;
         }
 
@@ -216,9 +217,8 @@ namespace Tauron.Application
         /// </param>
         protected virtual void Fill([NotNull] IContainer container)
         {
-            Contract.Requires<ArgumentNullException>(container != null, "container");
-
-            if(string.IsNullOrWhiteSpace(CatalogList))
+            if (container == null) throw new ArgumentNullException(nameof(container));
+            if (string.IsNullOrWhiteSpace(CatalogList))
                 CommonConstants.LogCommon(false, "Common Application: CatalogList Empty");
 
             if (CatalogList == null) return;
@@ -234,7 +234,8 @@ namespace Tauron.Application
             }
             catch (ArgumentException e)
             {
-                if (ExceptionPolicy.HandleException(e, CommonConstants.CommonExceptionPolicy)) throw;
+                LogManager.GetLogger("CommonApplication", typeof(CommonApplication)).Error(e);
+                throw;
             }
         }
 
@@ -293,8 +294,6 @@ namespace Tauron.Application
 
         protected virtual void InitializeModule([NotNull] IModule module)
         {
-            Contract.Requires<ArgumentNullException>(module != null, "module");
-
             module.Initialize(this);
             ModuleHandlerRegistry.Progress(module);
         }
@@ -304,23 +303,21 @@ namespace Tauron.Application
         {
             try
             {
-                SplashMessageListener listner = _splash.Listner;
+                var listner = _splash.Listner;
 
                 listner.ReceiveMessage(Resources.Resources.Init_Msg_Step1);
 
-                IConfigurationSource source = CreateConfiguration();
-                if (source != null)
-                {
-                    Logger.SetLogWriter(new LogWriterFactory(source).Create());
-                    ExceptionPolicy.SetExceptionManager(new ExceptionPolicyFactory(source).CreateManager());
-                }
+                LoggingConfiguration config = new LoggingConfiguration();
+                ConfigurateLagging(config);
+                LogManager.Configuration = config;
 
                 Container = CreateContainer();
                 Fill(Container);
 
                 listner.ReceiveMessage(Resources.Resources.Init_Msg_Step2);
-                foreach (IModule module in Container.ResolveAll(typeof (IModule), null)
-                    .Cast<IModule>().OrderBy(m => m.Order)) 
+                foreach (var module in Container.ResolveAll(typeof(IModule), null)
+                    .Cast<IModule>()
+                    .OrderBy(m => m.Order))
                     InitializeModule(module);
 
                 listner.ReceiveMessage(Resources.Resources.Init_Msg_Step3);
@@ -328,40 +325,31 @@ namespace Tauron.Application
                 LoadCommands();
 
                 listner.ReceiveMessage(Resources.Resources.Init_Msg_Step4);
-                IWindow win = DoStartup(new CommandLineProcessor(this));
+                var win = DoStartup(new CommandLineProcessor(this));
 
                 MainWindow = win;
 
                 if (win != null)
-                {
                     UiSynchronize.Synchronize.Invoke(
                         () =>
                         {
                             win.Show();
                             win.Closed += MainWindowClosed;
                         });
-                }
 
                 _splash.CloseSplash();
                 _args = null;
             }
             catch (Exception e)
             {
-                try
-                {
-                    if (ExceptionPolicy.HandleException(e, CommonConstants.CommonExceptionPolicy)) throw;
-                }
-// ReSharper disable once EmptyGeneralCatchClause
-                catch
-                {
-
-                }
+                LogManager.GetLogger("CommonApplication", typeof(CommonApplication)).Error(e);
 
                 SplashMessageListener.CurrentListner.Message = e.Message;
                 OnStartupError(e);
                 Thread.Sleep(2000);
                 Scheduler.Dispose();
                 Factory.CreateController().Shutdown();
+                Environment.Exit(-1);
             }
         }
 
@@ -371,89 +359,9 @@ namespace Tauron.Application
 
         #endregion
 
-        /// <summary>The null splash.</summary>
-        private class NullSplash : ISplashService
+        public virtual string GetdefaultFileLocation()
         {
-            #region Constructors and Destructors
-
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="NullSplash" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="NullSplash" /> Klasse.
-            ///     Initializes a new instance of the <see cref="NullSplash" /> class.
-            /// </summary>
-            public NullSplash()
-            {
-                Listner = new SplashMessageListener();
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            /// <summary>Gets the listner.</summary>
-            /// <value>The listner.</value>
-            public SplashMessageListener Listner { get; private set; }
-
-            #endregion
-
-            #region Public Methods and Operators
-
-            /// <summary>The close splash.</summary>
-            public void CloseSplash()
-            {
-            }
-
-            /// <summary>The show splash.</summary>
-            public void ShowSplash()
-            {
-            }
-
-            #endregion
+            return AppDomain.CurrentDomain.BaseDirectory;
         }
-    }
-
-    /// <summary>The common application contracts.</summary>
-    [ContractClassFor(typeof (CommonApplication))]
-    internal abstract class CommonApplicationContracts : CommonApplication
-    {
-        #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="CommonApplicationContracts" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="CommonApplicationContracts" /> Klasse.
-        ///     Initializes a new instance of the <see cref="CommonApplicationContracts" /> class.
-        /// </summary>
-        /// <param name="doStartup">
-        ///     The do startup.
-        /// </param>
-        /// <param name="service">
-        ///     The service.
-        /// </param>
-        /// <param name="factory">
-        ///     The factory.
-        /// </param>
-        public CommonApplicationContracts(bool doStartup, ISplashService service, IUIControllerFactory factory)
-            : base(doStartup, service, factory)
-        {
-        }
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets or sets the container.</summary>
-        /// <value>The container.</value>
-        public override IContainer Container
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IContainer>() != null);
-                return null;
-            }
-
-            set { Contract.Requires(value != null); }
-        }
-
-        #endregion
     }
 }

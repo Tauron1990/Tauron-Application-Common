@@ -25,7 +25,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using Castle.DynamicProxy;
 
 #endregion
@@ -37,49 +36,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     {
         #region Fields
 
-        private Func<IBuildContext, ProxyGenerator, object> constructor;
-
         #endregion
 
         #region Public Properties
 
         /// <summary>Gets or sets the constructor.</summary>
         /// <value>The constructor.</value>
-        public Func<IBuildContext, ProxyGenerator, object> Constructor
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Func<IBuildContext, ProxyGenerator, object>>() != null);
+        public Func<IBuildContext, ProxyGenerator, object> Constructor { get; set; }
 
-                return constructor;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                constructor = value;
-            }
-        }
-
-        private ProxyGenerator _generator;
-
-        public ProxyGenerator Generator
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<ProxyGenerator>() != null);
-
-                return _generator;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "Generator");
-
-                _generator = value;
-            }
-        }
+        public ProxyGenerator Generator { get; set; }
 
         #endregion
     }

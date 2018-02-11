@@ -6,17 +6,9 @@ namespace Tauron.Application.Converter
     [MarkupExtensionReturnType(typeof(IValueConverter))]
     public sealed class NullableToBoolConverter : ValueConverterFactoryBase
     {
-        protected override IValueConverter Create()
-        {
-            return new Converter();
-        }
-
         private class Converter : ValueConverterBase<bool, bool?>
         {
-            protected override bool CanConvertBack
-            {
-                get { return true; }
-            }
+            protected override bool CanConvertBack => true;
 
             protected override bool? Convert(bool value)
             {
@@ -27,6 +19,11 @@ namespace Tauron.Application.Converter
             {
                 return value == true;
             }
+        }
+
+        protected override IValueConverter Create()
+        {
+            return new Converter();
         }
     }
 }

@@ -17,17 +17,17 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Implementation
 {
     /// <summary>The wpf synchronize.</summary>
-    [PublicAPI, DebuggerNonUserCode]
+    [PublicAPI]
+    [DebuggerNonUserCode]
     public class WPFSynchronize : IUISynchronize
     {
         #region Fields
@@ -47,8 +47,7 @@ namespace Tauron.Application.Implementation
         /// </param>
         public WPFSynchronize([NotNull] Dispatcher dispatcher)
         {
-            Contract.Requires<ArgumentNullException>(dispatcher != null, "dispatcher");
-
+            if (dispatcher == null) throw new ArgumentNullException(nameof(dispatcher));
             _dispatcher = dispatcher;
         }
 

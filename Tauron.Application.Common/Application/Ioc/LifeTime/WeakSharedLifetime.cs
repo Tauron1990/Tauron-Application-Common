@@ -44,10 +44,7 @@ namespace Tauron.Application.Ioc.LifeTime
 
         /// <summary>Gets a value indicating whether is alive.</summary>
         /// <value>The is alive.</value>
-        public bool IsAlive
-        {
-            get { return _reference != null && _reference.IsAlive; }
-        }
+        public bool IsAlive => _reference != null && _reference.IsAlive;
 
         #endregion
 

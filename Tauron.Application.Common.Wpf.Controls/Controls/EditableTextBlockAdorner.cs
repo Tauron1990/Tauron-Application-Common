@@ -30,7 +30,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -41,16 +41,6 @@ namespace Tauron.Application.Controls
     /// </summary>
     public class EditableTextBlockAdorner : Adorner
     {
-        #region Fields
-
-        private readonly VisualCollection _collection;
-
-        private readonly TextBlock _textBlock;
-
-        private readonly TextBox _textBox;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -78,32 +68,39 @@ namespace Tauron.Application.Controls
 
         #endregion
 
+        #region Properties
+
+        /// <summary>Gets the visual children count.</summary>
+        protected override int VisualChildrenCount => _collection.Count;
+
+        #endregion
+
+        #region Fields
+
+        private readonly VisualCollection _collection;
+
+        private readonly TextBlock _textBlock;
+
+        private readonly TextBox _textBox;
+
+        #endregion
+
         #region Public Events
 
         /// <summary>The text box key up.</summary>
         public event KeyEventHandler TextBoxKeyUp
         {
-            add { _textBox.KeyUp += value; }
+            add => _textBox.KeyUp += value;
 
-            remove { _textBox.KeyUp -= value; }
+            remove => _textBox.KeyUp -= value;
         }
 
         /// <summary>The text box lost focus.</summary>
         public event RoutedEventHandler TextBoxLostFocus
         {
-            add { _textBox.LostFocus += value; }
+            add => _textBox.LostFocus += value;
 
-            remove { _textBox.LostFocus -= value; }
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>Gets the visual children count.</summary>
-        protected override int VisualChildrenCount
-        {
-            get { return _collection.Count; }
+            remove => _textBox.LostFocus -= value;
         }
 
         #endregion
@@ -122,7 +119,7 @@ namespace Tauron.Application.Controls
         protected override Size ArrangeOverride(Size finalSize)
         {
             _textBox.Arrange(
-                new Rect(0, 0, _textBlock.DesiredSize.Width + 50, _textBlock.DesiredSize.Height*1.5));
+                new Rect(0, 0, _textBlock.DesiredSize.Width + 50, _textBlock.DesiredSize.Height * 1.5));
             _textBox.Focus();
             return finalSize;
         }
@@ -153,7 +150,7 @@ namespace Tauron.Application.Controls
                 null,
                 new Pen {Brush = Brushes.Gold, Thickness = 2},
                 new Rect(0, 0, _textBlock.DesiredSize.Width + 50,
-                         _textBlock.DesiredSize.Height*1.5));
+                    _textBlock.DesiredSize.Height * 1.5));
         }
 
         private void TextBoxKeyUpEventHandler([NotNull] object sender, [NotNull] KeyEventArgs e)
@@ -161,7 +158,7 @@ namespace Tauron.Application.Controls
             if (e.Key != Key.Enter) return;
 
             _textBox.Text = _textBox.Text.Replace("\r\n", string.Empty);
-            BindingExpression expression = _textBox.GetBindingExpression(TextBox.TextProperty);
+            var expression = _textBox.GetBindingExpression(TextBox.TextProperty);
             if (null != expression) expression.UpdateSource();
         }
 

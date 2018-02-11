@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Drawing;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application
 {
@@ -37,7 +36,7 @@ namespace Tauron.Application
         Asterisk = 64,
 
         /// <summary>The information.</summary>
-        Information = 64,
+        Information = 64
     }
 
     /// <summary>The msg box button.</summary>
@@ -54,7 +53,7 @@ namespace Tauron.Application
         YesNoCancel = 3,
 
         /// <summary>The yes no.</summary>
-        YesNo = 4,
+        YesNo = 4
     }
 
     /// <summary>The msg box result.</summary>
@@ -74,12 +73,11 @@ namespace Tauron.Application
         Yes = 6,
 
         /// <summary>The no.</summary>
-        No = 7,
+        No = 7
     }
 
     /// <summary>The DialogFactory interface.</summary>
     [PublicAPI]
-    [ContractClass(typeof (DialogFactoryContracts))]
     public interface IDialogFactory
     {
         #region Public Methods and Operators
@@ -102,7 +100,8 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="IProgressDialog" />.
         /// </returns>
-        [NotNull,SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+        [NotNull]
+        [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         [PublicAPI]
         IProgressDialog CreateProgressDialog([NotNull] string text, [NotNull] string title, [CanBeNull] IWindow owner, [NotNull] Action<IProgress<ActiveProgress>> worker);
 
@@ -142,7 +141,8 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="string" />.
         /// </returns>
-        [NotNull,PublicAPI]
+        [NotNull]
+        [PublicAPI]
         string GetText([CanBeNull] IWindow owner, [NotNull] string instruction, [CanBeNull] string content, [NotNull] string caption,
             bool allowCancel, [CanBeNull] string defaultValue);
 
@@ -209,7 +209,8 @@ namespace Tauron.Application
         ///     The result.
         /// </param>
         /// <returns>
-        ///     The <see>
+        ///     The
+        ///     <see>
         ///         <cref>IEnumerable</cref>
         ///     </see>
         ///     .
@@ -334,334 +335,6 @@ namespace Tauron.Application
         MsgBoxResult ShowTaskDialog([CanBeNull] IWindow owner, [NotNull] string text, [NotNull] string caption,
             MsgBoxButton button,
             MsgBoxImage icon, [CanBeNull] Icon custumIcon);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (IDialogFactory))]
-    internal abstract class DialogFactoryContracts : IDialogFactory
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The create progress dialog.
-        /// </summary>
-        /// <param name="text">
-        ///     The text.
-        /// </param>
-        /// <param name="title">
-        ///     The title.
-        /// </param>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="worker">
-        ///     The worker.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IProgressDialog" />.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public IProgressDialog CreateProgressDialog(
-            string text,
-            string title,
-            IWindow owner,
-            Action<IProgress<ActiveProgress>> worker)
-        {
-            Contract.Requires<ArgumentNullException>(text != null, "text");
-            Contract.Requires<ArgumentNullException>(title != null, "title");
-            Contract.Requires<ArgumentNullException>(worker != null, "worker");
-            Contract.Ensures(Contract.Result<IProgressDialog>() != null);
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The format exception.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="exception">
-        ///     The exception.
-        /// </param>
-        public void FormatException(IWindow owner, Exception exception)
-        {
-            Contract.Requires<ArgumentNullException>(exception != null, "exception");
-        }
-
-        /// <summary>
-        ///     The get text.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="instruction">
-        ///     The instruction.
-        /// </param>
-        /// <param name="content">
-        ///     The content.
-        /// </param>
-        /// <param name="caption">
-        ///     The caption.
-        /// </param>
-        /// <param name="allowCancel">
-        ///     The allow cancel.
-        /// </param>
-        /// <param name="defaultValue">
-        ///     The default value.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public string GetText(
-            IWindow owner,
-            string instruction,
-            string content,
-            string caption,
-            bool allowCancel,
-            string defaultValue)
-        {
-            Contract.Requires<ArgumentNullException>(instruction != null, "instruction");
-            Contract.Requires<ArgumentNullException>(content != null, "content");
-            Contract.Requires<ArgumentNullException>(caption != null, "caption");
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The show message box.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="text">
-        ///     The text.
-        /// </param>
-        /// <param name="caption">
-        ///     The caption.
-        /// </param>
-        /// <param name="button">
-        ///     The button.
-        /// </param>
-        /// <param name="icon">
-        ///     The icon.
-        /// </param>
-        /// <param name="custumIcon">
-        ///     The custum icon.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="MsgBoxResult" />.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public MsgBoxResult ShowMessageBox(
-            IWindow owner,
-            string text,
-            string caption,
-            MsgBoxButton button,
-            MsgBoxImage icon,
-            Icon custumIcon)
-        {
-            Contract.Requires<ArgumentNullException>(text != null, "text");
-            Contract.Requires<ArgumentNullException>(caption != null, "caption");
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The show open file dialog.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="checkFileExists">
-        ///     The check file exists.
-        /// </param>
-        /// <param name="defaultExt">
-        ///     The default ext.
-        /// </param>
-        /// <param name="dereferenceLinks">
-        ///     The dereference links.
-        /// </param>
-        /// <param name="filter">
-        ///     The filter.
-        /// </param>
-        /// <param name="multiSelect">
-        ///     The multi select.
-        /// </param>
-        /// <param name="title">
-        ///     The title.
-        /// </param>
-        /// <param name="validateNames">
-        ///     The validate names.
-        /// </param>
-        /// <param name="checkPathExists">
-        ///     The check path exists.
-        /// </param>
-        /// <param name="result">
-        ///     The result.
-        /// </param>
-        /// <returns>
-        ///     The <see>
-        ///         <cref>IEnumerable</cref>
-        ///     </see>
-        ///     .
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public IEnumerable<string> ShowOpenFileDialog(
-            IWindow owner,
-            bool checkFileExists,
-            string defaultExt,
-            bool dereferenceLinks,
-            string filter,
-            bool multiSelect,
-            string title,
-            bool validateNames,
-            bool checkPathExists,
-            out bool? result)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The show open folder dialog.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="description">
-        ///     The description.
-        /// </param>
-        /// <param name="rootFolder">
-        ///     The root folder.
-        /// </param>
-        /// <param name="showNewFolderButton">
-        ///     The show new folder button.
-        /// </param>
-        /// <param name="useDescriptionForTitle">
-        ///     The use description for title.
-        /// </param>
-        /// <param name="result">
-        ///     The result.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public string ShowOpenFolderDialog(
-            IWindow owner,
-            string description,
-            Environment.SpecialFolder rootFolder,
-            bool showNewFolderButton,
-            bool useDescriptionForTitle,
-            out bool? result)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The show save file dialog.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="addExtension">
-        ///     The add extension.
-        /// </param>
-        /// <param name="checkFileExists">
-        ///     The check file exists.
-        /// </param>
-        /// <param name="checkPathExists">
-        ///     The check path exists.
-        /// </param>
-        /// <param name="defaultExt">
-        ///     The default ext.
-        /// </param>
-        /// <param name="dereferenceLinks">
-        ///     The dereference links.
-        /// </param>
-        /// <param name="filter">
-        ///     The filter.
-        /// </param>
-        /// <param name="createPrompt">
-        ///     The create prompt.
-        /// </param>
-        /// <param name="overwritePrompt">
-        ///     The overwrite prompt.
-        /// </param>
-        /// <param name="title">
-        ///     The title.
-        /// </param>
-        /// <param name="initialDirectory">
-        ///     The initial directory.
-        /// </param>
-        /// <param name="result">
-        ///     The result.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public string ShowSaveFileDialog(
-            IWindow owner,
-            bool addExtension,
-            bool checkFileExists,
-            bool checkPathExists,
-            string defaultExt,
-            bool dereferenceLinks,
-            string filter,
-            bool createPrompt,
-            bool overwritePrompt,
-            string title,
-            string initialDirectory,
-            out bool? result)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The show task dialog.
-        /// </summary>
-        /// <param name="owner">
-        ///     The owner.
-        /// </param>
-        /// <param name="text">
-        ///     The text.
-        /// </param>
-        /// <param name="caption">
-        ///     The caption.
-        /// </param>
-        /// <param name="button">
-        ///     The button.
-        /// </param>
-        /// <param name="icon">
-        ///     The icon.
-        /// </param>
-        /// <param name="custumIcon">
-        ///     The custum icon.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="MsgBoxResult" />.
-        /// </returns>
-        public MsgBoxResult ShowTaskDialog(
-            IWindow owner,
-            string text,
-            string caption,
-            MsgBoxButton button,
-            MsgBoxImage icon,
-            Icon custumIcon)
-        {
-            Contract.Requires<ArgumentNullException>(text != null, "text");
-            Contract.Requires<ArgumentNullException>(caption != null, "caption");
-            return MsgBoxResult.Cancel;
-        }
 
         #endregion
     }

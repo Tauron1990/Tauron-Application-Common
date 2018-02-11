@@ -4,8 +4,8 @@ using System;
 using System.Reflection;
 using System.Threading;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -44,8 +44,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The monitor lock attribute.</summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Event, AllowMultiple = false,
-        Inherited = true)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Event)]
     [PublicAPI]
     public sealed class MonitorLockAttribute : ThreadingBaseAspect
     {
@@ -70,7 +69,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="contextName">
         ///     The context name.
         /// </param>
-        protected internal override void Initialize( object target,  ObjectContext context,  string contextName)
+        protected internal override void Initialize(object target, ObjectContext context, string contextName)
         {
             _holder = BaseHolder.GetOrAdd<MonitorHolder, MonitorHolder>(
                 context,
@@ -89,9 +88,9 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected override void Intercept( IInvocation invocation,  ObjectContext context)
+        protected override void Intercept(IInvocation invocation, ObjectContext context)
         {
-            bool lockTaken = false;
+            var lockTaken = false;
 
             try
             {
@@ -109,7 +108,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The monitor source attribute.</summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     [PublicAPI]
     public sealed class MonitorSourceAttribute : ContextPropertyAttributeBase
     {
@@ -127,7 +126,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="target">
         ///     The target.
         /// </param>
-        protected internal override void Register( ObjectContext context,  MemberInfo info,  object target)
+        protected internal override void Register(ObjectContext context, MemberInfo info, object target)
         {
             context.Register<MonitorHolder, MonitorHolder>(
                 new MonitorHolder(info.GetInvokeMember<object>(target))

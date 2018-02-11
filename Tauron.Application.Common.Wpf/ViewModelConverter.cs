@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Data;
+using JetBrains.Annotations;
 using Tauron.Application.Converter;
 using Tauron.Application.Models;
 using Tauron.Application.Views;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application
 {
     public sealed class ViewModelConverterExtension : ValueConverterFactoryBase
     {
-        public bool EnableCaching { get; set; }
-
         public ViewModelConverterExtension()
         {
             EnableCaching = true;
         }
+
+        public bool EnableCaching { get; set; }
 
         protected override IValueConverter Create()
         {
@@ -26,22 +26,21 @@ namespace Tauron.Application
 
     public class ViewModelConverter : IValueConverter
     {
-        private readonly bool _enableCaching;
         private readonly Dictionary<string, object> _cache;
-        
+        private readonly bool _enableCaching;
+
         public ViewModelConverter(bool enableCaching)
         {
             _enableCaching = enableCaching;
 
-            if(enableCaching)
+            if (enableCaching)
                 _cache = new Dictionary<string, object>();
         }
 
         [CanBeNull]
         public object Convert([NotNull] object value, [NotNull] Type targetType, [NotNull] object parameter, [NotNull] CultureInfo culture)
         {
-            var model = value as ViewModelBase;
-            if (model == null) return value;
+            if (!(value is ViewModelBase model)) return value;
 
             var manager = ViewManager.Manager;
 
@@ -50,8 +49,7 @@ namespace Tauron.Application
             var name = manager.GetName(model);
             if (string.IsNullOrEmpty(name)) return value;
 
-            object view;
-            if (_cache.TryGetValue(name, out view))
+            if (_cache.TryGetValue(name, out var view))
                 return view;
 
             view = manager.CreateViewForModel(model);

@@ -11,32 +11,32 @@ namespace Tauron.Application.Views.Core
     public class AttributeBasedLocator : CommonLocatorBase
     {
         [Inject]
-        private List<InstanceResolver<Control, ISortableViewExportMetadata>> _views;
+        protected List<InstanceResolver<Control, ISortableViewExportMetadata>> Views;
 
         [Inject]
-        private List<InstanceResolver<Window, INameExportMetadata>> _windows;
+        protected List<InstanceResolver<Window, INameExportMetadata>> Windows;
 
         public override string GetName(Type model)
         {
             var attr = model.GetCustomAttribute<ExportViewModelAttribute>();
-            return attr == null ? null : attr.Name;
+            return attr?.Name;
         }
 
         public override DependencyObject Match(ISortableViewExportMetadata name)
         {
-            var temp = _views.FirstOrDefault(rs => rs.Metadata == name);
+            var temp = Views.FirstOrDefault(rs => rs.Metadata == name);
 
-            return temp == null ? null : temp.Resolve(true);
+            return temp?.Resolve(true);
         }
 
         public override IEnumerable<InstanceResolver<Control, ISortableViewExportMetadata>> GetAllViewsImpl(string name)
         {
-            return _views.Where(v => v.Metadata.Name == name);
+            return Views.Where(v => v.Metadata.Name == name);
         }
 
         public override DependencyObject Match(string name)
         {
-            return _views.First(v => v.Metadata.Name == name).Resolve();
+            return Views.First(v => v.Metadata.Name == name).Resolve();
         }
 
         public override IWindow CreateWindowImpl(string name, object[] parameters)
@@ -45,22 +45,27 @@ namespace Tauron.Application.Views.Core
             if (parameters != null)
             {
                 buildParameters = new BuildParameter[parameters.Length];
-                for (int i = 0; i < parameters.Length; i++)
-                {
+                for (var i = 0; i < parameters.Length; i++)
                     buildParameters[i] = new SimpleBuildPrameter(parameters[i]);
-                }
             }
 
-            Window window = _windows.First(win => win.Metadata.Name == name).Resolve(true, buildParameters);
+            var window = Windows.First(win => win.Metadata.Name == name).ResolveRaw(true, buildParameters);
 
-            UiSynchronize.Synchronize.Invoke(() => window.Name = name);
-
-            return new WpfWindow(window);
+            return CastToWindow(window, name);
         }
 
         public override Type GetViewType(string name)
         {
-            return _views.First(vi => vi.Metadata.Name == name).RealType;
+            return Views.First(vi => vi.Metadata.Name == name).RealType;
+        }
+
+        protected virtual IWindow CastToWindow(object objWindow, string name)
+        {
+            Window window = (Window) objWindow;
+
+            UiSynchronize.Synchronize.Invoke(() => window.Name = name);
+
+            return new WpfWindow(window);
         }
     }
 }

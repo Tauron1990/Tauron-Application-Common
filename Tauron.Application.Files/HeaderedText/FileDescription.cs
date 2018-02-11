@@ -21,10 +21,7 @@ namespace Tauron.Application.Files.HeaderedText
             _keys = new HashSet<string>(parent.Keys);
         }
 
-        public IEnumerable<string> Keys
-        {
-            get { return _readonlyEnumerable ?? (_readonlyEnumerable = new ReadOnlyEnumerator<string>(_keys)); }
-        }
+        public IEnumerable<string> Keys => _readonlyEnumerable ?? (_readonlyEnumerable = new ReadOnlyEnumerator<string>(_keys));
 
         public bool Add(string key)
         {

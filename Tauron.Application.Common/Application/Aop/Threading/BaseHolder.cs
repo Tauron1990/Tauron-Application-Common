@@ -1,10 +1,9 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -51,11 +50,9 @@ namespace Tauron.Application.Aop.Threading
         public static TValue GetOrAdd<TKey, TValue>([NotNull] ObjectContext context, [NotNull] Func<TValue> factory, [NotNull] string name)
             where TKey : class, IBaseHolder where TValue : class
         {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            Contract.Requires<ArgumentNullException>(factory != null, "factory");
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.Ensures(Contract.Result<TValue>() != null);
-
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
             var instance = context.GetAll<TKey>().FirstOrDefault(holder => holder.Name == name) as TValue;
 
             if (instance != null) return instance;
@@ -76,9 +73,20 @@ namespace Tauron.Application.Aop.Threading
     public abstract class BaseHolder<TValue> : IBaseHolder, IDisposable
         where TValue : class
     {
-        #region Fields
+        #region Public Methods and Operators
 
-        private TValue _value;
+        /// <summary>The dispose.</summary>
+        public void Dispose()
+        {
+            var dipo = Value as IDisposable;
+            if (dipo != null) dipo.Dispose();
+
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
+
+        #region Fields
 
         #endregion
 
@@ -94,8 +102,7 @@ namespace Tauron.Application.Aop.Threading
         /// </param>
         protected BaseHolder([NotNull] TValue value)
         {
-            Contract.Requires<ArgumentNullException>(value != null, "value");
-
+            if (value == null) throw new ArgumentNullException(nameof(value));
             Value = value;
         }
 
@@ -115,39 +122,11 @@ namespace Tauron.Application.Aop.Threading
         /// <summary>Gets or sets the value.</summary>
         /// <value>The value.</value>
         [NotNull]
-        public TValue Value
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<TValue>() != null);
-
-                return _value;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _value = value;
-            }
-        }
+        public TValue Value { get; set; }
 
         /// <summary>Gets or sets the name.</summary>
         /// <value>The name.</value>
         public string Name { get; set; }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>The dispose.</summary>
-        public void Dispose()
-        {
-            var dipo = Value as IDisposable;
-            if (dipo != null) dipo.Dispose();
-
-            GC.SuppressFinalize(this);
-        }
 
         #endregion
     }

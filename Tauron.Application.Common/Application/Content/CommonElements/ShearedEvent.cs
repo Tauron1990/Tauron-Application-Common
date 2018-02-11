@@ -1,10 +1,10 @@
 ﻿#region
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -46,8 +46,7 @@ namespace Tauron.Application
         /// </param>
         public void Subscribe([NotNull] Action<TPayload> handler)
         {
-            Contract.Requires<ArgumentNullException>(handler != null, "handler");
-
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
             _handlerList.Add(handler);
         }
 
@@ -60,8 +59,7 @@ namespace Tauron.Application
         [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Un")]
         public void UnSubscribe([NotNull] Action<TPayload> handler)
         {
-            Contract.Requires<ArgumentNullException>(handler != null, "handler");
-
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
             _handlerList.Remove(handler);
         }
 
@@ -69,7 +67,6 @@ namespace Tauron.Application
     }
 
     /// <summary>The EventAggregator interface.</summary>
-    [ContractClass(typeof (EventAggregatorContracts)), PublicAPI]
     public interface IEventAggregator
     {
         #region Public Methods and Operators
@@ -80,34 +77,15 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="TEventType" />.
         /// </returns>
-        [NotNull,SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
+        [NotNull]
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         TEventType GetEvent<TEventType, TPayload>() where TEventType : SharedEvent<TPayload>, new();
 
         #endregion
     }
 
-    [ContractClassFor(typeof (IEventAggregator))]
-    internal abstract class EventAggregatorContracts : IEventAggregator
-    {
-        #region Public Methods and Operators
-
-        /// <summary>The get event.</summary>
-        /// <typeparam name="TEventType"></typeparam>
-        /// <typeparam name="TPayload"></typeparam>
-        /// <returns>
-        ///     The <see cref="TEventType" />.
-        /// </returns>
-        public TEventType GetEvent<TEventType, TPayload>() where TEventType : SharedEvent<TPayload>, new()
-        {
-            Contract.Ensures(Contract.Result<TEventType>() != null);
-            return new TEventType();
-        }
-
-        #endregion
-    }
-
     /// <summary>The event aggregator.</summary>
-    [Export(typeof (IEventAggregator))]
+    [Export(typeof(IEventAggregator))]
     [PublicAPI]
     public sealed class EventAggregator : IEventAggregator
     {
@@ -134,13 +112,17 @@ namespace Tauron.Application
         {
             get
             {
-                Contract.Ensures(Contract.Result<IEventAggregator>() != null);
-
                 if (_aggregator != null) return _aggregator;
 
                 _aggregator =
-                    (IEventAggregator) CommonApplication.Current.Container.Resolve(typeof (IEventAggregator), null);
+                    (IEventAggregator) CommonApplication.Current.Container.Resolve(typeof(IEventAggregator), null);
                 return _aggregator;
+            }
+
+            set
+            {
+                if(_aggregator == null)
+                    _aggregator = value;
             }
         }
 
@@ -154,10 +136,9 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="TEventType" />.
         /// </returns>
-        [ContractVerification(false)]
         public TEventType GetEvent<TEventType, TPayload>() where TEventType : SharedEvent<TPayload>, new()
         {
-            Type t = typeof (TEventType);
+            var t = typeof(TEventType);
             if (!_events.ContainsKey(t)) _events[t] = new TEventType();
 
             return (TEventType) _events[t];

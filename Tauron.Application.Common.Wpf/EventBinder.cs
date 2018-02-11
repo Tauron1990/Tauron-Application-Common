@@ -3,20 +3,19 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
+using JetBrains.Annotations;
 using Tauron.Application.Commands;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application
 {
     /// <summary>The event target attribute.</summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
     //[DebuggerNonUserCode]
     [PublicAPI]
     [MeansImplicitUse(ImplicitUseKindFlags.Access)]
@@ -51,216 +50,8 @@ namespace Tauron.Application
     /// <summary>The event binder.</summary>
     public static class EventBinder
     {
-        #region Static Fields
-
-        public static readonly DependencyProperty EventsProperty = DependencyProperty.RegisterAttached(
-            "Events",
-            typeof (string),
-            typeof (
-                EventBinder),
-            new UIPropertyMetadata
-                (null,
-                 OnEventsChanged));
-
-        private static readonly WeakReferenceCollection<EventLinker> EventLinkerCollection =
-            new WeakReferenceCollection<EventLinker>();
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The get events.
-        /// </summary>
-        /// <param name="obj">
-        ///     The obj.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
-        [NotNull]
-        public static string GetEvents([NotNull] DependencyObject obj)
-        {
-            Contract.Requires<ArgumentNullException>(obj != null, "obj");
-
-            return (string) obj.GetValue(EventsProperty);
-        }
-
-        /// <summary>
-        ///     The set events.
-        /// </summary>
-        /// <param name="obj">
-        ///     The obj.
-        /// </param>
-        /// <param name="value">
-        ///     The value.
-        /// </param>
-        public static void SetEvents([NotNull] DependencyObject obj, [NotNull] string value)
-        {
-            Contract.Requires<ArgumentNullException>(obj != null, "obj");
-
-            obj.SetValue(EventsProperty, value);
-        }
-
-        #endregion
-
-        #region Methods
-
-        private static void OnEventsChanged([NotNull] DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (DesignerProperties.GetIsInDesignMode(d)) return;
-
-            bool simpleMode = false;
-
-            var newValue = e.NewValue as string;
-            if(newValue == null) return;
-
-            if (newValue.StartsWith("SimpleMode"))
-            {
-                simpleMode = true;
-                newValue = newValue.Remove(0, 10);
-            }
-
-            var oldValue = e.OldValue as string;
-
-            if (oldValue != null)
-            {
-                foreach (EventLinker linker in
-                    EventLinkerCollection.Where(ele => ele.Commands == oldValue && Equals(ele.Target, d)))
-                {
-                    linker.Commands = newValue;
-                    linker.SimpleMode = simpleMode;
-                    linker.Bind();
-                    return;
-                }
-            }
-
-            if (newValue == null) return;
-            
-            var temp = new EventLinker(newValue, d, simpleMode);
-            EventLinkerCollection.Add(temp);
-            temp.Bind();
-        }
-
-        #endregion
-
         private sealed class EventLinker : PipelineBase, IDisposable
         {
-            #region Fields
-
-            private readonly List<InternalEventLinker> _linkers = new List<InternalEventLinker>();
-
-            #endregion
-
-            #region Constructors and Destructors
-
-            public EventLinker([NotNull] string commands, [NotNull] DependencyObject target, bool simpleMode)
-                : base(target, simpleMode)
-            {
-                Contract.Requires<ArgumentNullException>(commands != null, "commands");
-                Contract.Requires<ArgumentNullException>(target != null, "target");
-
-                Commands = commands;
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            /// <summary>Gets or sets the commands.</summary>
-            [CanBeNull]
-            public string Commands { get; set; }
-
-            #endregion
-
-            #region Public Methods and Operators
-
-            /// <summary>The dispose.</summary>
-            public void Dispose()
-            {
-                Free();
-            }
-
-            /// <summary>The bind.</summary>
-            public void Bind()
-            {
-                DataContextChanged();
-            }
-
-            #endregion
-
-            #region Methods
-
-            /// <summary>The data context changed.</summary>
-            protected override void DataContextChanged()
-            {
-                Free();
-
-                if (Commands == null)
-                {
-                    CommonWpfConstans.LogCommon(false, "EventBinder: No Command Setted: {0}",
-                                                DataContext == null ? "Unkowen" : DataContext.Target);
-
-                    return;
-                }
-
-                string[] vals = Commands.Split(':');
-                var events = new Dictionary<string, string>();
-
-                try
-                {
-                    for (int i = 0; i < vals.Length; i++) events[vals[i]] = vals[++i];
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    CommonWpfConstans.LogCommon(false, "EventBinder: EventPairs not Valid: {0}", Commands);
-                }
-
-                if (DataContext == null) return;
-
-                object dataContext = DataContext.Target;
-                DependencyObject host = Target;
-                if (host == null || dataContext == null) return;
-
-                Type hostType = host.GetType();
-                CommandMember[] dataContextInfos =
-                    (from entry in dataContext.GetType().FindMemberAttributes<EventTargetAttribute>(true)
-                     select
-                         new CommandMember(
-                         entry.Item2.ProvideMemberName(entry.Item1),
-                         entry.Item1,
-                         entry.Item2.Synchronize)).ToArray();
-
-                foreach (var pair in events)
-                {
-                    EventInfo info = hostType.GetEvent(pair.Key);
-                    if (info == null)
-                    {
-                        CommonWpfConstans.LogCommon(false, "EventBinder: No event Found: {0}|{1}", hostType, pair.Key);
-
-                        return;
-                    }
-
-                    _linkers.Add(
-                        new InternalEventLinker(
-                            dataContextInfos,
-                            info,
-                            DataContext,
-                            pair.Value,
-                            Source,
-                            TaskScheduler));
-                }
-            }
-
-            private void Free()
-            {
-                foreach (InternalEventLinker linker in _linkers) linker.Dispose();
-
-                _linkers.Clear();
-            }
-
-            #endregion
-
             //[DebuggerNonUserCode]
             internal class CommandMember
             {
@@ -292,14 +83,14 @@ namespace Tauron.Application
 
                 /// <summary>Gets the member info.</summary>
                 [NotNull]
-                public MemberInfo MemberInfo { get; private set; }
+                public MemberInfo MemberInfo { get; }
 
                 /// <summary>Gets the name.</summary>
                 [NotNull]
-                public string Name { get; private set; }
+                public string Name { get; }
 
                 /// <summary>Gets a value indicating whether synchronize.</summary>
-                public bool Synchronize { get; private set; }
+                public bool Synchronize { get; }
 
                 #endregion
             }
@@ -310,32 +101,8 @@ namespace Tauron.Application
                 #region Static Fields
 
                 private static readonly MethodInfo Method =
-                    typeof (InternalEventLinker).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
-                                                .First(m => m.Name == "Handler");
-
-                #endregion
-
-                #region Fields
-
-                private readonly EventInfo _event;
-
-                private readonly WeakReference _dataContext;
-
-                private readonly WeakReference<DependencyObject> _host;
-
-                private readonly TaskScheduler _scheduler;
-
-                private readonly string _targetName;
-
-                private Delegate _delegate;
-
-                private ICommand _command;
-
-                private bool _isDirty;
-
-                private MemberInfo _member;
-
-                private bool _sync;
+                    typeof(InternalEventLinker).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                        .First(m => m.Name == "Handler");
 
                 #endregion
 
@@ -363,9 +130,10 @@ namespace Tauron.Application
                 /// <param name="scheduler">
                 ///     The scheduler.
                 /// </param>
-                public InternalEventLinker([CanBeNull] IEnumerable<CommandMember> member, [CanBeNull] EventInfo @event, [NotNull] WeakReference dataContext, [NotNull] string targetName, [CanBeNull] WeakReference<DependencyObject> host, [NotNull] TaskScheduler scheduler)
+                public InternalEventLinker([CanBeNull] IEnumerable<CommandMember> member, [CanBeNull] EventInfo @event, [NotNull] WeakReference dataContext, [NotNull] string targetName, [CanBeNull] WeakReference<DependencyObject> host,
+                    [NotNull] TaskScheduler scheduler)
                 {
-                    _isDirty = member == null | @event == null;
+                    _isDirty = (member == null) | (@event == null);
 
                     _scheduler = scheduler;
                     _host = host;
@@ -393,6 +161,30 @@ namespace Tauron.Application
 
                 #endregion
 
+                #region Fields
+
+                private readonly EventInfo _event;
+
+                private readonly WeakReference _dataContext;
+
+                private readonly WeakReference<DependencyObject> _host;
+
+                private readonly TaskScheduler _scheduler;
+
+                private readonly string _targetName;
+
+                private Delegate _delegate;
+
+                private ICommand _command;
+
+                private bool _isDirty;
+
+                private MemberInfo _member;
+
+                private bool _sync;
+
+                #endregion
+
                 #region Methods
 
                 private bool EnsureCommandStade()
@@ -403,13 +195,13 @@ namespace Tauron.Application
 
                     try
                     {
-                        object context = _dataContext.Target;
+                        var context = _dataContext.Target;
                         if (context == null) return false;
 
                         var minfo = _member as MethodInfo;
                         if (minfo != null)
                         {
-                            if (minfo.ReturnType.IsAssignableFrom(typeof (ICommand))) _command = (ICommand) minfo.Invoke(context, null);
+                            if (minfo.ReturnType.IsAssignableFrom(typeof(ICommand))) _command = (ICommand) minfo.Invoke(context, null);
                             else _command = new MethodCommand(minfo, _dataContext);
                         }
                         else
@@ -422,7 +214,7 @@ namespace Tauron.Application
                     catch (InvalidCastException e)
                     {
                         CommonWpfConstans.LogCommon(true, "EventBinder: Casting Faild: {0}|{1}|{2}", _dataContext.Target,
-                                                    _targetName, e);
+                            _targetName, e);
                         _isDirty = true;
                     }
                     catch (ArgumentException e)
@@ -436,7 +228,7 @@ namespace Tauron.Application
                     return _command != null && !_isDirty;
                 }
 
-                private void FindMember([CanBeNull]IEnumerable<CommandMember> members)
+                private void FindMember([CanBeNull] IEnumerable<CommandMember> members)
                 {
                     if (members == null)
                     {
@@ -444,11 +236,11 @@ namespace Tauron.Application
                         return;
                     }
 
-                    CommandMember temp = members.FirstOrDefault(mem => mem.Name == _targetName);
+                    var temp = members.FirstOrDefault(mem => mem.Name == _targetName);
                     if (temp == null)
                     {
                         CommonWpfConstans.LogCommon(false, "EventBinder: No Valid Member found: {0}|{1}",
-                                                    _dataContext.Target, _targetName);
+                            _dataContext.Target, _targetName);
                         return;
                     }
 
@@ -495,6 +287,206 @@ namespace Tauron.Application
 
                 #endregion
             }
+
+            #region Fields
+
+            private readonly List<InternalEventLinker> _linkers = new List<InternalEventLinker>();
+
+            #endregion
+
+            #region Constructors and Destructors
+
+            public EventLinker([NotNull] string commands, [NotNull] DependencyObject target, bool simpleMode)
+                : base(target, simpleMode)
+            {
+                if (target == null) throw new ArgumentNullException(nameof(target));
+                if (string.IsNullOrEmpty(commands)) throw new ArgumentException("Value cannot be null or empty.", nameof(commands));
+                Commands = commands;
+            }
+
+            #endregion
+
+            #region Public Properties
+
+            /// <summary>Gets or sets the commands.</summary>
+            [CanBeNull]
+            public string Commands { get; set; }
+
+            #endregion
+
+            #region Public Methods and Operators
+
+            /// <summary>The dispose.</summary>
+            public void Dispose()
+            {
+                Free();
+            }
+
+            /// <summary>The bind.</summary>
+            public void Bind()
+            {
+                DataContextChanged();
+            }
+
+            #endregion
+
+            #region Methods
+            
+            protected override void DataContextChanged()
+            {
+                Free();
+
+                if (Commands == null)
+                {
+                    CommonWpfConstans.LogCommon(false, "EventBinder: No Command Setted: {0}",
+                        DataContext == null ? "Unkowen" : DataContext.Target);
+
+                    return;
+                }
+
+                var vals = Commands.Split(':');
+                var events = new Dictionary<string, string>();
+
+                try
+                {
+                    for (var i = 0; i < vals.Length; i++) events[vals[i]] = vals[++i];
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    CommonWpfConstans.LogCommon(false, "EventBinder: EventPairs not Valid: {0}", Commands);
+                }
+
+                if (DataContext == null) return;
+
+                var dataContext = DataContext.Target;
+                var host = Target;
+                if (host == null || dataContext == null) return;
+
+                var hostType = host.GetType();
+                var dataContextInfos =
+                (from entry in dataContext.GetType().FindMemberAttributes<EventTargetAttribute>(true)
+                    select
+                    new CommandMember(
+                        entry.Item2.ProvideMemberName(entry.Item1),
+                        entry.Item1,
+                        entry.Item2.Synchronize)).ToArray();
+
+                foreach (var pair in events)
+                {
+                    var info = hostType.GetEvent(pair.Key);
+                    if (info == null)
+                    {
+                        CommonWpfConstans.LogCommon(false, "EventBinder: No event Found: {0}|{1}", hostType, pair.Key);
+
+                        return;
+                    }
+
+                    _linkers.Add(
+                        new InternalEventLinker(
+                            dataContextInfos,
+                            info,
+                            DataContext,
+                            pair.Value,
+                            Source,
+                            TaskScheduler));
+                }
+            }
+
+            private void Free()
+            {
+                foreach (var linker in _linkers) linker.Dispose();
+
+                _linkers.Clear();
+            }
+
+            #endregion
         }
+
+        #region Methods
+
+        private static void OnEventsChanged([NotNull] DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (DesignerProperties.GetIsInDesignMode(d)) return;
+
+            var simpleMode = false;
+
+            if (!(e.NewValue is string newValue)) return;
+
+            if (newValue.StartsWith("SimpleMode"))
+            {
+                simpleMode = true;
+                newValue = newValue.Remove(0, 10);
+            }
+
+            if (e.OldValue is string oldValue)
+                foreach (var linker in
+                    EventLinkerCollection.Where(ele => ele.Commands == oldValue && Equals(ele.Target, d)))
+                {
+                    linker.Commands = newValue;
+                    linker.SimpleMode = simpleMode;
+                    linker.Bind();
+                    return;
+                }
+
+            if (newValue == null) return;
+
+            var temp = new EventLinker(newValue, d, simpleMode);
+            EventLinkerCollection.Add(temp);
+            temp.Bind();
+        }
+
+        #endregion
+
+        #region Static Fields
+
+        public static readonly DependencyProperty EventsProperty = DependencyProperty.RegisterAttached(
+            "Events",
+            typeof(string),
+            typeof(
+                EventBinder),
+            new UIPropertyMetadata
+            (null,
+                OnEventsChanged));
+
+        private static readonly WeakReferenceCollection<EventLinker> EventLinkerCollection =
+            new WeakReferenceCollection<EventLinker>();
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>
+        ///     The get events.
+        /// </summary>
+        /// <param name="obj">
+        ///     The obj.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="string" />.
+        /// </returns>
+        [NotNull]
+        public static string GetEvents([NotNull] DependencyObject obj)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            return (string) obj.GetValue(EventsProperty);
+        }
+
+        /// <summary>
+        ///     The set events.
+        /// </summary>
+        /// <param name="obj">
+        ///     The obj.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        public static void SetEvents([NotNull] DependencyObject obj, [NotNull] string value)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            if (string.IsNullOrEmpty(value)) throw new ArgumentException("Value cannot be null or empty.", nameof(value));
+            obj.SetValue(EventsProperty, value);
+        }
+
+        #endregion
     }
 }

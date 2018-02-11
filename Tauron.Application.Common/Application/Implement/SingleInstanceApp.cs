@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
@@ -13,8 +12,8 @@ using System.Runtime.Remoting.Channels.Ipc;
 using System.Runtime.Serialization.Formatters;
 using System.Text;
 using System.Threading;
+using JetBrains.Annotations;
 using Tauron.Interop;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -37,6 +36,61 @@ namespace Tauron.Application.Implement
     public static class SingleInstance<TApplication>
         where TApplication : ISingleInstanceApp
     {
+        /// <summary>
+        ///     Remoting service class which is exposed by the server i.e the first instance and called by the second instance
+        ///     to pass on the command line arguments to the first instance and cause it to activate itself.
+        /// </summary>
+        [DebuggerNonUserCode]
+        private class IpcRemoteService : MarshalByRefObject
+        {
+            #region Public Methods and Operators
+
+            /// <summary>
+            ///     Remoting Object's ease expires after every 5 minutes by default. We need to override the InitializeLifetimeService
+            ///     class
+            ///     to ensure that lease never expires.
+            /// </summary>
+            /// <returns>Always null.</returns>
+            public override object InitializeLifetimeService()
+            {
+                return null;
+            }
+
+            /// <summary>
+            ///     Activates the first instance of the application.
+            /// </summary>
+            /// <param name="args">
+            ///     List of arguments to pass to the first instance.
+            /// </param>
+            [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
+            public void InvokeFirstInstance([NotNull] IList<string> args)
+            {
+                // Do an asynchronous call to ActivateFirstInstance function
+                var thread = new Thread(ActivateFirstInstanceCallback);
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.Start(args);
+            }
+
+            #endregion
+        }
+
+        #region Public Properties
+
+        /// <summary>Gets list of command line arguments for the application.</summary>
+        /// <value>The command line args.</value>
+        [NotNull]
+        [SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes")]
+        public static IList<string> CommandLineArgs => commandLineArgs;
+
+        #endregion
+
+        public static void InitializeAsFirstInstance(Mutex mutex, string channelName, TApplication app)
+        {
+            _app = app;
+            singleInstanceMutex = mutex;
+            CreateRemoteService(channelName);
+        }
+
         #region Constants
 
         /// <summary>Suffix to the channel name.</summary>
@@ -70,18 +124,6 @@ namespace Tauron.Application.Implement
         /// <summary>Application mutex.</summary>
         [CanBeNull]
         private static Mutex singleInstanceMutex;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets list of command line arguments for the application.</summary>
-        /// <value>The command line args.</value>
-        [NotNull,SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes")]
-        public static IList<string> CommandLineArgs
-        {
-            get { return commandLineArgs; }
-        }
 
         #endregion
 
@@ -120,15 +162,13 @@ namespace Tauron.Application.Implement
         [SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes")]
         public static bool InitializeAsFirstInstance([NotNull] string uniqueName, TApplication application)
         {
-            Contract.Requires<ArgumentNullException>(uniqueName != null, "uniqueName");
-            Contract.Requires<ArgumentNullException>(application != null, "application");
-
+            if (string.IsNullOrWhiteSpace(uniqueName)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(uniqueName));
             commandLineArgs = GetCommandLineArgs(uniqueName);
 
             // Build unique application Id and the IPC channel name.
-            string applicationIdentifier = uniqueName + Environment.UserName;
+            var applicationIdentifier = uniqueName + Environment.UserName;
 
-            string channelName = string.Concat(applicationIdentifier, Delimiter, ChannelNameSuffix);
+            var channelName = string.Concat(applicationIdentifier, Delimiter, ChannelNameSuffix);
 
             // Create mutex based on unique application Id to check if this is the first instance of the application.
             bool firstInstance;
@@ -138,7 +178,10 @@ namespace Tauron.Application.Implement
                 CreateRemoteService(channelName);
                 _app = application;
             }
-            else SignalFirstInstance(channelName, commandLineArgs);
+            else
+            {
+                SignalFirstInstance(channelName, commandLineArgs);
+            }
 
             return firstInstance;
         }
@@ -155,12 +198,10 @@ namespace Tauron.Application.Implement
         /// </param>
         private static void ActivateFirstInstance([CanBeNull] IList<string> args)
         {
-            Contract.Requires<ArgumentNullException>(args != null, "args");
-
+            if (args == null) throw new ArgumentNullException(nameof(args));
             // Set main window state and process command line args
-            if (_app == null) return;
 
-            _app.SignalExternalCommandLineArgs(args);
+            _app?.SignalExternalCommandLineArgs(args);
         }
 
         /// <summary>
@@ -171,8 +212,6 @@ namespace Tauron.Application.Implement
         /// </param>
         private static void ActivateFirstInstanceCallback([CanBeNull] object arg)
         {
-            Contract.Requires<ArgumentNullException>((arg as IList<string>) != null, "arg");
-
             // Get command line args to be passed to first instance
             var args = arg as IList<string>;
             ActivateFirstInstance(args);
@@ -200,7 +239,7 @@ namespace Tauron.Application.Implement
             ChannelServices.RegisterChannel(channel, true);
 
             // Expose the remote service with the REMOTE_SERVICE_NAME
-            var remoteService = new IPCRemoteService();
+            var remoteService = new IpcRemoteService();
             RemotingServices.Marshal(remoteService, RemoteServiceName);
         }
 
@@ -217,11 +256,12 @@ namespace Tauron.Application.Implement
         [NotNull]
         public static IList<string> GetCommandLineArgs([NotNull] string uniqueApplicationName)
         {
-            Contract.Requires<ArgumentNullException>(uniqueApplicationName != null, "uniqueApplicationName");
-
+            if (string.IsNullOrWhiteSpace(uniqueApplicationName)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(uniqueApplicationName));
             string[] args = null;
             if (AppDomain.CurrentDomain.ActivationContext == null) // The application was not clickonce deployed, get args from standard API's
+            {
                 args = Environment.GetCommandLineArgs();
+            }
             else
             {
                 // The application was clickonce deployed
@@ -229,27 +269,28 @@ namespace Tauron.Application.Implement
                 // As a workaround commandline arguments can be written to a shared location before
                 // the app is launched and the app can obtain its commandline arguments from the
                 // shared location
-                string appFolderPath =
+                var appFolderPath =
                     Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                         uniqueApplicationName);
 
-                string cmdLinePath = Path.Combine(appFolderPath, "cmdline.txt");
+                var cmdLinePath = Path.Combine(appFolderPath, "cmdline.txt");
                 if (File.Exists(cmdLinePath))
-                {
                     try
                     {
-                        using (TextReader reader = new StreamReader(cmdLinePath, Encoding.Unicode)) args = NativeMethods.CommandLineToArgvW(reader.ReadToEnd());
+                        using (TextReader reader = new StreamReader(cmdLinePath, Encoding.Unicode))
+                        {
+                            args = NativeMethods.CommandLineToArgvW(reader.ReadToEnd());
+                        }
 
                         File.Delete(cmdLinePath);
                     }
                     catch (IOException)
                     {
                     }
-                }
             }
 
-            if (args == null) args = new string[] {};
+            if (args == null) args = new string[] { };
 
             return new List<string>(args);
         }
@@ -270,64 +311,17 @@ namespace Tauron.Application.Implement
             var secondInstanceChannel = new IpcClientChannel();
             ChannelServices.RegisterChannel(secondInstanceChannel, true);
 
-            string remotingServiceUrl = IpcProtocol + channelName + "/" + RemoteServiceName;
+            var remotingServiceUrl = IpcProtocol + channelName + "/" + RemoteServiceName;
 
             // Obtain a reference to the remoting service exposed by the server i.e the first instance of the application
             var firstInstanceRemoteServiceReference =
-                (IPCRemoteService) RemotingServices.Connect(typeof (IPCRemoteService), remotingServiceUrl);
+                (IpcRemoteService) RemotingServices.Connect(typeof(IpcRemoteService), remotingServiceUrl);
 
             // Check that the remote service exists, in some cases the first instance may not yet have created one, in which case
             // the second instance should just exit
-            if (firstInstanceRemoteServiceReference != null) // Invoke a method of the remote service exposed by the first instance passing on the command line
-                // arguments and causing the first instance to activate itself
-                firstInstanceRemoteServiceReference.InvokeFirstInstance(args);
+            firstInstanceRemoteServiceReference?.InvokeFirstInstance(args);
         }
 
         #endregion
-
-        /// <summary>
-        ///     Remoting service class which is exposed by the server i.e the first instance and called by the second instance
-        ///     to pass on the command line arguments to the first instance and cause it to activate itself.
-        /// </summary>
-        [DebuggerNonUserCode]
-        private class IPCRemoteService : MarshalByRefObject
-        {
-            #region Public Methods and Operators
-
-            /// <summary>
-            ///     Remoting Object's ease expires after every 5 minutes by default. We need to override the InitializeLifetimeService
-            ///     class
-            ///     to ensure that lease never expires.
-            /// </summary>
-            /// <returns>Always null.</returns>
-            public override object InitializeLifetimeService()
-            {
-                return null;
-            }
-
-            /// <summary>
-            ///     Activates the first instance of the application.
-            /// </summary>
-            /// <param name="args">
-            ///     List of arguments to pass to the first instance.
-            /// </param>
-            [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-            public void InvokeFirstInstance([NotNull] IList<string> args)
-            {
-                // Do an asynchronous call to ActivateFirstInstance function
-                var thread = new Thread(ActivateFirstInstanceCallback);
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start(args);
-            }
-
-            #endregion
-        }
-
-        public static void InitializeAsFirstInstance(Mutex mutex, string channelName, TApplication app)
-        {
-            _app = app;
-            singleInstanceMutex = mutex;
-            CreateRemoteService(channelName);
-        }
     }
 }

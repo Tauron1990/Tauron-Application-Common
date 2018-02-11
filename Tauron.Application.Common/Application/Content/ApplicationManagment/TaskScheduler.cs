@@ -12,9 +12,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -24,6 +23,14 @@ namespace Tauron.Application
     [PublicAPI]
     public sealed class TaskScheduler : IDisposable
     {
+        #region Public Properties
+
+        /// <summary></summary>
+        /// <value>The disposed.</value>
+        public bool Disposed => _disposed;
+
+        #endregion
+
         #region Fields
 
         /// <summary>The _collection.</summary>
@@ -33,7 +40,7 @@ namespace Tauron.Application
         private readonly IUISynchronize _synchronizationContext;
 
         /// <summary>The _disposed.</summary>
-        [ContractPublicPropertyName("Disposed")] private bool _disposed;
+        private bool _disposed;
 
         #endregion
 
@@ -49,8 +56,7 @@ namespace Tauron.Application
         /// </param>
         public TaskScheduler([NotNull] IUISynchronize synchronizationContext)
         {
-            Contract.Requires<ArgumentNullException>(synchronizationContext != null, "synchronizationContext");
-
+            if (synchronizationContext == null) throw new ArgumentNullException(nameof(synchronizationContext));
             _synchronizationContext = synchronizationContext;
             _collection = new BlockingCollection<ITask>();
         }
@@ -76,17 +82,6 @@ namespace Tauron.Application
 
         #endregion
 
-        #region Public Properties
-
-        /// <summary></summary>
-        /// <value>The disposed.</value>
-        public bool Disposed
-        {
-            get { return _disposed; }
-        }
-
-        #endregion
-
         #region Public Methods and Operators
 
         /// <summary>The dispose.</summary>
@@ -108,13 +103,10 @@ namespace Tauron.Application
         [NotNull]
         public Task QueueTask([NotNull] ITask task)
         {
-            Contract.Requires<ArgumentNullException>(task != null, "task");
-
+            if (task == null) throw new ArgumentNullException(nameof(task));
             CheckDispose();
             if (task.Synchronize && _synchronizationContext != null)
-            {
                 return _synchronizationContext.BeginInvoke(task.Execute);
-            }
 
             if (_collection == null)
             {
@@ -133,11 +125,9 @@ namespace Tauron.Application
 
         #region Methods
 
-        /// <summary>The enter loop.</summary>
-        [ContractVerification(false)]
         internal void EnterLoop()
         {
-            foreach (ITask task in _collection.GetConsumingEnumerable()) task.Execute();
+            foreach (var task in _collection.GetConsumingEnumerable()) task.Execute();
 
             _collection.Dispose();
         }
@@ -155,6 +145,7 @@ namespace Tauron.Application
         /// <param name="disposing">
         ///     The disposing.
         /// </param>
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_collection")]
         [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "disposing")]
         // ReSharper disable UnusedParameter.Local
         private void Dispose(bool disposing)
@@ -163,9 +154,8 @@ namespace Tauron.Application
             if (_disposed) return;
 
             _disposed = true;
-            if (_collection == null) return;
 
-            _collection.CompleteAdding();
+            _collection?.CompleteAdding();
         }
 
         #endregion

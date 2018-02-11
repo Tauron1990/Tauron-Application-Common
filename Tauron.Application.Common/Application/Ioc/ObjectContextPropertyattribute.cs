@@ -25,18 +25,16 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc
 {
     /// <summary>The object context property attribute.</summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
-    [ContractClass(typeof (ObjectContextPropertyAttributeContracts))]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public abstract class ObjectContextPropertyAttribute : Attribute
     {
         #region Methods
@@ -54,33 +52,6 @@ namespace Tauron.Application.Ioc
         ///     The target.
         /// </param>
         protected internal abstract void Register([NotNull] ObjectContext context, [NotNull] MemberInfo info, [NotNull] object target);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (ObjectContextPropertyAttribute))]
-    internal abstract class ObjectContextPropertyAttributeContracts : ObjectContextPropertyAttribute
-    {
-        #region Methods
-
-        /// <summary>
-        ///     The register.
-        /// </summary>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <param name="info">
-        ///     The info.
-        /// </param>
-        /// <param name="target">
-        ///     The target.
-        /// </param>
-        protected internal override void Register(ObjectContext context, MemberInfo info, object target)
-        {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            Contract.Requires<ArgumentNullException>(info != null, "info");
-            Contract.Requires<ArgumentNullException>(target != null, "target");
-        }
 
         #endregion
     }

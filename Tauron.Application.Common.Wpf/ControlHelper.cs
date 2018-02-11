@@ -4,10 +4,9 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Windows;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -84,134 +83,6 @@ namespace Tauron.Application
     [PublicAPI]
     public static class ControlHelper
     {
-        #region Static Fields
-
-        public static readonly DependencyProperty MarkControlProperty =
-            DependencyProperty.RegisterAttached(
-                "MarkControl",
-                typeof (string),
-                typeof (ControlHelper),
-                new UIPropertyMetadata(string.Empty, MarkControl));
-
-        public static readonly DependencyProperty MarkWindowProperty = DependencyProperty.RegisterAttached(
-            "MarkWindow",
-            typeof (
-                string),
-            typeof (
-                ControlHelper
-                ),
-            new UIPropertyMetadata
-                (null,
-                 MarkWindowChanged));
-
-        private static readonly WeakReferenceCollection<LinkerBase> LinkerCollection =
-            new WeakReferenceCollection<LinkerBase>();
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The get mark control.
-        /// </summary>
-        /// <param name="obj">
-        ///     The obj.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
-        [NotNull]
-        public static string GetMarkControl([NotNull] DependencyObject obj)
-        {
-            Contract.Requires<ArgumentNullException>(obj != null, "obj");
-
-            return (string) obj.GetValue(MarkControlProperty);
-        }
-
-        /// <summary>
-        ///     The get mark window.
-        /// </summary>
-        /// <param name="obj">
-        ///     The obj.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
-        [NotNull]
-        public static string GetMarkWindow([NotNull] DependencyObject obj)
-        {
-            Contract.Requires<ArgumentNullException>(obj != null, "obj");
-
-            return (string) obj.GetValue(MarkWindowProperty);
-        }
-
-        /// <summary>
-        ///     The set mark control.
-        /// </summary>
-        /// <param name="obj">
-        ///     The obj.
-        /// </param>
-        /// <param name="value">
-        ///     The value.
-        /// </param>
-        public static void SetMarkControl([NotNull] DependencyObject obj, [NotNull] string value)
-        {
-            Contract.Requires<ArgumentNullException>(obj != null, "obj");
-
-            obj.SetValue(MarkControlProperty, value);
-        }
-
-        /// <summary>
-        ///     The set mark window.
-        /// </summary>
-        /// <param name="obj">
-        ///     The obj.
-        /// </param>
-        /// <param name="value">
-        ///     The value.
-        /// </param>
-        public static void SetMarkWindow([NotNull] DependencyObject obj, [NotNull] string value)
-        {
-            Contract.Requires<ArgumentNullException>(obj != null, "obj");
-
-            obj.SetValue(MarkWindowProperty, value);
-        }
-
-        #endregion
-
-        #region Methods
-
-        private static void MarkControl([NotNull] DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            SetLinker(d, e.OldValue.As<string>(), e.NewValue.As<string>(), (obj, str) => new ControlLinker(str, obj));
-        }
-
-        // Using a DependencyProperty as the backing store for MarkWindow.  This enables animation, styling, binding, etc...
-        private static void MarkWindowChanged([NotNull] DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            SetLinker(d, e.OldValue.As<string>(), e.NewValue.As<string>(), (obj, str) => new WindowLinker(str, obj));
-        }
-
-        private static void SetLinker([NotNull] DependencyObject obj, [NotNull] string oldName, [NotNull] string newName, [NotNull] Func<DependencyObject, string, LinkerBase> factory)
-        {
-            Contract.Requires<ArgumentNullException>(factory != null, "factory");
-
-            if(DesignerProperties.GetIsInDesignMode(obj)) return;
-
-            foreach (LinkerBase linker in
-                LinkerCollection.Where(linker => Equals(linker.Target, obj) && linker.Name == oldName))
-            {
-                linker.Name = newName;
-                return;
-            }
-
-            LinkerBase pipline = factory(obj, newName);
-            pipline.Scan();
-            LinkerCollection.Add(pipline);
-        }
-
-        #endregion
-
         [DebuggerNonUserCode]
         private class ControlLinker : LinkerBase
         {
@@ -239,7 +110,7 @@ namespace Tauron.Application
             /// <summary>The scan.</summary>
             public override void Scan()
             {
-                object context = DataContext == null ? null : DataContext.Target;
+                var context = DataContext == null ? null : DataContext.Target;
                 if (context == null) return;
 
                 MemberInfoAttribute.InvokeMembers<ControlTargetAttribute>(context, Name, Target);
@@ -273,9 +144,8 @@ namespace Tauron.Application
             protected LinkerBase([NotNull] string name, [NotNull] DependencyObject element)
                 : base(element, false)
             {
-                Contract.Requires<ArgumentNullException>(name != null, "name");
-                Contract.Requires<ArgumentNullException>(element != null, "element");
-
+                if (name == null) throw new ArgumentNullException(nameof(name));
+                if (element == null) throw new ArgumentNullException(nameof(element));
                 Name = name;
             }
 
@@ -287,12 +157,10 @@ namespace Tauron.Application
             [NotNull]
             public string Name
             {
-                get { return _name; }
+                get => _name;
 
                 set
                 {
-                    Contract.Requires<ArgumentNullException>(value != null, "value");
-
                     _name = value;
                     Scan();
                 }
@@ -345,18 +213,18 @@ namespace Tauron.Application
             /// <summary>The scan.</summary>
             public override void Scan()
             {
-                string realName = Name;
+                var realName = Name;
                 string windowName = null;
 
                 if (realName.Contains(":"))
                 {
-                    string[] nameSplit = realName.Split(new[] {':'}, 2);
+                    var nameSplit = realName.Split(new[] {':'}, 2);
                     realName = nameSplit[0];
                     windowName = nameSplit[1];
                 }
 
                 object context;
-                DependencyObject priTarget = Target;
+                var priTarget = Target;
                 if (DataContext == null || (context = DataContext.Target) == null || priTarget == null)
                 {
                     CommonConstants.LogCommon(false, "ControlHelper: No Context Found");
@@ -367,7 +235,7 @@ namespace Tauron.Application
                 {
                     if (!(priTarget is Window)) priTarget = Window.GetWindow(priTarget);
 
-                    if(priTarget == null)
+                    if (priTarget == null)
                         CommonWpfConstans.LogCommon(false, "ControlHelper: No Window Found: {0}|{1}", context.GetType(), realName);
                 }
                 else
@@ -375,22 +243,21 @@ namespace Tauron.Application
                     priTarget =
                         System.Windows.Application.Current.Windows.Cast<Window>().FirstOrDefault(win => win.Name == windowName);
 
-                    if(priTarget == null)
+                    if (priTarget == null)
                         CommonWpfConstans.LogCommon(false, "ControlHelper: No Window Named {0} Found", windowName);
                 }
 
-                if(priTarget == null) return;
+                if (priTarget == null) return;
 
                 foreach (var member in
                     MemberInfoAttribute.GetMembers<WindowTargetAttribute>(context.GetType())
-                                       .Where(mem => mem.Item1 == realName))
-                {
+                        .Where(mem => mem.Item1 == realName))
                     try
                     {
-                        Type targetType = member.Item2.GetSetInvokeType();
+                        var targetType = member.Item2.GetSetInvokeType();
 
                         object arg;
-                        if (targetType == typeof (IWindow)) arg = new WpfWindow((Window) priTarget);
+                        if (targetType == typeof(IWindow)) arg = new WpfWindow((Window) priTarget);
                         else arg = priTarget;
 
                         member.Item2.SetInvokeMember(context, arg);
@@ -401,10 +268,135 @@ namespace Tauron.Application
 
                         throw;
                     }
-                }
             }
 
             #endregion
         }
+
+        #region Static Fields
+
+        public static readonly DependencyProperty MarkControlProperty =
+            DependencyProperty.RegisterAttached(
+                "MarkControl",
+                typeof(string),
+                typeof(ControlHelper),
+                new UIPropertyMetadata(string.Empty, MarkControl));
+
+        public static readonly DependencyProperty MarkWindowProperty = DependencyProperty.RegisterAttached(
+            "MarkWindow",
+            typeof(
+                string),
+            typeof(
+                ControlHelper
+            ),
+            new UIPropertyMetadata
+            (null,
+                MarkWindowChanged));
+
+        private static readonly WeakReferenceCollection<LinkerBase> LinkerCollection =
+            new WeakReferenceCollection<LinkerBase>();
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>
+        ///     The get mark control.
+        /// </summary>
+        /// <param name="obj">
+        ///     The obj.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="string" />.
+        /// </returns>
+        [NotNull]
+        public static string GetMarkControl([NotNull] DependencyObject obj)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            return (string) obj.GetValue(MarkControlProperty);
+        }
+
+        /// <summary>
+        ///     The get mark window.
+        /// </summary>
+        /// <param name="obj">
+        ///     The obj.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="string" />.
+        /// </returns>
+        [NotNull]
+        public static string GetMarkWindow([NotNull] DependencyObject obj)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            return (string) obj.GetValue(MarkWindowProperty);
+        }
+
+        /// <summary>
+        ///     The set mark control.
+        /// </summary>
+        /// <param name="obj">
+        ///     The obj.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        public static void SetMarkControl([NotNull] DependencyObject obj, [NotNull] string value)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            if (string.IsNullOrEmpty(value)) throw new ArgumentException("Value cannot be null or empty.", nameof(value));
+            obj.SetValue(MarkControlProperty, value);
+        }
+
+        /// <summary>
+        ///     The set mark window.
+        /// </summary>
+        /// <param name="obj">
+        ///     The obj.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        public static void SetMarkWindow([NotNull] DependencyObject obj, [NotNull] string value)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            if (string.IsNullOrEmpty(value)) throw new ArgumentException("Value cannot be null or empty.", nameof(value));
+            obj.SetValue(MarkWindowProperty, value);
+        }
+
+        #endregion
+
+        #region Methods
+
+        private static void MarkControl([NotNull] DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            SetLinker(d, e.OldValue.As<string>(), e.NewValue.As<string>(), (obj, str) => new ControlLinker(str, obj));
+        }
+
+        // Using a DependencyProperty as the backing store for MarkWindow.  This enables animation, styling, binding, etc...
+        private static void MarkWindowChanged([NotNull] DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            SetLinker(d, e.OldValue.As<string>(), e.NewValue.As<string>(), (obj, str) => new WindowLinker(str, obj));
+        }
+
+        private static void SetLinker([NotNull] DependencyObject obj, [NotNull] string oldName, [NotNull] string newName, [NotNull] Func<DependencyObject, string, LinkerBase> factory)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            if (DesignerProperties.GetIsInDesignMode(obj)) return;
+
+            foreach (var linker in
+                LinkerCollection.Where(linker => Equals(linker.Target, obj) && linker.Name == oldName))
+            {
+                linker.Name = newName;
+                return;
+            }
+
+            var pipline = factory(obj, newName);
+            pipline.Scan();
+            LinkerCollection.Add(pipline);
+        }
+
+        #endregion
     }
 }

@@ -25,8 +25,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Threading;
 
 #endregion
@@ -47,10 +45,7 @@ namespace Tauron.Application.Ioc.LifeTime
 
         /// <summary>Gets a value indicating whether is alive.</summary>
         /// <value>The is alive.</value>
-        public bool IsAlive
-        {
-            get { return _objects.ContainsKey(Thread.CurrentThread); }
-        }
+        public bool IsAlive => _objects.ContainsKey(Thread.CurrentThread);
 
         #endregion
 

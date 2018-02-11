@@ -26,10 +26,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -39,15 +38,6 @@ namespace Tauron.Application.Ioc.Components
     [PublicAPI]
     public class BuildObject : IWeakReference
     {
-        #region Fields
-
-        private readonly ImportMetadata[] imports;
-
-        /// <summary>The _instance.</summary>
-        private WeakReference _instance;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -58,16 +48,37 @@ namespace Tauron.Application.Ioc.Components
         /// </param>
         /// <param name="targetExport">
         /// </param>
-        public BuildObject(IEnumerable<ImportMetadata> imports, ExportMetadata targetExport, [CanBeNull]BuildParameter[] buildParameters)
+        public BuildObject([NotNull] IEnumerable<ImportMetadata> imports, [NotNull] ExportMetadata targetExport, [CanBeNull] BuildParameter[] buildParameters)
         {
-            Contract.Requires<ArgumentNullException>(imports != null, "imports");
-            Contract.Requires<ArgumentNullException>(targetExport != null, "targetExport");
-
+            if (imports == null) throw new ArgumentNullException(nameof(imports));
+            if (targetExport == null) throw new ArgumentNullException(nameof(targetExport));
             Metadata = targetExport;
             this.imports = imports.ToArray();
             Export = targetExport.Export;
             BuildParameters = buildParameters;
         }
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>The get imports.</summary>
+        /// <returns>
+        ///     The <see cref="ImportMetadata[]" />.
+        /// </returns>
+        public ImportMetadata[] GetImports()
+        {
+            return (ImportMetadata[]) imports.Clone();
+        }
+
+        #endregion
+
+        #region Fields
+
+        private readonly ImportMetadata[] imports;
+
+        /// <summary>The _instance.</summary>
+        private WeakReference _instance;
 
         #endregion
 
@@ -81,9 +92,9 @@ namespace Tauron.Application.Ioc.Components
         /// <value>The instance.</value>
         public object Instance
         {
-            get { return _instance.Target; }
+            get => _instance.Target;
 
-            set { _instance = new WeakReference(value); }
+            set => _instance = new WeakReference(value);
         }
 
         /// <summary>Gets or sets the metadata.</summary>
@@ -91,28 +102,10 @@ namespace Tauron.Application.Ioc.Components
 
         /// <summary>Gets a value indicating whether is alive.</summary>
         /// <value>The is alive.</value>
-        public bool IsAlive
-        {
-            get { return _instance.IsAlive; }
-        }
+        public bool IsAlive => _instance.IsAlive;
 
         [CanBeNull]
         public BuildParameter[] BuildParameters { get; set; }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>The get imports.</summary>
-        /// <returns>
-        ///     The <see cref="ImportMetadata[]" />.
-        /// </returns>
-        public ImportMetadata[] GetImports()
-        {
-            Contract.Ensures(Contract.Result<ImportMetadata[]>() != null);
-
-            return (ImportMetadata[]) imports.Clone();
-        }
 
         #endregion
     }
@@ -125,7 +118,7 @@ namespace Tauron.Application.Ioc.Components
 
         /// <summary>The _objects.</summary>
         private readonly GroupDictionary<ExportMetadata, BuildObject> _objects =
-            new GroupDictionary<ExportMetadata, BuildObject>(typeof (WeakReferenceCollection<BuildObject>));
+            new GroupDictionary<ExportMetadata, BuildObject>(typeof(WeakReferenceCollection<BuildObject>));
 
         #endregion
 
@@ -137,10 +130,9 @@ namespace Tauron.Application.Ioc.Components
         /// <param name="instance">
         ///     The instance.
         /// </param>
-        public void AddBuild(BuildObject instance)
+        public void AddBuild([NotNull] BuildObject instance)
         {
-            Contract.Requires<ArgumentNullException>(instance != null, "instance");
-
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
             lock (this)
             {
                 _objects[instance.Metadata].Add(instance);
@@ -160,28 +152,27 @@ namespace Tauron.Application.Ioc.Components
         ///     The <see cref="IEnumerable" />.
         /// </returns>
         public IEnumerable<BuildObject> GetAffectedParts(
-            IEnumerable<ExportMetadata> added,
-            IEnumerable<ExportMetadata> removed)
+            [NotNull] IEnumerable<ExportMetadata> added,
+            [NotNull] IEnumerable<ExportMetadata> removed)
         {
-            Contract.Requires<ArgumentNullException>(added != null, "added");
-            Contract.Requires<ArgumentNullException>(removed != null, "removed");
-
+            if (added == null) throw new ArgumentNullException(nameof(added));
+            if (removed == null) throw new ArgumentNullException(nameof(removed));
             lock (this)
             {
-                IEnumerable<ExportMetadata> changed = added.Concat(removed);
+                var changed = added.Concat(removed);
 
                 return from o in _objects
-                       from buildObject in o.Value
-                       where
-                           buildObject.GetImports()
-                                      .Any(
-                                          tup =>
-                                          changed.Any(
-                                              meta =>
-                                              tup.InterfaceType == meta.InterfaceType
-                                              && tup.ContractName == meta.ContractName))
-                       where buildObject.IsAlive
-                       select buildObject;
+                    from buildObject in o.Value
+                    where
+                    buildObject.GetImports()
+                        .Any(
+                            tup =>
+                                changed.Any(
+                                    meta =>
+                                        tup.InterfaceType == meta.InterfaceType
+                                        && tup.ContractName == meta.ContractName))
+                    where buildObject.IsAlive
+                    select buildObject;
             }
         }
 

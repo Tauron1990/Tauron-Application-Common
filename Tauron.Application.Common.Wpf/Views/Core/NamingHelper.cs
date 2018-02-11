@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Views.Core
 {
@@ -10,9 +9,7 @@ namespace Tauron.Application.Views.Core
         [NotNull]
         public static IEnumerable<string> CreatePossibilyNames([NotNull] string baseName)
         {
-            Contract.Requires<ArgumentNullException>(baseName != null, "baseName");
-            Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
-
+            if (string.IsNullOrEmpty(baseName)) throw new ArgumentException("Value cannot be null or empty.", nameof(baseName));
             yield return baseName;
             yield return baseName + "View";
             yield return baseName + "ViewModel";

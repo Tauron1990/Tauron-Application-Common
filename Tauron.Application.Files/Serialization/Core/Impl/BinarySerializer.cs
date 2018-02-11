@@ -14,10 +14,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
             _formatter = formatter;
         }
 
-        public AggregateException Errors
-        {
-            get { return _formatter == null ? new AggregateException(new SerializerElementNullException("Formatter")) : null; }
-        }
+        public AggregateException Errors => _formatter == null ? new AggregateException(new SerializerElementNullException("Formatter")) : null;
 
         public void Serialize(IStreamSource target, object graph)
         {

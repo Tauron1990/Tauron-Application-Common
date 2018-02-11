@@ -1,8 +1,7 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -40,8 +39,6 @@ namespace Tauron
         /// </returns>
         public static EditableValueMap<T1, T2> Create<T1, T2>(T1 item1, T2 item2)
         {
-            Contract.Ensures(Contract.Result<EditableValueMap<T1, T2>>() != null);
-
             return new EditableValueMap<T1, T2> {Item1 = item1, Item2 = item2};
         }
 
@@ -71,6 +68,24 @@ namespace Tauron
     [PublicAPI]
     public sealed class EditableValueMap<T1, T2> : IWeakReference
     {
+        #region Explicit Interface Properties
+
+        /// <summary>Wenn eines der beiden Item einen Schwacher Verweis Ist gibt diese Eigenscht dessen Wert zurück.</summary>
+        /// <value>Ob diese Instnz noch verfügbar ist.</value>
+        bool IWeakReference.IsAlive
+        {
+            get
+            {
+                var reference = Item1 as IWeakReference ?? Item2 as IWeakReference;
+                if (reference != null) return reference.IsAlive;
+
+                var reference2 = Item1 as WeakReference ?? Item2 as WeakReference;
+                return reference2 == null || reference2.IsAlive;
+            }
+        }
+
+        #endregion
+
         #region Public Properties
 
         /// <summary>Gibt den wert des item 1 zurück oder legt ihn fest.</summary>
@@ -80,24 +95,6 @@ namespace Tauron
         /// <summary>Gibt den wert des item 1 zurück oder legt ihn fest.</summary>
         /// <value>Der Typesierter zeiter Wert.</value>
         public T2 Item2 { get; set; }
-
-        #endregion
-
-        #region Explicit Interface Properties
-
-        /// <summary>Wenn eines der beiden Item einen Schwacher Verweis Ist gibt diese Eigenscht dessen Wert zurück.</summary>
-        /// <value>Ob diese Instnz noch verfügbar ist.</value>
-        bool IWeakReference.IsAlive
-        {
-            get
-            {
-                IWeakReference reference = Item1 as IWeakReference ?? Item2 as IWeakReference;
-                if (reference != null) return reference.IsAlive;
-
-                WeakReference reference2 = Item1 as WeakReference ?? Item2 as WeakReference;
-                return reference2 == null || reference2.IsAlive;
-            }
-        }
 
         #endregion
     }

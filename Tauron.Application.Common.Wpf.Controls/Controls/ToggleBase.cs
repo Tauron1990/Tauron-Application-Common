@@ -27,7 +27,7 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -41,13 +41,13 @@ namespace Tauron.Application.Controls
 
         public static readonly DependencyProperty ActiveItemProperty = DependencyProperty.Register(
             "ActiveItem",
-            typeof (object),
-            typeof (
+            typeof(object),
+            typeof(
                 ToggleSwitchSelectionBase
-                ),
+            ),
             new UIPropertyMetadata
-                (null,
-                 OnPropertyChanged));
+            (null,
+                OnPropertyChanged));
 
         #endregion
 
@@ -56,12 +56,14 @@ namespace Tauron.Application.Controls
         /// <summary>Gets or sets the active item.</summary>
         public object ActiveItem
         {
-            get { return GetValue(ActiveItemProperty); }
+            get => GetValue(ActiveItemProperty);
 
-            set { SetValue(ActiveItemProperty, value); }
+            set => SetValue(ActiveItemProperty, value);
         }
 
         #endregion
+
+        // Using a DependencyProperty as the backing store for ActiveItem.  This enables animation, styling, binding, etc...
 
         #region Methods
 
@@ -81,8 +83,6 @@ namespace Tauron.Application.Controls
         }
 
         #endregion
-
-        // Using a DependencyProperty as the backing store for ActiveItem.  This enables animation, styling, binding, etc...
     }
 
     /// <summary>
@@ -136,13 +136,11 @@ namespace Tauron.Application.Controls
 
             var toggle = (TToggle) element;
             foreach (var item2 in controls)
-            {
                 if (ReferenceEquals(item, toggle))
                 {
                     controls.Remove(item2.Key);
                     break;
                 }
-            }
 
             ClearItem(toggle, item);
             toggle.SetHeader(null);
@@ -255,10 +253,13 @@ namespace Tauron.Application.Controls
             PrepateItem(toggle, item);
             controls[Items.IndexOf(item)] = toggle;
             var provider = item as IHeaderProvider;
-            if (provider != null) toggle.SetHeader(provider.Header);
+            if (provider != null)
+            {
+                toggle.SetHeader(provider.Header);
+            }
             else
             {
-                object header = GetHeader(item);
+                var header = GetHeader(item);
                 toggle.SetHeader(header ?? item.ToString());
             }
 
@@ -292,7 +293,7 @@ namespace Tauron.Application.Controls
                 return;
             }
 
-            TToggle control = controls[Items.IndexOf(item)];
+            var control = controls[Items.IndexOf(item)];
             if (!Equals(control, Active)) control.Switch();
         }
 
@@ -304,7 +305,7 @@ namespace Tauron.Application.Controls
 
                 Active = sender;
 
-                object item = GetItem((TToggle) Active);
+                var item = GetItem((TToggle) Active);
                 if (ActiveItem != null && ActiveItem != item) ActiveItem = item;
 
                 ItemActivateted((TToggle) sender);

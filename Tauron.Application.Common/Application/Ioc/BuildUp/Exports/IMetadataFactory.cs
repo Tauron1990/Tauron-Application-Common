@@ -26,8 +26,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -35,7 +34,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
 {
     /// <summary>The MetadataFactory interface.</summary>
     [PublicAPI]
-    [ContractClass(typeof (MetadataFactoryContracts))]
     public interface IMetadataFactory
     {
         #region Public Methods and Operators
@@ -53,36 +51,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         ///     The <see cref="object" />.
         /// </returns>
         object CreateMetadata(Type interfaceType, IDictionary<string, object> metadata);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (IMetadataFactory))]
-    internal abstract class MetadataFactoryContracts : IMetadataFactory
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The create metadata.
-        /// </summary>
-        /// <param name="interfaceType">
-        ///     The interface type.
-        /// </param>
-        /// <param name="metadata">
-        ///     The metadata.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public object CreateMetadata(Type interfaceType, IDictionary<string, object> metadata)
-        {
-            Contract.Requires<ArgumentNullException>(interfaceType != null, "interfaceType");
-            Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
-
-            throw new NotImplementedException();
-        }
 
         #endregion
     }

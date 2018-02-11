@@ -27,7 +27,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -91,11 +91,11 @@ namespace Tauron.Application.Controls
 
         public static readonly DependencyProperty HeaderProperty = DependencyProperty.RegisterAttached(
             "Header",
-            typeof (object),
-            typeof (
+            typeof(object),
+            typeof(
                 ExpanderList),
             new FrameworkPropertyMetadata
-                (
+            (
                 null,
                 FrameworkPropertyMetadataOptions
                     .AffectsRender |
@@ -113,11 +113,13 @@ namespace Tauron.Application.Controls
         static ExpanderList()
         {
             DefaultStyleKeyProperty.OverrideMetadata(
-                typeof (ExpanderList),
-                new FrameworkPropertyMetadata(typeof (ExpanderList)));
+                typeof(ExpanderList),
+                new FrameworkPropertyMetadata(typeof(ExpanderList)));
         }
 
         #endregion
+
+        // Using a DependencyProperty as the backing store for Header.  This enables animation, styling, binding, etc...
 
         #region Public Methods and Operators
 
@@ -185,7 +187,5 @@ namespace Tauron.Application.Controls
         }
 
         #endregion
-
-        // Using a DependencyProperty as the backing store for Header.  This enables animation, styling, binding, etc...
     }
 }

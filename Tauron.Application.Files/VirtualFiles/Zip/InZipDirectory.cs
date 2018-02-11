@@ -22,21 +22,9 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
             _file = file;
         }
 
-        public override DateTime LastModified
-        {
-            get
-            {
-                return _dic.ZipEntry == null ? DateTime.MinValue : _dic.ZipEntry.ModifiedTime;
-            }
-        }
+        public override DateTime LastModified => _dic.ZipEntry == null ? DateTime.MinValue : _dic.ZipEntry.ModifiedTime;
 
-        public override bool Exist
-        {
-            get
-            {
-                return _dic.ZipEntry != null || _dic.Files.Count + _dic.Directorys.Count > 0;
-            }
-        }
+        public override bool Exist => _dic.ZipEntry != null || _dic.Files.Count + _dic.Directorys.Count > 0;
 
         protected override void DeleteImpl()
         {

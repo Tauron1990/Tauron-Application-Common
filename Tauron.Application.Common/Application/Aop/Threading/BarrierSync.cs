@@ -5,8 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -48,7 +48,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The barrier source attribute.</summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
     [PublicAPI]
     public sealed class BarrierSourceAttribute : ContextPropertyAttributeBase
     {

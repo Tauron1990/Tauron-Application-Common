@@ -11,20 +11,20 @@
 
 using System.Collections.Generic;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Implement
 {
     /// <summary>The command line service.</summary>
-    [Export(typeof (ICommandLineService))]
+    [Export(typeof(ICommandLineService))]
     public class CommandLineService : ICommandLineService
     {
         #region Fields
 
         /// <summary>The _commands.</summary>
-        [Inject] private readonly List<ICommandLineCommand> _commands = new List<ICommandLineCommand>();
+        [Inject]
+        private readonly List<ICommandLineCommand> _commands = new List<ICommandLineCommand>();
 
         #endregion
 
@@ -32,10 +32,7 @@ namespace Tauron.Application.Implement
 
         /// <summary>Gets the commands.</summary>
         /// <value>The commands.</value>
-        public IEnumerable<ICommandLineCommand> Commands
-        {
-            get { return _commands.AsReadOnly(); }
-        }
+        public IEnumerable<ICommandLineCommand> Commands => _commands.AsReadOnly();
 
         #endregion
 

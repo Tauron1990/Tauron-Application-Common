@@ -47,7 +47,7 @@ namespace Tauron.Application.Files.Serialization.Core
         private BackgroundStream _backgroundStream;
         private bool _snapShot;
 
-        public bool IsSnapShot { get { return _snapShot; } }
+        public bool IsSnapShot => _snapShot;
         public ContextMode ContextMode { get; private set; }
         [NotNull]
         public IStreamSource StreamSource { get; private set; }

@@ -26,8 +26,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using System.Diagnostics;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -37,16 +37,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
     [PublicAPI]
     public sealed class ImportMetadata : IEquatable<ImportMetadata>
     {
-        #region Fields
-
-        private IExport export;
-
-        private string memberName;
-
-        private IDictionary<string, object> metadata;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -73,17 +63,16 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         ///     The metadata.
         /// </param>
         public ImportMetadata(
-            Type interfaceType,
-            string contractName,
-            IExport export,
-            string memberName,
+            [CanBeNull] Type interfaceType,
+            [CanBeNull] string contractName,
+            [NotNull] IExport export,
+            [NotNull] string memberName,
             bool optional,
-            IDictionary<string, object> metadata)
+            [NotNull] IDictionary<string, object> metadata)
         {
-            Contract.Requires<ArgumentNullException>(export != null, "export");
-            Contract.Requires<ArgumentNullException>(memberName != null, "memberName");
-            Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
-
+            if (export == null) throw new ArgumentNullException(nameof(export));
+            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+            if (string.IsNullOrWhiteSpace(memberName)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(memberName));
             InterfaceType = interfaceType;
             ContractName = contractName;
             Export = export;
@@ -91,6 +80,10 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
             Optional = optional;
             Metadata = metadata;
         }
+
+        #endregion
+
+        #region Fields
 
         #endregion
 
@@ -102,22 +95,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
 
         /// <summary>Gets the export.</summary>
         /// <value>The export.</value>
-        public IExport Export
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IExport>() != null);
-
-                return export;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                export = value;
-            }
-        }
+        public IExport Export { get; private set; }
 
         /// <summary>Gets the interface type.</summary>
         /// <value>The interface type.</value>
@@ -125,41 +103,11 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
 
         /// <summary>Gets the member name.</summary>
         /// <value>The member name.</value>
-        public string MemberName
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-
-                return memberName;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                memberName = value;
-            }
-        }
+        public string MemberName { get; private set; }
 
         /// <summary>Gets the metadata.</summary>
         /// <value>The metadata.</value>
-        public IDictionary<string, object> Metadata
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IDictionary<string, object>>() != null);
-
-                return metadata;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                metadata = value;
-            }
-        }
+        public IDictionary<string, object> Metadata { get; private set; }
 
         /// <summary>Gets a value indicating whether optional.</summary>
         /// <value>The optional.</value>
@@ -233,11 +181,12 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         {
             unchecked
             {
-                return (InterfaceType != null ? InterfaceType.GetHashCode()*397 : 0)
-                       ^ (ContractName != null ? ContractName.GetHashCode() : 0);
+                return (InterfaceType?.GetHashCode() * 397 ?? 0)
+                       ^ (ContractName?.GetHashCode() ?? 0);
             }
         }
 
+        [DebuggerStepThrough]
         public override string ToString()
         {
             return ErrorTracer.FormatExport(InterfaceType, ContractName);

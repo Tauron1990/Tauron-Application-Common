@@ -2,12 +2,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Resources;
 using System.Windows.Markup;
 using System.Xaml;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -24,14 +23,6 @@ namespace Tauron.Application
 
         #endregion
 
-        #region Public Properties
-
-        /// <summary>Gets or sets the name.</summary>
-        [NotNull]
-        public string Name { get; set; }
-
-        #endregion
-
         public SimpleLocalize([NotNull] string name)
         {
             Name = name;
@@ -40,6 +31,14 @@ namespace Tauron.Application
         public SimpleLocalize()
         {
         }
+
+        #region Public Properties
+
+        /// <summary>Gets or sets the name.</summary>
+        [NotNull]
+        public string Name { get; set; }
+
+        #endregion
 
         #region Public Methods and Operators
 
@@ -54,9 +53,8 @@ namespace Tauron.Application
         /// </param>
         public static void Register([NotNull] ResourceManager manager, [NotNull] Assembly key)
         {
-            Contract.Requires<ArgumentNullException>(manager != null, "manager");
-            Contract.Requires<ArgumentNullException>(key != null, "key");
-
+            if (manager == null) throw new ArgumentNullException(nameof(manager));
+            if (key == null) throw new ArgumentNullException(nameof(key));
             Resources[key] = manager;
         }
 
@@ -82,15 +80,15 @@ namespace Tauron.Application
         /// </returns>
         public override object ProvideValue(IServiceProvider serviceProvider)
         {
-            var provider = serviceProvider.GetService(typeof (IRootObjectProvider)) as IRootObjectProvider;
+            var provider = serviceProvider.GetService(typeof(IRootObjectProvider)) as IRootObjectProvider;
 
-            if (provider == null || provider.RootObject == null) return Name; // "IRootObjectProvider oder das RootObject existieren nicht!";
+            if (provider?.RootObject == null) return Name; // "IRootObjectProvider oder das RootObject existieren nicht!";
 
             ResourceManager manager;
 
             return Resources.TryGetValue(provider.RootObject.GetType().Assembly, out manager)
-                       ? manager.GetObject(Name)
-                       : Name;
+                ? manager.GetObject(Name)
+                : Name;
         }
 
         #endregion

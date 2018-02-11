@@ -25,8 +25,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -37,12 +36,6 @@ namespace Tauron.Application.Ioc
     [PublicAPI]
     public abstract class ExportMetadataBaseAttribute : Attribute
     {
-        #region Fields
-
-        private readonly string internalKey;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -56,13 +49,16 @@ namespace Tauron.Application.Ioc
         /// <param name="value">
         ///     The value.
         /// </param>
-        protected ExportMetadataBaseAttribute(string key, object value)
+        protected ExportMetadataBaseAttribute([NotNull] string key, object value)
         {
-            Contract.Requires<ArgumentNullException>(key != null, "key");
-
-            internalKey = key;
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(key));
+            InternalKey = key;
             InternalValue = value;
         }
+
+        #endregion
+
+        #region Fields
 
         #endregion
 
@@ -70,15 +66,7 @@ namespace Tauron.Application.Ioc
 
         /// <summary>Gets or sets the internal key.</summary>
         /// <value>The internal key.</value>
-        protected internal string InternalKey
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-
-                return internalKey;
-            }
-        }
+        protected internal string InternalKey { get; }
 
         /// <summary>Gets or sets the internal value.</summary>
         /// <value>The internal value.</value>

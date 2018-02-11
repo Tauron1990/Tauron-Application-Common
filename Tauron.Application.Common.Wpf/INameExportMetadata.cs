@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Tauron.Application
 {
@@ -11,13 +10,6 @@ namespace Tauron.Application
 
     internal abstract class NameExportMetadataContracts : INameExportMetadata
     {
-        public string Name
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-                return null;
-            }
-        }
+        public string Name => null;
     }
 }

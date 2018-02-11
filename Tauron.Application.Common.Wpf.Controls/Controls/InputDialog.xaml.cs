@@ -48,12 +48,21 @@ namespace Tauron.Application.Controls
 
         #endregion
 
+        #region Methods
+
+        private void OkClick(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
+        }
+
+        #endregion
+
         #region Public Properties
 
         /// <summary>Gets or sets a value indicating whether allow cancel.</summary>
         public bool AllowCancel
         {
-            get { return Cancelbutton.IsEnabled; }
+            get => Cancelbutton.IsEnabled;
 
             set
             {
@@ -65,34 +74,25 @@ namespace Tauron.Application.Controls
         /// <summary>Gets or sets the instruction text.</summary>
         public string InstructionText
         {
-            get { return InstructionTextBlock.Text; }
+            get => InstructionTextBlock.Text;
 
-            set { InstructionTextBlock.Text = value; }
+            set => InstructionTextBlock.Text = value;
         }
 
         /// <summary>Gets or sets the main text.</summary>
         public string MainText
         {
-            get { return MainTextBlock.Text; }
+            get => MainTextBlock.Text;
 
-            set { MainTextBlock.Text = value; }
+            set => MainTextBlock.Text = value;
         }
 
         /// <summary>Gets or sets the result.</summary>
         public string Result
         {
-            get { return InputText.Text; }
+            get => InputText.Text;
 
-            set { InputText.Text = value; }
-        }
-
-        #endregion
-
-        #region Methods
-
-        private void OkClick(object sender, RoutedEventArgs e)
-        {
-            DialogResult = true;
+            set => InputText.Text = value;
         }
 
         #endregion

@@ -2,14 +2,14 @@
 
 using System;
 using System.Windows.Markup;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application
 {
     /// <summary>The simple localize with arg.</summary>
-    [MarkupExtensionReturnType(typeof (string))]
+    [MarkupExtensionReturnType(typeof(string))]
     public class SimpleLocalizeWithArg : SimpleLocalize
     {
         #region Public Properties

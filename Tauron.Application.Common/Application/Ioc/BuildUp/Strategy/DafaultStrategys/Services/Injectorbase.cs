@@ -1,45 +1,33 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps;
 using Tauron.Application.SimpleWorkflow;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
     [PublicAPI]
     public abstract class Injectorbase<TMember> : MemberInjector
     {
+        protected Injectorbase([NotNull] IMetadataFactory metadataFactory, [NotNull] TMember member, [NotNull] IResolverExtension[] resolverExtensions)
+        {
+            if (metadataFactory == null) throw new ArgumentNullException(nameof(metadataFactory));
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (resolverExtensions == null) throw new ArgumentNullException(nameof(resolverExtensions));
+            Member = member;
+
+            InjectorContext = new InjectorContext(metadataFactory, member, MemberType, resolverExtensions);
+        }
+
         [NotNull]
 // ReSharper disable once MemberCanBePrivate.Global
         protected InjectorContext InjectorContext { get; private set; }
 
-        private TMember _member;
-
         [NotNull]
-        protected TMember Member
-        {
-            get
-            {
-// ReSharper disable once CompareNonConstrainedGenericWithNull
-                Contract.Ensures(Contract.Result<TMember>() != null);
-
-                return _member;
-            }
-        }
+        protected TMember Member { get; }
 
         [NotNull]
         protected abstract Type MemberType { get; }
-
-        protected Injectorbase([NotNull] IMetadataFactory metadataFactory, [NotNull] TMember member, IResolverExtension[] resolverExtensions)
-        {
-            Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
-
-            _member = member;
-
-// ReSharper disable once DoNotCallOverridableMethodsInConstructor
-            InjectorContext = new InjectorContext(metadataFactory, member, MemberType, resolverExtensions);
-        }
 
         protected virtual StepId InitializeMachine([NotNull] out ResolverFactory solidMachine)
         {
@@ -49,7 +37,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         }
 
         public override void Inject(object target, IContainer container, ImportMetadata metadata,
-                                    IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
+            IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
         {
             try
             {
@@ -62,13 +50,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 InjectorContext.Container = container;
                 InjectorContext.Target = target;
 
-                ResolverFactory fac;
-
-                var start = InitializeMachine(out fac);
+                var start = InitializeMachine(out var fac);
 
                 InjectorContext.Machine = fac;
 
-                fac.Beginn(start, InjectorContext);
+                fac.Begin(start, InjectorContext);
 
                 if (InjectorContext.Resolver == null) throw new InvalidOperationException("No Resolver Created");
 
@@ -84,6 +70,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 errorTracer.Exception = e;
             }
         }
+
         protected abstract void Inject([NotNull] object target, [CanBeNull] object value);
     }
 }

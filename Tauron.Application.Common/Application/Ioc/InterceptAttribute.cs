@@ -26,14 +26,14 @@
 
 using System;
 using Castle.DynamicProxy;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc
 {
     /// <summary>The intercept attribute.</summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class)]
     [PublicAPI]
     public class InterceptAttribute : ExportMetadataBaseAttribute
     {

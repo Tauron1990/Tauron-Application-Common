@@ -17,8 +17,10 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Windows;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -29,46 +31,6 @@ namespace Tauron.Application.Implementation
         #region Static Fields
 
         private static ManualResetEventSlim _waiter;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets or sets the main window.</summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        public IWindow MainWindow
-        {
-            get
-            {
-                Window win = Application.MainWindow;
-                return win == null ? null : new WpfWindow(win);
-            }
-
-            set
-            {
-                if (value == null) Application.MainWindow = null;
-
-                var wpfwindow = value as WpfWindow;
-                if (wpfwindow == null) throw new InvalidOperationException();
-
-                Application.MainWindow = (Window) wpfwindow.TranslateForTechnology();
-            }
-        }
-
-        /// <summary>Gets or sets the shutdown mode.</summary>
-        public ShutdownMode ShutdownMode
-        {
-            get { return (ShutdownMode) Application.ShutdownMode; }
-
-            set { Application.ShutdownMode = (System.Windows.ShutdownMode) value; }
-        }
-
-        #endregion
-
-        #region Properties
-
-        private static object _waiterLock = new object();
-        internal static System.Windows.Application Application { get; private set; }
 
         #endregion
 
@@ -100,12 +62,67 @@ namespace Tauron.Application.Implementation
 
         #endregion
 
+        #region Public Properties
+
+        /// <summary>Gets or sets the main window.</summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public IWindow MainWindow
+        {
+            get
+            {
+                var win = Application.MainWindow;
+                return win == null ? null : new WpfWindow(win);
+            }
+
+            set
+            {
+                if (value == null) Application.MainWindow = null;
+
+                var wpfwindow = value as WpfWindow;
+                if (wpfwindow == null) throw new InvalidOperationException();
+
+                Application.MainWindow = (Window) wpfwindow.TranslateForTechnology();
+            }
+        }
+
+        /// <summary>Gets or sets the shutdown mode.</summary>
+        public ShutdownMode ShutdownMode
+        {
+            get => (ShutdownMode) Application.ShutdownMode;
+
+            set => Application.ShutdownMode = (System.Windows.ShutdownMode) value;
+        }
+
+        #endregion
+
+        #region Properties
+
+        private static object _waiterLock = new object();
+
+        public WpfApplicationController(System.Windows.Application app)
+        {
+            Application = app;
+        }
+
+        internal static System.Windows.Application Application { get; private set; }
+
+        #endregion
+
         #region Methods
 
-        internal static void Initialize()
+        internal static void Initialize([CanBeNull] CultureInfo info)
         {
+            if(Application != null) return;
+
             _waiter = new ManualResetEventSlim();
             var runner = new Thread(RunApplication) {IsBackground = false};
+
+            if (info != null && !info.Equals(CultureInfo.InvariantCulture))
+            {
+                runner.CurrentCulture = info;
+                runner.CurrentUICulture = info;
+            }
+
             runner.SetApartmentState(ApartmentState.STA);
             lock (_waiterLock)
             {
@@ -116,7 +133,7 @@ namespace Tauron.Application.Implementation
 
         internal static void Shutdown()
         {
-            Application.Dispatcher.Invoke(Application.Shutdown);
+            Application?.Dispatcher?.Invoke(Application.Shutdown);
         }
 
         private static void RunApplication()

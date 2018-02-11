@@ -26,10 +26,10 @@
 
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Tauron.Application.Ioc;
 // Allgemeine Informationen über eine Assembly werden über die folgenden 
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die mit einer Assembly verknüpft sind.
-using Tauron.Application.Ioc;
 
 #endregion
 
@@ -61,6 +61,6 @@ using Tauron.Application.Ioc;
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("0.9.0.0")]
-[assembly: AssemblyFileVersion("0.9.0.0")]
+[assembly: AssemblyVersion("1.0.6462.22542")]
+[assembly: AssemblyFileVersion("1.0.6462.22542")]
 [assembly: ExportLevel(0)]

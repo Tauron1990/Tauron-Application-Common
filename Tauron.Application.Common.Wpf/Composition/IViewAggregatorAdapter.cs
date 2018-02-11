@@ -1,7 +1,8 @@
 ﻿#region
+
 using System.Collections.Generic;
 using System.Windows;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 

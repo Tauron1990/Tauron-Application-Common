@@ -1,13 +1,11 @@
 ﻿#region
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -25,6 +23,13 @@ namespace Tauron
 
         #endregion
 
+        public static T ParseEnum<T>([NotNull] this string value, bool ignoreCase)
+            where T : struct
+        {
+            T evalue;
+            return Enum.TryParse(value, ignoreCase, out evalue) ? evalue : default(T);
+        }
+
         #region Public Methods and Operators
 
         /// <summary>
@@ -41,10 +46,8 @@ namespace Tauron
         [NotNull]
         public static TValue CreateInstanceAndUnwrap<TValue>([NotNull] this AppDomain domain) where TValue : class
         {
-            Contract.Requires<ArgumentNullException>(domain != null, "domain");
-            Contract.Ensures(Contract.Result<TValue>() != null);
-
-            Type targetType = typeof (TValue);
+            if (domain == null) throw new ArgumentNullException(nameof(domain));
+            var targetType = typeof(TValue);
             return (TValue) domain.CreateInstanceAndUnwrap(targetType.Assembly.FullName, targetType.FullName);
         }
 
@@ -66,11 +69,10 @@ namespace Tauron
         public static TValue CreateInstanceAndUnwrap<TValue>([NotNull] this AppDomain domain, [NotNull] params object[] args)
             where TValue : class
         {
-            Contract.Requires<ArgumentNullException>(domain != null, "domain");
-            Contract.Requires<ArgumentNullException>(args != null, "args");
-            Contract.Ensures(Contract.Result<TValue>() != null);
+            if (domain == null) throw new ArgumentNullException(nameof(domain));
+            if (args == null) throw new ArgumentNullException(nameof(args));
 
-            Type targetType = typeof (TValue);
+            var targetType = typeof(TValue);
             return
                 (TValue)
                 domain.CreateInstanceAndUnwrap(
@@ -101,39 +103,36 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="IEnumerable" />.
         /// </returns>
-        [NotNull, SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+        [NotNull]
+        [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         public static IEnumerable<Tuple<MemberInfo, TAttribute>> FindMemberAttributes<TAttribute>(
             [NotNull] this Type type,
             bool nonPublic,
             BindingFlags bindingflags) where TAttribute : Attribute
         {
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-            Contract.Ensures(Contract.Result<IEnumerable<Tuple<MemberInfo, TAttribute>>>() != null);
-
+            if (type == null) throw new ArgumentNullException(nameof(type));
             bindingflags |= BindingFlags.Public;
             if (nonPublic) bindingflags |= BindingFlags.NonPublic;
 
-            if (!Enum.IsDefined(typeof (BindingFlags), BindingFlags.FlattenHierarchy))
-            {
+            if (!Enum.IsDefined(typeof(BindingFlags), BindingFlags.FlattenHierarchy))
                 return from mem in type.GetMembers(bindingflags)
-                       let attr = mem.GetCustomAttribute<TAttribute>()
-                       where attr != null
-                       select Tuple.Create(mem, attr);
-            }
+                    let attr = CustomAttributeExtensions.GetCustomAttribute<TAttribute>(mem)
+                    where attr != null
+                    select Tuple.Create(mem, attr);
 
             return from mem in type.GetHieratichialMembers(bindingflags)
-                   let attr = mem.GetCustomAttribute<TAttribute>()
-                   where attr != null
-                   select Tuple.Create(mem, attr);
+                let attr = mem.GetCustomAttribute<TAttribute>()
+                where attr != null
+                select Tuple.Create(mem, attr);
         }
 
         [NotNull]
         public static IEnumerable<MemberInfo> GetHieratichialMembers([NotNull] this Type type, BindingFlags flags)
         {
-            Type targetType = type;
+            var targetType = type;
             while (targetType != null)
             {
-                foreach (MemberInfo mem in targetType.GetMembers(flags)) yield return mem;
+                foreach (var mem in targetType.GetMembers(flags)) yield return mem;
 
                 targetType = targetType.BaseType;
             }
@@ -153,36 +152,32 @@ namespace Tauron
         /// <returns>
         ///     The <see cref="IEnumerable" />.
         /// </returns>
-        [NotNull,SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+        [NotNull]
+        [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         public static IEnumerable<Tuple<MemberInfo, TAttribute>> FindMemberAttributes<TAttribute>([NotNull] this Type type,
             bool nonPublic) where TAttribute : Attribute
         {
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-            Contract.Ensures(Contract.Result<IEnumerable<Tuple<MemberInfo, TAttribute>>>() != null);
-
+            if (type == null) throw new ArgumentNullException(nameof(type));
             return FindMemberAttributes<TAttribute>(
                 type,
                 nonPublic,
                 BindingFlags.Instance | BindingFlags.FlattenHierarchy);
         }
 
-        [NotNull,System.Diagnostics.Contracts.Pure]
+        [NotNull]
+        [System.Diagnostics.Contracts.Pure]
         public static T[] GetAllCustomAttributes<T>([NotNull] this ICustomAttributeProvider member) where T : Attribute
         {
-            Contract.Requires<ArgumentNullException>(member != null, "member");
-            Contract.Ensures(Contract.ForAll(Contract.Result<T[]>(), mem => mem != null));
-            Contract.Ensures(Contract.Result<T[]>() != null);
-
-            return (T[]) member.GetCustomAttributes(typeof (T), true);
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            return (T[]) member.GetCustomAttributes(typeof(T), true);
         }
 
-        [NotNull,System.Diagnostics.Contracts.Pure]
+        [NotNull]
+        [System.Diagnostics.Contracts.Pure]
         public static object[] GetAllCustomAttributes([NotNull] this ICustomAttributeProvider member, [NotNull] Type type)
         {
-            Contract.Requires<ArgumentNullException>(member != null, "member");
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-            Contract.Ensures(Contract.Result<object[]>() != null);
-
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (type == null) throw new ArgumentNullException(nameof(type));
             return member.GetCustomAttributes(type, true);
         }
 
@@ -201,8 +196,7 @@ namespace Tauron
         public static TAttribute GetCustomAttribute<TAttribute>([NotNull] this ICustomAttributeProvider provider)
             where TAttribute : Attribute
         {
-            Contract.Requires<ArgumentNullException>(provider != null, "provider");
-
+            if (provider == null) throw new ArgumentNullException(nameof(provider));
             return GetCustomAttribute<TAttribute>(provider, true);
         }
 
@@ -224,10 +218,9 @@ namespace Tauron
         public static TAttribute GetCustomAttribute<TAttribute>([NotNull] this ICustomAttributeProvider provider, bool inherit)
             where TAttribute : Attribute
         {
-            Contract.Requires<ArgumentNullException>(provider != null, "provider");
+            if (provider == null) throw new ArgumentNullException(nameof(provider));
 
-            object temp = provider.GetCustomAttributes(typeof (TAttribute), inherit).FirstOrDefault();
-            if (temp == null) return null;
+            var temp = provider.GetCustomAttributes(typeof(TAttribute), inherit).FirstOrDefault();
 
             return (TAttribute) temp;
         }
@@ -245,14 +238,9 @@ namespace Tauron
         ///     The <see cref="IEnumerable" />.
         /// </returns>
         [NotNull]
-        public static IEnumerable<object> GetCustomAttributes([NotNull] this ICustomAttributeProvider provider, [NotNull] params Type[] attributeTypes)
+        public static IEnumerable<object> GetCustomAttributes([NotNull] this ICustomAttributeProvider provider, [NotNull] [ItemNotNull] params Type[] attributeTypes)
         {
-            Contract.Requires<ArgumentNullException>(provider != null, "provider");
-            Contract.Requires<ArgumentNullException>(attributeTypes != null, "attributeTypes");
-            Contract.Requires<ArgumentNullException>(
-                Contract.ForAll(attributeTypes, type => type != null),
-                "attributeTypes");
-            Contract.Ensures(Contract.Result<IEnumerable<object>>() != null);
+            if (provider == null) throw new ArgumentNullException(nameof(provider));
 
             return attributeTypes.SelectMany(attributeType => provider.GetCustomAttributes(attributeType, false));
         }
@@ -276,8 +264,7 @@ namespace Tauron
         /// </returns>
         public static TType GetInvokeMember<TType>([NotNull] this MemberInfo info, [NotNull] object instance, [CanBeNull] params object[] parameter)
         {
-            Contract.Requires<ArgumentNullException>(info != null, "info");
-
+            if (info == null) throw new ArgumentNullException(nameof(info));
             try
             {
                 if (info is PropertyInfo)
@@ -310,8 +297,7 @@ namespace Tauron
         /// </returns>
         public static RuntimeMethodHandle GetMethodHandle([NotNull] this MethodBase method)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
             var mi = method as MethodInfo;
 
             if (mi != null && mi.IsGenericMethod) return mi.GetGenericMethodDefinition().MethodHandle;
@@ -331,9 +317,7 @@ namespace Tauron
         [NotNull]
         public static IEnumerable<Type> GetParameterTypes([NotNull] this MethodBase method)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-            Contract.Ensures(Contract.Result<IEnumerable<Type>>() != null);
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
             return method.GetParameters().Select(p => p.ParameterType);
         }
 
@@ -352,16 +336,15 @@ namespace Tauron
         [CanBeNull]
         public static PropertyInfo GetPropertyFromMethod([NotNull] this MethodInfo method, [NotNull] Type implementingType)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-            Contract.Requires<ArgumentNullException>(implementingType != null, "implementingType");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (implementingType == null) throw new ArgumentNullException(nameof(implementingType));
             if (!method.IsSpecialName || method.Name.Length < 4) return null;
 
-            bool isGetMethod = method.Name.Substring(0, 4) == "get_";
-            Type returnType = isGetMethod ? method.ReturnType : method.GetParameterTypes().Last();
-            IEnumerable<Type> indexerTypes = isGetMethod
-                                                 ? method.GetParameterTypes()
-                                                 : method.GetParameterTypes().SkipLast(1);
+            var isGetMethod = method.Name.Substring(0, 4) == "get_";
+            var returnType = isGetMethod ? method.ReturnType : method.GetParameterTypes().Last();
+            var indexerTypes = isGetMethod
+                ? method.GetParameterTypes()
+                : method.GetParameterTypes().SkipLast(1);
 
             return implementingType.GetProperty(
                 method.Name.Substring(4),
@@ -384,8 +367,7 @@ namespace Tauron
         [CanBeNull]
         public static PropertyInfo GetPropertyFromMethod([NotNull] this MethodBase method)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
             return !method.IsSpecialName ? null : method.DeclaringType.GetProperty(method.Name.Substring(4), DefaultBindingFlags);
         }
 
@@ -403,9 +385,7 @@ namespace Tauron
         [NotNull]
         public static Type GetSetInvokeType([NotNull] this MemberInfo info)
         {
-            Contract.Requires<ArgumentNullException>(info != null, "info");
-            Contract.Ensures(Contract.Result<Type>() != null);
-
+            if (info == null) throw new ArgumentNullException(nameof(info));
             switch (info.MemberType)
             {
                 case MemberTypes.Field:
@@ -432,9 +412,8 @@ namespace Tauron
         /// </returns>
         public static bool HasAttribute<T>([NotNull] this ICustomAttributeProvider member) where T : Attribute
         {
-            Contract.Requires<ArgumentNullException>(member != null, "member");
-
-            return member.IsDefined(typeof (T), true);
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            return member.IsDefined(typeof(T), true);
         }
 
         /// <summary>
@@ -451,9 +430,8 @@ namespace Tauron
         /// </returns>
         public static bool HasAttribute([NotNull] this ICustomAttributeProvider member, [NotNull] Type type)
         {
-            Contract.Requires<ArgumentNullException>(member != null, "member");
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (type == null) throw new ArgumentNullException(nameof(type));
             return member.IsDefined(type, true);
         }
 
@@ -475,12 +453,11 @@ namespace Tauron
         public static bool HasMatchingAttribute<T>([NotNull] this ICustomAttributeProvider member, [NotNull] T attributeToMatch)
             where T : Attribute
         {
-            Contract.Requires<ArgumentNullException>(member != null, "member");
-            Contract.Requires<ArgumentNullException>(attributeToMatch != null, "attributeToMatch");
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (attributeToMatch == null) throw new ArgumentNullException(nameof(attributeToMatch));
+            var attributes = member.GetAllCustomAttributes<T>();
 
-            T[] attributes = member.GetAllCustomAttributes<T>();
-
-            return (attributes.Length != 0) && attributes.Any(attribute => attribute.Match(attributeToMatch));
+            return attributes.Length != 0 && attributes.Any(attribute => attribute.Match(attributeToMatch));
         }
 
         /// <summary>
@@ -502,9 +479,8 @@ namespace Tauron
         /// </returns>
         public static TType Invoke<TType>([NotNull] this MethodBase method, [NotNull] object instance, [NotNull] params object[] args)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-            Contract.Requires<ArgumentNullException>(args != null, "args");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
             return (TType) method.Invoke(instance, args);
         }
 
@@ -522,8 +498,8 @@ namespace Tauron
         /// </param>
         public static void Invoke([NotNull] this MethodBase method, [NotNull] object instance, [NotNull] params object[] args)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
             method.Invoke(instance, args);
         }
 
@@ -540,9 +516,8 @@ namespace Tauron
         /// </returns>
         public static TEnum ParseEnum<TEnum>([NotNull] this string value)
         {
-            Contract.Requires<ArgumentNullException>(value != null, "value");
-
-            return (TEnum) Enum.Parse(typeof (TEnum), value);
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            return (TEnum) Enum.Parse(typeof(TEnum), value);
         }
 
         /// <summary>
@@ -559,8 +534,7 @@ namespace Tauron
         /// </param>
         public static void SetInvokeMember([NotNull] this MemberInfo info, [NotNull] object instance, [CanBeNull] params object[] parameter)
         {
-            Contract.Requires<ArgumentNullException>(info != null, "info");
-
+            if (info == null) throw new ArgumentNullException(nameof(info));
             if (info is PropertyInfo)
             {
                 var property = info.CastObj<PropertyInfo>();
@@ -582,7 +556,10 @@ namespace Tauron
 
                 info.CastObj<FieldInfo>().SetValue(instance, value);
             }
-            else if (info is MethodBase) info.CastObj<MethodBase>().Invoke(instance, parameter);
+            else if (info is MethodBase)
+            {
+                info.CastObj<MethodBase>().Invoke(instance, parameter);
+            }
         }
 
         /// <summary>
@@ -601,18 +578,10 @@ namespace Tauron
         /// </returns>
         public static bool TryParseEnum<TEnum>([NotNull] this string value, out TEnum eEnum) where TEnum : struct
         {
-            Contract.Requires<ArgumentNullException>(value != null, "value");
-
+            if (value == null) throw new ArgumentNullException(nameof(value));
             return Enum.TryParse(value, out eEnum);
         }
 
         #endregion
-
-        public static T ParseEnum<T>([NotNull] this string value, bool ignoreCase)
-            where T : struct
-        {
-            T evalue;
-            return Enum.TryParse(value, ignoreCase, out evalue) ? evalue : default(T);
-        }
     }
 }

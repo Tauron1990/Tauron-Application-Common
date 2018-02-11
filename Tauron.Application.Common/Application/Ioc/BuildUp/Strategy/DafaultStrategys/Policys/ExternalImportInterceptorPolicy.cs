@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
@@ -11,6 +11,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         }
 
         [NotNull]
-        public List<IImportInterceptor> Interceptors { get; private set; }
+        public List<IImportInterceptor> Interceptors { get; }
     }
 }

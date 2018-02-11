@@ -24,9 +24,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using Castle.DynamicProxy;
 
 #endregion
@@ -37,10 +35,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     public class InterceptionPolicy : IPolicy
     {
         #region Fields
-
-        private readonly List<KeyValuePair<MemberInterceptionAttribute, IInterceptor>> memberInterceptor;
-
-        private InterceptAttribute interceptAttribute;
 
         #endregion
 
@@ -53,7 +47,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// </summary>
         public InterceptionPolicy()
         {
-            memberInterceptor = new List<KeyValuePair<MemberInterceptionAttribute, IInterceptor>>();
+            MemberInterceptor = new List<KeyValuePair<MemberInterceptionAttribute, IInterceptor>>();
         }
 
         #endregion
@@ -62,42 +56,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         /// <summary>Gets or sets the intercept attribute.</summary>
         /// <value>The intercept attribute.</value>
-        public InterceptAttribute InterceptAttribute
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<InterceptAttribute>() != null);
-
-                return interceptAttribute;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                interceptAttribute = value;
-            }
-        }
+        public InterceptAttribute InterceptAttribute { get; set; }
 
         /// <summary>Gets the member interceptor.</summary>
         /// <value>The member interceptor.</value>
-        public List<KeyValuePair<MemberInterceptionAttribute, IInterceptor>> MemberInterceptor
-        {
-            get
-            {
-                Contract.Ensures(
-                    Contract.Result<List<KeyValuePair<MemberInterceptionAttribute, IInterceptor>>>() !=
-                    null);
-                Contract.Ensures(
-                    Contract.ForAll(
-                        Contract
-                            .Result
-                            <List<KeyValuePair<MemberInterceptionAttribute, IInterceptor>>>(),
-                        mem => mem.Key != null && mem.Value != null));
-
-                return memberInterceptor;
-            }
-        }
+        public List<KeyValuePair<MemberInterceptionAttribute, IInterceptor>> MemberInterceptor { get; }
 
         #endregion
     }

@@ -11,11 +11,12 @@ namespace Tauron.Application.Files.Serialization
     {
         private readonly ISerializer _serializer;
 
+        [NotNull]
         public ISerializer Serializer => _serializer;
 
         public TypedSerializer([NotNull] ISerializer serializer)
         {
-            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+            if (serializer == null) throw new ArgumentNullException("serializer");
             _serializer = serializer;
         }
 

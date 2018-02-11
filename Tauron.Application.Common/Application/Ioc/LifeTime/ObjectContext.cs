@@ -26,9 +26,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -83,20 +82,11 @@ namespace Tauron.Application.Ioc.LifeTime
         /// </returns>
         public TInterface Get<TInterface>() where TInterface : class
         {
-            Contract.Ensures(Contract.Result<TInterface>() != null);
-
             return _registry.Get<TInterface>();
         }
 
-        /// <summary>The get all.</summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
         public IEnumerable<TInterface> GetAll<TInterface>() where TInterface : class
         {
-            Contract.Ensures(Contract.Result<IEnumerable<TInterface>>() != null);
-
             return _registry.GetAll<TInterface>();
         }
 
@@ -118,10 +108,9 @@ namespace Tauron.Application.Ioc.LifeTime
         /// </typeparam>
         /// <typeparam name="TImplement">
         /// </typeparam>
-        public void Register<TInterface, TImplement>(TImplement instance)
+        public void Register<TInterface, TImplement>([NotNull] TImplement instance)
         {
-            Contract.Requires<ArgumentNullException>(instance != null, "instance");
-
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
             _registry.Register<TInterface, TImplement>(instance);
         }
 

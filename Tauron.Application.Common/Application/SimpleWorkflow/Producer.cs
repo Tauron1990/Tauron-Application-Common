@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.SimpleWorkflow
 {
@@ -10,6 +11,7 @@ namespace Tauron.Application.SimpleWorkflow
     public abstract class Producer<TState, TContext>
         where TState : IStep<TContext>
     {
+        [PublicAPI]
         public class StepConfiguration
         {
             private readonly StepRev _context;
@@ -31,7 +33,7 @@ namespace Tauron.Application.SimpleWorkflow
             {
                 var con = new SimpleCondition<TContext> {Guard = guard};
                 if (guard != null) return new ConditionConfiguration(AddCondition(con), con);
-                
+
                 _context.GenericCondition = con;
                 return new ConditionConfiguration(this, con);
             }
@@ -39,8 +41,8 @@ namespace Tauron.Application.SimpleWorkflow
 
         public class ConditionConfiguration
         {
-            private readonly StepConfiguration _config;
             private readonly SimpleCondition<TContext> _condition;
+            private readonly StepConfiguration _config;
 
             public ConditionConfiguration([NotNull] StepConfiguration config, [NotNull] SimpleCondition<TContext> condition)
             {
@@ -59,18 +61,18 @@ namespace Tauron.Application.SimpleWorkflow
 
         internal class StepRev
         {
-            public TState State { get; set; }
-
-            [NotNull]
-            public List<ICondition<TContext>> Conditions { get; private set; }
-
-            [CanBeNull]
-            public ICondition<TContext> GenericCondition { get; set; }
-
             public StepRev()
             {
                 Conditions = new List<ICondition<TContext>>();
             }
+
+            public TState State { get; set; }
+
+            [NotNull]
+            public List<ICondition<TContext>> Conditions { get; }
+
+            [CanBeNull]
+            public ICondition<TContext> GenericCondition { get; set; }
 
             public override string ToString()
             {
@@ -78,9 +80,7 @@ namespace Tauron.Application.SimpleWorkflow
                 b.Append(State);
 
                 foreach (var condition in Conditions)
-                {
                     b.AppendLine("->" + condition + ";");
-                }
 
                 if (GenericCondition != null) b.Append("Generic->" + GenericCondition + ";");
 
@@ -90,23 +90,21 @@ namespace Tauron.Application.SimpleWorkflow
 
         private readonly Dictionary<StepId, StepRev> _states;
 
+        private StepId _lastId;
+
         protected Producer()
         {
             _states = new Dictionary<StepId, StepRev>();
-            MaxIterations = int.MaxValue;
         }
 
-        private StepId _lastId;
-
-        public int MaxIterations { get; set; }
-
-        public void Beginn(StepId id, TContext context)
+        public void Begin(StepId id, TContext context)
         {
             Process(id, context);
 
             if (_lastId.Name == StepId.Invalid.Name) throw new InvalidOperationException();
         }
 
+        [DebuggerStepThrough]
         protected bool SetLastId(StepId id)
         {
             _lastId = id;
@@ -119,12 +117,10 @@ namespace Tauron.Application.SimpleWorkflow
 
             StepRev rev;
             if (!_states.TryGetValue(id, out rev))
-            {
                 return SetLastId(StepId.Invalid);
-            }
 
             var sId = rev.State.OnExecute(context);
-            bool result = false;
+            var result = false;
 
             switch (sId.Name)
             {
@@ -134,7 +130,7 @@ namespace Tauron.Application.SimpleWorkflow
                     result = ProgressConditions(rev, context);
                     break;
                 case "Loop":
-                    bool ok = true;
+                    var ok = true;
 
                     do
                     {
@@ -147,15 +143,17 @@ namespace Tauron.Application.SimpleWorkflow
                         if (loopId.Name == StepId.Invalid.Name) return SetLastId(StepId.Invalid);
 
                         ProgressConditions(rev, context);
-
                     } while (ok);
+                    break;
+                case "Finish":
+                case "Skip":
+                    result = true;
                     break;
                 default:
                     return SetLastId(StepId.Invalid);
-
             }
 
-            if(!result)
+            if (!result)
                 rev.State.OnExecuteFinish(context);
 
             return result;
@@ -164,14 +162,14 @@ namespace Tauron.Application.SimpleWorkflow
         private bool ProgressConditions([NotNull] StepRev rev, TContext context)
         {
             var std = (from con in rev.Conditions
-                       let stateId = con.Select(rev.State, context)
-                       where stateId.Name != StepId.None.Name
-                       select stateId).ToArray();
+                let stateId = con.Select(rev.State, context)
+                where stateId.Name != StepId.None.Name
+                select stateId).ToArray();
 
             if (std.Length != 0) return std.Any(id => Process(id, context));
 
             if (rev.GenericCondition == null) return false;
-            StepId cid = rev.GenericCondition.Select(rev.State, context);
+            var cid = rev.GenericCondition.Select(rev.State, context);
             return cid.Name != StepId.None.Name && Process(cid, context);
         }
 

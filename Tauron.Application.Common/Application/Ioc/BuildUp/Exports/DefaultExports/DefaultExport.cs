@@ -26,11 +26,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -39,6 +38,81 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
     /// <summary>The default export.</summary>
     public sealed class DefaultExport : IExport
     {
+        #region Methods
+
+        /// <summary>
+        ///     The initialize.
+        /// </summary>
+        /// <param name="anonym">
+        ///     The anonym.
+        /// </param>
+        private void Initialize(bool anonym)
+        {
+            _isAnonymos = anonym;
+
+            Globalmetadata = new Dictionary<string, object>();
+
+            IEnumerable<ExportMetadataBaseAttribute> metadata =
+                _attributeProvider.GetAllCustomAttributes<ExportMetadataBaseAttribute>();
+            foreach (var exportMetadataAttribute in metadata) Globalmetadata[exportMetadataAttribute.InternalKey] = exportMetadataAttribute.InternalValue;
+
+            var attr = Globalmetadata.TryGetAndCast<LifetimeContextAttribute>(AopConstants.LiftimeMetadataName);
+
+            var lifetime = attr?.LifeTimeType ?? typeof(SharedLifetime);
+
+            if (anonym)
+            {
+                _exports = new[]
+                {
+                    new ExportMetadata(
+                        _exportetType,
+                        ExternalInfo.ExtenalComponentName,
+                        typeof(NotSharedLifetime),
+                        new Dictionary<string, object>(Globalmetadata),
+                        this)
+                };
+                return;
+            }
+
+            _exports = _attributeProvider.GetAllCustomAttributes<ExportAttribute>()
+                .Select(
+                    attribute =>
+                    {
+                        var temp = new Dictionary<string, object>(Globalmetadata);
+
+                        Type realLifetime;
+
+                        if (attr == null)
+                        {
+                            var customLifeTime = attribute.GetOverrideDefaultPolicy();
+                            if (customLifeTime != null)
+                            {
+                                realLifetime = customLifeTime.LifeTimeType;
+                                attr = customLifeTime;
+                            }
+                            else
+                            {
+                                realLifetime = lifetime;
+                            }
+                        }
+                        else
+                        {
+                            realLifetime = lifetime;
+                        }
+
+                        foreach (var tuple in attribute.Metadata)
+                            temp.Add(tuple.Item1,
+                                tuple.Item2);
+
+                        return new ExportMetadata(attribute.Export, attribute.ContractName, realLifetime, temp, this);
+                    })
+                .ToArray();
+
+            ShareLifetime = attr == null || attr.ShareLiftime;
+        }
+
+        #endregion
+
         #region Fields
 
         private readonly ICustomAttributeProvider _attributeProvider;
@@ -48,6 +122,8 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
         /// <summary>The _exports.</summary>
         private ExportMetadata[] _exports;
+
+        private bool _isAnonymos;
 
         #endregion
 
@@ -69,8 +145,8 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </param>
         public DefaultExport([NotNull] Type exportetType, [NotNull] ExternalExportInfo externalInfo, bool asAnonym)
         {
-            Contract.Requires<ArgumentNullException>(exportetType != null, "exportetType");
-            Contract.Requires<ArgumentNullException>(externalInfo != null, "externalInfo");
+            if (exportetType == null) throw new ArgumentNullException(nameof(exportetType));
+            if (externalInfo == null) throw new ArgumentNullException(nameof(externalInfo));
 
             Globalmetadata = new Dictionary<string, object>();
             _exportetType = exportetType;
@@ -95,9 +171,8 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </param>
         public DefaultExport([NotNull] MethodInfo info, [NotNull] ExternalExportInfo externalInfo, bool asAnonym)
         {
-            Contract.Requires<ArgumentNullException>(info != null, "exportetType");
-            Contract.Requires<ArgumentNullException>(externalInfo != null, "externalInfo");
-
+            if (info == null) throw new ArgumentNullException(nameof(info));
+            if (externalInfo == null) throw new ArgumentNullException(nameof(externalInfo));
             Globalmetadata = new Dictionary<string, object>();
             _attributeProvider = info;
             ExternalInfo = externalInfo;
@@ -111,10 +186,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <summary>Gets the export metadata.</summary>
         /// <value>The export metadata.</value>
         [NotNull]
-        public IEnumerable<ExportMetadata> ExportMetadata
-        {
-            get { return _exports; }
-        }
+        public IEnumerable<ExportMetadata> ExportMetadata => _exports;
 
         /// <summary>Gets the exports.</summary>
         /// <value>The exports.</value>
@@ -135,10 +207,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
         /// <summary>Gets the implement type.</summary>
         /// <value>The implement type.</value>
-        public Type ImplementType
-        {
-            get { return _exportetType; }
-        }
+        public Type ImplementType => _exportetType;
 
         /// <summary>Gets the import metadata.</summary>
         /// <value>The import metadata.</value>
@@ -179,10 +248,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns>
         ///     The <see cref="ExportMetadata" />.
         /// </returns>
-        [ContractVerification(false)]
         public ExportMetadata GetNamedExportMetadata(string contractName)
         {
-            return _exports.Single(exm => exm.ContractName == contractName);
+            return _isAnonymos ? _exports[0] : _exports.Single(exm => exm.ContractName == contractName);
         }
 
         /// <summary>
@@ -196,7 +264,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </returns>
         public IEnumerable<ExportMetadata> SelectContractName(string contractName)
         {
-            return _exports.Where(meta => meta.ContractName == contractName);
+            return _isAnonymos ? _exports : _exports.Where(meta => meta.ContractName == contractName);
         }
 
         /// <summary>
@@ -208,11 +276,10 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public static bool IsExport(ICustomAttributeProvider type)
+        public static bool IsExport([NotNull] ICustomAttributeProvider type)
         {
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-
-            return type.GetCustomAttributes(typeof (ExportAttribute), false).Length != 0;
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            return type.GetCustomAttributes(typeof(ExportAttribute), false).Length != 0;
         }
 
         /// <summary>The ==.</summary>
@@ -221,9 +288,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns></returns>
         public static bool operator ==(DefaultExport left, DefaultExport right)
         {
-            Contract.Requires<ArgumentNullException>(left != null, "left");
-            Contract.Requires<ArgumentNullException>(right != null, "right");
-
             return Equals(left, right);
         }
 
@@ -233,9 +297,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns></returns>
         public static bool operator !=(DefaultExport left, DefaultExport right)
         {
-            Contract.Requires<ArgumentNullException>(left != null, "left");
-            Contract.Requires<ArgumentNullException>(right != null, "right");
-
             return !Equals(left, right);
         }
 
@@ -254,7 +315,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
             if (ReferenceEquals(this, obj)) return true;
 
-            return obj is DefaultExport && Equals((DefaultExport)obj);
+            return obj is DefaultExport && Equals((DefaultExport) obj);
         }
 
         /// <summary>The get hash code.</summary>
@@ -272,76 +333,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </returns>
         public override string ToString()
         {
-            return ImplementType != null ? ImplementType.ToString() : string.Empty;
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        ///     The initialize.
-        /// </summary>
-        /// <param name="anonym">
-        ///     The anonym.
-        /// </param>
-        private void Initialize(bool anonym)
-        {
-            Contract.Requires(_attributeProvider != null);
-
-            Globalmetadata = new Dictionary<string, object>();
-
-            IEnumerable<ExportMetadataBaseAttribute> metadata =
-                _attributeProvider.GetAllCustomAttributes<ExportMetadataBaseAttribute>();
-            foreach (ExportMetadataBaseAttribute exportMetadataAttribute in metadata) Globalmetadata[exportMetadataAttribute.InternalKey] = exportMetadataAttribute.InternalValue;
-
-            var attr = Globalmetadata.TryGetAndCast<LifetimeContextAttribute>(AopConstants.LiftimeMetadataName);
-
-            Type lifetime = attr != null ? attr.LifeTimeType ?? typeof (SharedLifetime) : typeof (SharedLifetime);
-
-            if (anonym)
-            {
-                _exports = new[]
-                {
-                    new ExportMetadata(
-                        _exportetType,
-                        ExternalInfo.ExtenalComponentName,
-                        typeof (NotSharedLifetime),
-                        new Dictionary<string, object>(Globalmetadata),
-                        this)
-                };
-                return;
-            }
-
-            _exports = _attributeProvider.GetAllCustomAttributes<ExportAttribute>().Select(
-                attribute =>
-                {
-                    var temp = new Dictionary<string, object>(Globalmetadata);
-
-                    Type realLifetime;
-
-                    if (attr == null)
-                    {
-                        var customLifeTime = attribute.GetOverrideDefaultPolicy();
-                        if (customLifeTime != null)
-                        {
-                            realLifetime = customLifeTime.LifeTimeType;
-                            attr = customLifeTime;
-                        }
-                        else realLifetime = lifetime;
-                    }
-                    else realLifetime = lifetime;
-
-                    foreach (var tuple in attribute.Metadata)
-                    {
-                        temp.Add(tuple.Item1,
-                                 tuple.Item2);
-                    }
-
-                    return new ExportMetadata(attribute.Export, attribute.ContractName, realLifetime, temp, this);
-                }).ToArray();
-
-            ShareLifetime = attr == null || attr.ShareLiftime;
+            return ImplementType?.ToString() ?? string.Empty;
         }
 
         #endregion

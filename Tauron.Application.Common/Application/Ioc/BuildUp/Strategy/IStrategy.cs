@@ -24,10 +24,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -35,7 +33,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 {
     /// <summary>The Strategy interface.</summary>
     [PublicAPI]
-    [ContractClass(typeof (StrategyContracts))]
     public interface IStrategy : IInitializeable
     {
         #region Public Methods and Operators
@@ -71,84 +68,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         ///     The context.
         /// </param>
         void OnPostBuild([NotNull] IBuildContext context);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (IStrategy))]
-    internal abstract class StrategyContracts : IStrategy
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The initialize.
-        /// </summary>
-        /// <param name="components">
-        ///     The components.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void Initialize(ComponentRegistry components)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The on build.
-        /// </summary>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void OnBuild(IBuildContext context)
-        {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The on create instance.
-        /// </summary>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void OnCreateInstance(IBuildContext context)
-        {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The on perpare.
-        /// </summary>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void OnPerpare(IBuildContext context)
-        {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The on post build.
-        /// </summary>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void OnPostBuild(IBuildContext context)
-        {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            throw new NotImplementedException();
-        }
 
         #endregion
     }

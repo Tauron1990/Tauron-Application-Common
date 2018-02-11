@@ -24,55 +24,27 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Diagnostics.Contracts;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc.BuildUp
 {
     /// <summary>The ProxyService interface.</summary>
-    [ContractClass(typeof (ProxyServiceContracts)), PublicAPI]
     public interface IProxyService
     {
+        [NotNull]
+        ProxyGenerator GenericGenerator { get; }
+
         #region Public Properties
 
         /// <summary>Gets the generator.</summary>
         /// <value>The generator.</value>
         [NotNull]
-        ProxyGenerator Generate([NotNull] ExportMetadata metadata, [NotNull] ImportMetadata[] imports,  out IImportInterceptor interceptor);
+        ProxyGenerator Generate([NotNull] ExportMetadata metadata, [NotNull] ImportMetadata[] imports, out IImportInterceptor interceptor);
 
         #endregion
-
-        [NotNull]
-        ProxyGenerator GenericGenerator { get; }
-    }
-
-    [ContractClassFor(typeof (IProxyService))]
-    internal abstract class ProxyServiceContracts : IProxyService
-    {
-        public ProxyGenerator Generate(ExportMetadata metadata, ImportMetadata[] imports, out IImportInterceptor interceptor)
-        {
-            Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
-            Contract.Requires<ArgumentNullException>(imports != null, "imports");
-            Contract.Ensures(Contract.Result<ProxyGenerator>() != null);
-
-            interceptor = null;
-
-            return null;
-        }
-
-        public ProxyGenerator GenericGenerator
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<ProxyGenerator>() != null);
-
-                return null;
-            }
-        }
     }
 }

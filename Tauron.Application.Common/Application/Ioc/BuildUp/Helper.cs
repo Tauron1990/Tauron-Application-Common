@@ -26,13 +26,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Strategy;
 using Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys;
-using Tauron.JetBrains.Annotations;
+using Tauron.Application.Ioc.Components;
 
 #endregion
 
@@ -53,20 +53,16 @@ namespace Tauron.Application.Ioc.BuildUp
         /// <returns>
         ///     The <see cref="IEnumerable" />.
         /// </returns>
-        public static IEnumerable<Tuple<Type, string, bool>> MapParameters(MethodBase info)
+        public static IEnumerable<Tuple<Type, string, bool>> MapParameters([NotNull] MethodBase info)
         {
-            Contract.Requires<ArgumentNullException>(info != null, "info");
-            Contract.Ensures(Contract.Result<IEnumerable<Tuple<Type, string, bool>>>() != null);
-
-            foreach (ParameterInfo parameterInfo in info.GetParameters())
+            if (info == null) throw new ArgumentNullException(nameof(info));
+            foreach (var parameterInfo in info.GetParameters())
             {
                 var attr = parameterInfo.GetCustomAttribute<InjectAttribute>();
-                if (attr == null) yield return Tuple.Create<Type, string, bool>(parameterInfo.ParameterType, null, false);
+                if (attr == null) yield return Tuple.Create<Type, string, bool>(parameterInfo.ParameterType, null, true);
                 else
-                {
                     yield return
                         Tuple.Create(attr.Interface ?? parameterInfo.ParameterType, attr.ContractName, attr.Optional);
-                }
             }
         }
 
@@ -84,14 +80,12 @@ namespace Tauron.Application.Ioc.BuildUp
         [NotNull]
         public static Func<IBuildContext, ProxyGenerator, object> WriteDefaultCreation([NotNull] IBuildContext context)
         {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            Contract.Ensures(Contract.Result<Func<IBuildContext, ProxyGenerator, object>>() != null);
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            var type = context.Metadata.Export.ImplementType;
 
-            Type type = context.Metadata.Export.ImplementType;
-
-            ConstructorInfo[] construcors = type.GetConstructors(AopConstants.DefaultBindingFlags);
+            var construcors = type.GetConstructors(AopConstants.DefaultBindingFlags);
             ConstructorInfo constructor = null;
-            foreach (ConstructorInfo constructorInfo in
+            foreach (var constructorInfo in
                 construcors.Where(constructorInfo => constructorInfo.GetCustomAttribute<InjectAttribute>() != null))
             {
                 if (constructor != null) throw new InvalidOperationException("Too manay Constructors");
@@ -105,38 +99,53 @@ namespace Tauron.Application.Ioc.BuildUp
 
             return (build, service) =>
             {
-                if(build == null)
+                if (build == null)
                     throw new ArgumentNullException(nameof(build));
-                //Contract.Requires<ArgumentNullException>(build != null, "build");
-                //Contract.Requires<ArgumentNullException>(service != null, "service");
-                //Contract.Ensures(Contract.Result<object>() != null);
+                //CContract.Requires<ArgumentNullException>(build != null, "build");
+                //CContract.Requires<ArgumentNullException>(service != null, "service");
+                //CContract.Ensures(CContract.Result<object>() != null);
 
-                IEnumerable<object> parameters = from parm in MapParameters(constructor)
-                                                 select
-                                                     build.Container.Resolve(parm.Item1, parm.Item2, parm.Item3, new BuildParameter[0]);
+                var parameters = from parm in MapParameters(constructor)
+                    select TryResolveConstructorParameter(parm, build);
+                    
 
                 var policy = build.Policys.Get<InterceptionPolicy>();
 
-                if (policy != null)
-                {
-                    context.ErrorTracer.Phase = "Creating Direct Proxy for " + context.Metadata;
+                if (policy == null) return constructor.Invoke(parameters.ToArray());
 
-                    return service.CreateClassProxy(
-                        build.ExportType,
-                        null,
-                        new ProxyGenerationOptions
-                        {
-                            Selector =
-                                new InternalInterceptorSelector
-                            ()
-                        },
-                        parameters.ToArray(),
-                        policy.MemberInterceptor.Select(mem => mem.Value)
-                              .ToArray());
-                }
+                build.ErrorTracer.Phase = "Creating Direct Proxy for " + build.Metadata;
 
-                return constructor.Invoke(parameters.ToArray());
+                return service.CreateClassProxy(
+                    build.ExportType,
+                    null,
+                    new ProxyGenerationOptions
+                    {
+                        Selector =
+                            new InternalInterceptorSelector
+                                ()
+                    },
+                    parameters.ToArray(),
+                    policy.MemberInterceptor.Select(mem => mem.Value)
+                        .ToArray());
             };
+        }
+
+
+        private static object TryResolveConstructorParameter(Tuple<Type, string, bool> parm, IBuildContext context)
+        {
+            var temp = context.Container.Resolve(parm.Item1, parm.Item2, parm.Item3, context.Parameters);
+            if (temp != null) return temp;
+            if (context.Parameters == null) return null;
+
+            ExportRegistry tempRegistry = new ExportRegistry();
+
+            foreach (var parameter in context.Parameters)
+                tempRegistry.Register(parameter.CreateExport() ?? throw new InvalidOperationException(), 0);
+
+            var data = tempRegistry.FindOptional(parm.Item1, parm.Item2, context.ErrorTracer);
+            if (data == null) return null;
+
+            return context.Container.BuildUp(data, context.ErrorTracer, context.Parameters);
         }
 
         #endregion

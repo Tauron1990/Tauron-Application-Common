@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc
 {
@@ -14,27 +15,13 @@ namespace Tauron.Application.Ioc
         [NotNull]
         public string Phase
         {
-            get
-            {
-                return _internalPhase.ToString();
-            }
+            get => _internalPhase.ToString();
             set
             {
-                for (int i = 0; i < _ident; i++)
-                {
+                for (var i = 0; i < _ident; i++)
                     _internalPhase.Append('\t');
-                }
                 _internalPhase.AppendLine(value);
             }
-        }
-
-        public void IncrementIdent()
-        {
-            _ident++;
-        }
-        public void DecrementIdent()
-        {
-            _ident--;
         }
 
         [CanBeNull]
@@ -43,10 +30,21 @@ namespace Tauron.Application.Ioc
         [CanBeNull]
         public Exception Exception { get; set; }
 
-        [NotNull]
-        public static string FormatExport([CanBeNull]Type type, [CanBeNull]object exportName)
+        public void IncrementIdent()
         {
-            if (type == null) type = typeof (object);
+            _ident++;
+        }
+
+        public void DecrementIdent()
+        {
+            _ident--;
+        }
+
+        [NotNull]
+        [DebuggerStepThrough]
+        public static string FormatExport([CanBeNull] Type type, [CanBeNull] object exportName)
+        {
+            if (type == null) type = typeof(object);
             return "[" + type.Name + "|" + exportName + "]";
         }
     }

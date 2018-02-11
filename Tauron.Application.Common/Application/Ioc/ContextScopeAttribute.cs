@@ -25,7 +25,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -35,6 +35,14 @@ namespace Tauron.Application.Ioc
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     public sealed class ContextScopeAttribute : ExportMetadataBaseAttribute
     {
+        #region Public Properties
+
+        /// <summary>Gets the name.</summary>
+        /// <value>The name.</value>
+        public string Name => InternalValue as string;
+
+        #endregion
+
         #region Constructors and Destructors
 
         /// <summary>
@@ -45,10 +53,10 @@ namespace Tauron.Application.Ioc
         /// <param name="name">
         ///     The name.
         /// </param>
-        public ContextScopeAttribute(string name)
+        public ContextScopeAttribute([NotNull] string name)
             : base(AopConstants.ContextMetadataName, name)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
         }
 
         /// <summary>
@@ -59,17 +67,6 @@ namespace Tauron.Application.Ioc
         public ContextScopeAttribute()
             : base(AopConstants.ContextMetadataName, null)
         {
-        }
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets the name.</summary>
-        /// <value>The name.</value>
-        public string Name
-        {
-            get { return InternalValue as string; }
         }
 
         #endregion

@@ -1,41 +1,31 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 using System.Windows.Controls;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
 using Tauron.Application.Ioc.LifeTime;
 using Tauron.Application.Views.Core;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Views
 {
-    [PublicAPI, BaseTypeRequired(typeof(Control))]
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [PublicAPI]
+    [BaseTypeRequired(typeof(Control))]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class ExportViewAttribute : ExportAttribute, ISortableViewExportMetadata
     {
-        public ExportViewAttribute([NotNull] string viewName) : base(typeof (Control))
+        public ExportViewAttribute([NotNull] string viewName) : base(typeof(Control))
         {
-            Contract.Requires<ArgumentNullException>(viewName != null, "viewName");
-
+            if (viewName == null) throw new ArgumentNullException(nameof(viewName));
             Name = viewName;
             Order = int.MaxValue;
         }
 
+        protected override LifetimeContextAttribute OverrideDefaultPolicy => new NotSharedAttribute();
+
+        public override string DebugName => Name;
+
+        protected override bool HasMetadata => true;
+
         public string Name { get; private set; }
-
-        protected override LifetimeContextAttribute OverrideDefaultPolicy
-        {
-            get { return new NotSharedAttribute(); }
-        }
-
-        public override string DebugName
-        {
-            get { return Name; }
-        }
-
-        protected override bool HasMetadata
-        {
-            get { return true; }
-        }
 
         public int Order { get; set; }
     }

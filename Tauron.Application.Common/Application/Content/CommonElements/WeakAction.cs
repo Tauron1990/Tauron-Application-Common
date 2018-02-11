@@ -2,10 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -24,8 +23,35 @@ namespace Tauron.Application
         {
             unchecked
             {
-                return ((_method != null ? _method.GetHashCode() : 0)*397) ^ (TargetObject.Target != null ? TargetObject.Target.GetHashCode() : 0);
+                return ((_method != null ? _method.GetHashCode() : 0) * 397) ^ (TargetObject.Target != null ? TargetObject.Target.GetHashCode() : 0);
             }
+        }
+
+        #region Public Methods and Operators
+
+        /// <summary>
+        ///     Führt die Methode aus.
+        /// </summary>
+        /// <param name="parms">
+        ///     Die Argumente die Übergeben werden.
+        /// </param>
+        /// <returns>
+        ///     Das Ergebnis der Methode.
+        /// </returns>
+        [CanBeNull]
+        public object Invoke([NotNull] params object[] parms)
+        {
+            var temp = CreateDelegate();
+            return temp != null ? temp.DynamicInvoke(parms) : null;
+        }
+
+        #endregion
+
+        public override bool Equals([CanBeNull] object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is WeakAction && Equals((WeakAction) obj);
         }
 
         #region Fields
@@ -51,17 +77,15 @@ namespace Tauron.Application
         /// <param name="parameterType">
         ///     Der Parameter der methode.
         /// </param>
-        [ContractVerification(false)]
         public WeakAction([CanBeNull] object target, [NotNull] MethodInfo method, [CanBeNull] Type parameterType)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
             if (target != null) TargetObject = new WeakReference(target);
 
             _method = method;
             _delegateType = parameterType == null
-                                ? typeof (Action)
-                                : typeof (Action<>).MakeGenericType(parameterType);
+                ? typeof(Action)
+                : typeof(Action<>).MakeGenericType(parameterType);
 
             ParameterCount = parameterType == null ? 0 : 1;
         }
@@ -77,16 +101,15 @@ namespace Tauron.Application
         /// </param>
         public WeakAction([CanBeNull] object target, [NotNull] MethodInfo method)
         {
-            Contract.Requires<ArgumentNullException>(method != null, "method");
-
+            if (method == null) throw new ArgumentNullException(nameof(method));
             if (target != null) TargetObject = new WeakReference(target);
 
-            Type[] parames =
+            var parames =
                 method.GetParameters().OrderBy(parm => parm.Position).Select(parm => parm.ParameterType).ToArray();
-            Type returntype = method.ReturnType;
-            _delegateType = returntype == typeof (void)
-                                ? FactoryDelegateType("System.Action", parames.ToArray())
-                                : FactoryDelegateType("System.Func", parames.Concat(new[] {returntype}).ToArray());
+            var returntype = method.ReturnType;
+            _delegateType = returntype == typeof(void)
+                ? FactoryDelegateType("System.Action", parames.ToArray())
+                : FactoryDelegateType("System.Func", parames.Concat(new[] {returntype}).ToArray());
 
             ParameterCount = parames.Length;
         }
@@ -100,40 +123,12 @@ namespace Tauron.Application
         /// <summary>Die ZielMethode.</summary>
         /// <value>The method info.</value>
         [NotNull]
-        public MethodInfo MethodInfo
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<MethodInfo>() != null);
-
-                return _method;
-            }
-        }
+        public MethodInfo MethodInfo => _method;
 
         /// <summary>Das Object mit dem die Methode Ausgeführt werden soll.</summary>
         /// <value>The target object.</value>
         [CanBeNull]
         public WeakReference TargetObject { get; private set; }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     Führt die Methode aus.
-        /// </summary>
-        /// <param name="parms">
-        ///     Die Argumente die Übergeben werden.
-        /// </param>
-        /// <returns>
-        ///     Das Ergebnis der Methode.
-        /// </returns>
-        [CanBeNull]
-        public object Invoke([NotNull] params object[] parms)
-        {
-            Delegate temp = CreateDelegate();
-            return temp != null ? temp.DynamicInvoke(parms) : null;
-        }
 
         #endregion
 
@@ -146,10 +141,10 @@ namespace Tauron.Application
         {
             if (TargetObject == null) return null;
 
-            object target = TargetObject.Target;
+            var target = TargetObject.Target;
             return target != null
-                       ? Delegate.CreateDelegate(_delegateType, TargetObject.Target, _method)
-                       : null;
+                ? Delegate.CreateDelegate(_delegateType, TargetObject.Target, _method)
+                : null;
         }
 
         /// <summary>
@@ -169,23 +164,15 @@ namespace Tauron.Application
         [NotNull]
         private static Type FactoryDelegateType([NotNull] string name, [NotNull] Type[] types)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.Requires<ArgumentNullException>(types != null, "types");
-
-            Type type = Type.GetType(name + "`" + types.Length);
+            if (types == null) throw new ArgumentNullException(nameof(types));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
+            var type = Type.GetType(name + "`" + types.Length);
             if (type != null) return types.Length > 0 ? type.MakeGenericType(types) : Type.GetType(name);
 
             throw new InvalidOperationException();
         }
 
         #endregion
-
-        public override bool Equals([CanBeNull] object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj is WeakAction && Equals((WeakAction) obj);
-        }
     }
 
     /// <summary>
@@ -218,6 +205,27 @@ namespace Tauron.Application
 
         #endregion
 
+        #region Methods
+
+        /// <summary>The clean up.</summary>
+        private void CleanUp()
+        {
+            lock (this)
+            {
+                if (_delegates == null) return;
+
+                var dead = _delegates.Where(item => !item.TargetObject.IsAlive).ToList();
+
+                lock (this)
+                {
+                    dead.ForEach(ac => _delegates.Remove(ac));
+                }
+            }
+            ;
+        }
+
+        #endregion
+
         #region Public Methods and Operators
 
         /// <summary>
@@ -230,18 +238,15 @@ namespace Tauron.Application
         [NotNull]
         public WeakActionEvent<T> Add([NotNull] Action<T> handler)
         {
-            Contract.Requires<ArgumentNullException>(handler != null, "handler");
-
-            ParameterInfo[] parameters = handler.Method.GetParameters();
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+            var parameters = handler.Method.GetParameters();
 
             if (
                 _delegates.Where(del => del.MethodInfo == handler.Method)
-                          .Select(weakAction => weakAction.TargetObject != null ? weakAction.TargetObject.Target : null)
-                          .Any(weakTarget => weakTarget == handler.Target)) return this;
+                    .Select(weakAction => weakAction.TargetObject?.Target)
+                    .Any(weakTarget => weakTarget == handler.Target)) return this;
 
-            Contract.Assume(parameters.Length > 0);
-
-            Type parameterType = parameters[0].ParameterType;
+            var parameterType = parameters[0].ParameterType;
 
             lock (this)
             {
@@ -261,7 +266,7 @@ namespace Tauron.Application
         {
             lock (this)
             {
-                foreach (Delegate action in _delegates.Select(weakAction => weakAction.CreateDelegate())) action.DynamicInvoke(arg);
+                foreach (var action in _delegates.Select(weakAction => weakAction.CreateDelegate())) action.DynamicInvoke(arg);
             }
         }
 
@@ -275,11 +280,10 @@ namespace Tauron.Application
         [NotNull]
         public WeakActionEvent<T> Remove([NotNull] Action<T> handler)
         {
-            Contract.Requires<ArgumentNullException>(handler != null, "handler");
-
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
             lock (this)
             {
-                foreach (WeakAction del in _delegates.Where(del => del.TargetObject != null && del.TargetObject.Target == handler.Target))
+                foreach (var del in _delegates.Where(del => del.TargetObject != null && del.TargetObject.Target == handler.Target))
                 {
                     _delegates.Remove(del);
                     return this;
@@ -287,20 +291,6 @@ namespace Tauron.Application
             }
 
             return this;
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>The clean up.</summary>
-        private void CleanUp()
-        {
-            Contract.Requires(_delegates != null);
-
-            List<WeakAction> dead = _delegates.Where(item => !item.TargetObject.IsAlive).ToList();
-
-            lock (this) dead.ForEach(ac => _delegates.Remove(ac));
         }
 
         #endregion

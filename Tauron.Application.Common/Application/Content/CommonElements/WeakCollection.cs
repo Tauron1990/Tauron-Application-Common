@@ -5,9 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -43,48 +42,6 @@ namespace Tauron.Application
 
         #endregion
 
-        #region Public Events
-
-        /// <summary>The cleaned event.</summary>
-        public event EventHandler CleanedEvent;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets the effective count.</summary>
-        /// <value>The effective count.</value>
-        public int EffectiveCount
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<int>() >= 0);
-
-                return _internalCollection.Count(refer => refer.IsAlive());
-            }
-        }
-
-        /// <summary>Gets the count.</summary>
-        /// <value>The count.</value>
-        public int Count
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<int>() >= 0);
-
-                return _internalCollection.Count;
-            }
-        }
-
-        /// <summary>Gets a value indicating whether is read only.</summary>
-        /// <value>The is read only.</value>
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
-
-        #endregion
-
         #region Public Indexers
 
         /// <summary>
@@ -98,10 +55,49 @@ namespace Tauron.Application
         /// </returns>
         public TType this[int index]
         {
-            get { return _internalCollection[index].TypedTarget(); }
+            get => _internalCollection[index].TypedTarget();
 
-            set { _internalCollection[index] = new WeakReference<TType>(value); }
+            set => _internalCollection[index] = new WeakReference<TType>(value);
         }
+
+        #endregion
+
+        #region Explicit Interface Methods
+
+        /// <summary>The get enumerator.</summary>
+        /// <returns>
+        ///     The <see cref="IEnumerator" />.
+        /// </returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion
+
+        #region Public Events
+
+        /// <summary>The cleaned event.</summary>
+        public event EventHandler CleanedEvent;
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets the effective count.</summary>
+        /// <value>The effective count.</value>
+        public int EffectiveCount
+        {
+            get { return _internalCollection.Count(refer => refer.IsAlive()); }
+        }
+
+        /// <summary>Gets the count.</summary>
+        /// <value>The count.</value>
+        public int Count => _internalCollection.Count;
+
+        /// <summary>Gets a value indicating whether is read only.</summary>
+        /// <value>The is read only.</value>
+        public bool IsReadOnly => false;
 
         #endregion
 
@@ -113,7 +109,6 @@ namespace Tauron.Application
         /// <param name="item">
         ///     The item.
         /// </param>
-        [ContractVerification(false)]
         public void Add([CanBeNull] TType item)
         {
             if (item == null) return;
@@ -136,7 +131,6 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        [ContractVerification(false)]
         public bool Contains([CanBeNull] TType item)
         {
             return item != null && _internalCollection.Any(it => it.TypedTarget() == item);
@@ -153,8 +147,8 @@ namespace Tauron.Application
         /// </param>
         public void CopyTo(TType[] array, int arrayIndex)
         {
-            int index = 0;
-            for (int i = arrayIndex; i < array.Length; i++)
+            var index = 0;
+            for (var i = arrayIndex; i < array.Length; i++)
             {
                 TType target = null;
                 while (target == null && index <= _internalCollection.Count)
@@ -175,12 +169,10 @@ namespace Tauron.Application
         /// </returns>
         public IEnumerator<TType> GetEnumerator()
         {
-            Contract.Ensures(Contract.Result<IEnumerator<TType>>() != null);
-
             return
                 _internalCollection.Select(reference => reference.TypedTarget())
-                                   .Where(target => target != null)
-                                   .GetEnumerator();
+                    .Where(target => target != null)
+                    .GetEnumerator();
         }
 
         /// <summary>
@@ -192,14 +184,14 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="int" />.
         /// </returns>
-        public int IndexOf([CanBeNull]TType item)
+        public int IndexOf([CanBeNull] TType item)
         {
             if (item == null) return -1;
 
             int index;
             for (index = 0; index < _internalCollection.Count; index++)
             {
-                WeakReference<TType> temp = _internalCollection[index];
+                var temp = _internalCollection[index];
                 if (temp.TypedTarget() == item) break;
             }
 
@@ -215,7 +207,7 @@ namespace Tauron.Application
         /// <param name="item">
         ///     The item.
         /// </param>
-        public void Insert(int index, [CanBeNull]TType item)
+        public void Insert(int index, [CanBeNull] TType item)
         {
             if (item == null) return;
 
@@ -231,11 +223,11 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public bool Remove([CanBeNull]TType item)
+        public bool Remove([CanBeNull] TType item)
         {
             if (item == null) return false;
 
-            int index = IndexOf(item);
+            var index = IndexOf(item);
             if (index == -1) return false;
 
             _internalCollection.RemoveAt(index);
@@ -248,25 +240,9 @@ namespace Tauron.Application
         /// <param name="index">
         ///     The index.
         /// </param>
-        [ContractVerification(false)]
         public void RemoveAt(int index)
         {
             _internalCollection.RemoveAt(index);
-        }
-
-        #endregion
-
-        #region Explicit Interface Methods
-
-        /// <summary>The get enumerator.</summary>
-        /// <returns>
-        ///     The <see cref="IEnumerator" />.
-        /// </returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            Contract.Ensures(Contract.Result<IEnumerator>() != null);
-
-            return GetEnumerator();
         }
 
         #endregion
@@ -276,7 +252,7 @@ namespace Tauron.Application
         /// <summary>The clean up.</summary>
         internal void CleanUp()
         {
-            WeakReference<TType>[] dead = _internalCollection.Where(reference => !reference.IsAlive()).ToArray();
+            var dead = _internalCollection.Where(reference => !reference.IsAlive()).ToArray();
 
             foreach (var genericWeakReference in dead) _internalCollection.Remove(genericWeakReference);
 
@@ -353,7 +329,10 @@ namespace Tauron.Application
         /// </param>
         protected override void RemoveItem(int index)
         {
-            lock (this) base.RemoveItem(index);
+            lock (this)
+            {
+                base.RemoveItem(index);
+            }
         }
 
         /// <summary>
@@ -367,21 +346,29 @@ namespace Tauron.Application
         /// </param>
         protected override void SetItem(int index, TType item)
         {
-            lock (this) base.SetItem(index, item);
+            lock (this)
+            {
+                base.SetItem(index, item);
+            }
         }
 
         /// <summary>The clean up method.</summary>
         private void CleanUpMethod()
         {
             lock (this)
-                Items.ToArray().Where(it => !it.IsAlive).ToArray().Foreach(
-                    it =>
-                    {
-                        var dis = it as IDisposable;
-                        if (dis != null) dis.Dispose();
+            {
+                Items.ToArray()
+                    .Where(it => !it.IsAlive)
+                    .ToArray()
+                    .Foreach(
+                        it =>
+                        {
+                            var dis = it as IDisposable;
+                            if (dis != null) dis.Dispose();
 
-                        Items.Remove(it);
-                    });
+                            Items.Remove(it);
+                        });
+            }
         }
 
         #endregion

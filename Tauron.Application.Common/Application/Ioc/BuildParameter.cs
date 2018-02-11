@@ -1,5 +1,5 @@
-﻿using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using Tauron.Application.Ioc.BuildUp.Exports;
 
 namespace Tauron.Application.Ioc
 {

@@ -25,7 +25,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -46,10 +46,7 @@ namespace Tauron.Application.Ioc.LifeTime
 
         /// <summary>Gets a value indicating whether is alive.</summary>
         /// <value>The is alive.</value>
-        public bool IsAlive
-        {
-            get { return _value != null; }
-        }
+        public bool IsAlive => _value != null;
 
         #endregion
 

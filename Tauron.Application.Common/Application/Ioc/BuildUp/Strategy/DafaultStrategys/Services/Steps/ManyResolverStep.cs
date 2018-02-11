@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Tauron.Application.SimpleWorkflow;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
 {
     public abstract class ManyResolverStep : InjectorStep
     {
+        private Type _currentType;
         private ExportEnumeratorHelper _enumeratorHelper;
-        private List<IResolver> _resolvers;
         private Type _listType;
+        private List<IResolver> _resolvers;
 
         public override StepId OnExecute(InjectorContext context)
         {
             _listType = context.ReflectionContext.CurrentType;
-            context.ReflectionContext.CurrentType = GetCurrentType(context.ReflectionContext);
+            _currentType = GetCurrentType(context.ReflectionContext);
+            context.ReflectionContext.CurrentType = _currentType;
 
             var findAllExports = context.ReflectionContext.FindAllExports();
             if (findAllExports == null) return StepId.Invalid;
@@ -31,7 +33,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         {
             if (context.Resolver != null)
                 _resolvers.Add(context.Resolver);
-            _enumeratorHelper.MoveNext();
+            if (_enumeratorHelper.MoveNext())
+                context.ReflectionContext.CurrentType = _currentType;
             return _enumeratorHelper.NextId;
         }
 
@@ -41,6 +44,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         public override void OnExecuteFinish(InjectorContext context)
         {
             context.Resolver = CreateResolver(_resolvers, _listType);
+
             _resolvers = null;
             _listType = null;
             _enumeratorHelper = null;

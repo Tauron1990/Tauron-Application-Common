@@ -1,12 +1,11 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -29,8 +28,7 @@ namespace Tauron
         /// </returns>
         public static bool IsCriticalApplicationException([NotNull] Exception ex)
         {
-            Contract.Requires<ArgumentNullException>(ex != null, "ex");
-
+            if (ex == null) throw new ArgumentNullException(nameof(ex));
             ex = Unwrap(ex);
             return ex is StackOverflowException || ex is OutOfMemoryException || ex is ThreadAbortException
                    || ex is SecurityException;
@@ -47,8 +45,7 @@ namespace Tauron
         /// </returns>
         public static bool IsCriticalException([NotNull] Exception ex)
         {
-            Contract.Requires<ArgumentNullException>(ex != null, "ex");
-
+            if (ex == null) throw new ArgumentNullException(nameof(ex));
             ex = Unwrap(ex);
             return ex is NullReferenceException || ex is StackOverflowException || ex is OutOfMemoryException
                    || ex is ThreadAbortException || ex is SEHException || ex is SecurityException;
@@ -66,8 +63,7 @@ namespace Tauron
         [NotNull]
         public static Exception Unwrap([NotNull] Exception ex)
         {
-            Contract.Requires<ArgumentNullException>(ex != null, "ex");
-
+            if (ex == null) throw new ArgumentNullException(nameof(ex));
             while (ex.InnerException != null && ex is TargetInvocationException) ex = ex.InnerException;
 
             return ex;

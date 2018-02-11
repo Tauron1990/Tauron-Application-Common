@@ -1,8 +1,9 @@
 ﻿using System.Windows;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application
 {
+    [PublicAPI]
     public sealed class ViewModelBinding : BindingDecoratorBase
     {
         public ViewModelBinding([NotNull] string path)
@@ -14,7 +15,6 @@ namespace Tauron.Application
         public ViewModelBinding()
             : this(string.Empty)
         {
-            
         }
     }
 }

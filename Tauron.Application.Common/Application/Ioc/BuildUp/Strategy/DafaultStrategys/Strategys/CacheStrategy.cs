@@ -25,7 +25,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using Tauron.Application.Ioc.Components;
-using Tauron.Application.Ioc.LifeTime;
 
 #endregion
 
@@ -66,10 +65,10 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             context.ErrorTracer.Phase = "Reciving Build (" + context.Metadata + ") from Cache";
 
-            ILifetimeContext life = _cache.GetContext(context.Metadata);
+            var life = _cache.GetContext(context.Metadata);
             if (life == null) return;
 
-            object value = life.GetValue();
+            var value = life.GetValue();
             if (value == null) return;
 
             context.Target = value;

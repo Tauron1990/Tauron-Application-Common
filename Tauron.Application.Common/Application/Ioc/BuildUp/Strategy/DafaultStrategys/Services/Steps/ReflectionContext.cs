@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
 {
@@ -19,14 +19,14 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
 
             public int GetHashCode([NotNull] ExportMetadata obj)
             {
-                return obj.Export.ImplementType != null ? obj.Export.ImplementType.GetHashCode() : obj.GetHashCode();
+                return obj.Export.ImplementType?.GetHashCode() ?? obj.GetHashCode();
             }
         }
 
         private readonly InjectorContext _parentContext;
 
         public ReflectionContext([NotNull] IMetadataFactory metadataFactory, [NotNull] Type memberType,
-                                 [NotNull] InjectorContext parentContext, [NotNull] IResolverExtension[] resolverExtensions)
+            [NotNull] InjectorContext parentContext, [NotNull] IResolverExtension[] resolverExtensions)
         {
             _parentContext = parentContext;
             MetadataFactory = metadataFactory;
@@ -64,7 +64,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         public object Metadata { get; set; }
 
         [CanBeNull]
-        public Type  MetadataType { get; set; }
+        public Type MetadataType { get; set; }
 
         //[NotNull]
         //public IResolver CreateSimpleListHelper([NotNull] ExportMetadata meta, bool isDescriptor)
@@ -86,14 +86,14 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         [CanBeNull]
         public IEnumerable<ExportMetadata> FindAllExports()
         {
-            Type type = _parentContext.Metadata.InterfaceType ?? ExtractRealType(CurrentType);
-            string name = _parentContext.Metadata.ContractName;
+            var type = _parentContext.Metadata.InterfaceType ?? ExtractRealType(CurrentType);
+            var name = _parentContext.Metadata.ContractName;
 
             return
                 BuildParametersRegistry.FindAll(type, name, new ErrorTracer())
-                                       .Union(
-                                           _parentContext.Container.FindExports(type, name, _parentContext.Tracer, Level),
-                                           new UionExportMetatdataEqualityComparer());
+                    .Union(
+                        _parentContext.Container.FindExports(type, name, _parentContext.Tracer, Level),
+                        new UionExportMetatdataEqualityComparer());
         }
 
         [CanBeNull]
@@ -113,18 +113,20 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
             if (temp != null) return temp;
 
             return _parentContext.Container.FindExport(_parentContext.Metadata.InterfaceType ?? ExtractRealType(CurrentType), _parentContext.Metadata.ContractName,
-                                        _parentContext.Tracer, _parentContext.Metadata.Optional, Level);
+                _parentContext.Tracer, _parentContext.Metadata.Optional, Level);
         }
 
         [NotNull]
         private static Type ExtractRealType([NotNull] Type type)
         {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof (InstanceResolver<,>))
+            if (!type.IsGenericType) return type.IsArray ? type.GetElementType() : type;
+
+            var def = type.GetGenericTypeDefinition();
+
+            if (def == typeof(InstanceResolver<,>) || def == typeof(Lazy<>) || def == typeof(Lazy<,>))
                 return type.GenericTypeArguments[0];
-            if (type.IsArray)
-                return type.GetElementType();
-            
-            return type;
+
+            return type.IsArray ? type.GetElementType() : type;
         }
     }
 }

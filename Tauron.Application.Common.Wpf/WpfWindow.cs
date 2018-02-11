@@ -1,11 +1,10 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -14,6 +13,18 @@ namespace Tauron.Application
     /// <summary>The wpf window.</summary>
     public sealed class WpfWindow : IWindow, IDisposable
     {
+        #region Public Events
+
+        /// <summary>The closed.</summary>
+        public event EventHandler Closed
+        {
+            add => _window.Closed += value;
+
+            remove => _window.Closed -= value;
+        }
+
+        #endregion
+
         #region Fields
 
         private readonly Window _window;
@@ -35,8 +46,7 @@ namespace Tauron.Application
         /// </param>
         public WpfWindow([NotNull] Window window)
         {
-            Contract.Requires<ArgumentNullException>(window != null, "window");
-
+            if (window == null) throw new ArgumentNullException(nameof(window));
             _window = window;
         }
 
@@ -47,18 +57,6 @@ namespace Tauron.Application
         ~WpfWindow()
         {
             Dispose(false);
-        }
-
-        #endregion
-
-        #region Public Events
-
-        /// <summary>The closed.</summary>
-        public event EventHandler Closed
-        {
-            add { _window.Closed += value; }
-
-            remove { _window.Closed -= value; }
         }
 
         #endregion
@@ -116,8 +114,7 @@ namespace Tauron.Application
         /// </param>
         public void AddHook(WindowHook winProc)
         {
-            Contract.Requires<ArgumentNullException>(winProc != null, "winProc");
-
+            if (winProc == null) throw new ArgumentNullException(nameof(winProc));
             EnsureSource();
             UiSynchronize.Synchronize.Invoke(() => _source.AddHook(Create(winProc)));
         }
@@ -125,7 +122,11 @@ namespace Tauron.Application
         /// <summary>The close.</summary>
         public void Close()
         {
-            UiSynchronize.Synchronize.Invoke(() => { Dispose(); _window.Close(); });
+            UiSynchronize.Synchronize.Invoke(() =>
+            {
+                Dispose();
+                _window.Close();
+            });
         }
 
         /// <summary>
@@ -136,8 +137,7 @@ namespace Tauron.Application
         /// </param>
         public void RemoveHook(WindowHook winProc)
         {
-            Contract.Requires<ArgumentNullException>(winProc != null, "winProc");
-
+            if (winProc == null) throw new ArgumentNullException(nameof(winProc));
             EnsureSource();
             UiSynchronize.Synchronize.Invoke(() => _source.RemoveHook(Create(winProc)));
         }
@@ -145,7 +145,13 @@ namespace Tauron.Application
         /// <summary>The show.</summary>
         public void Show()
         {
-            UiSynchronize.Synchronize.Invoke(_window.Show);
+            UiSynchronize.Synchronize.Invoke(() =>
+            {
+                var info = _window.DataContext as IShowInformation;
+                info?.OnShow(this);
+
+                _window.Show();
+            });
         }
 
         public Task ShowDialogAsync(IWindow window)
@@ -153,6 +159,10 @@ namespace Tauron.Application
             return UiSynchronize.Synchronize.BeginInvoke(() =>
             {
                 _window.Owner = window?.TranslateForTechnology() as Window;
+
+                var info = _window.DataContext as IShowInformation;
+                info?.OnShow(this);
+
                 _window.ShowDialog();
             });
         }
@@ -200,7 +210,7 @@ namespace Tauron.Application
         [NotNull]
         private HwndSourceHook Create([NotNull] WindowHook hook)
         {
-            return (HwndSourceHook) Delegate.CreateDelegate(typeof (HwndSourceHook), hook.Target, hook.Method);
+            return (HwndSourceHook) Delegate.CreateDelegate(typeof(HwndSourceHook), hook.Target, hook.Method);
         }
 
         private void Dispose(bool disposing)

@@ -67,10 +67,7 @@ namespace Tauron.Application.Files.Ini
             _sections = new Dictionary<string, IniSection>();
         }
 
-        public ReadOnlyEnumerator<IniSection> Sections
-        {
-            get { return new ReadOnlyEnumerator<IniSection>(_sections.Values); }
-        }
+        public ReadOnlyEnumerator<IniSection> Sections => new ReadOnlyEnumerator<IniSection>(_sections.Values);
 
         public IniSection this[string name]
         {

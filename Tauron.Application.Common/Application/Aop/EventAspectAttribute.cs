@@ -10,19 +10,18 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Aop
 {
     /// <summary>The event aspect attribute.</summary>
-    [AttributeUsage(AttributeTargets.Event, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Event)]
     [PublicAPI]
     public abstract class EventAspectAttribute : AspectBaseAttribute
     {
@@ -46,14 +45,13 @@ namespace Tauron.Application.Aop
         /// </param>
         protected override void Intercept(IInvocation invocation, ObjectContext context)
         {
-            string name = invocation.Method.Name;
-            bool getter = name.StartsWith(AopConstants.EventAdder, StringComparison.Ordinal);
+            var name = invocation.Method.Name;
+            var getter = name.StartsWith(AopConstants.EventAdder, StringComparison.Ordinal);
             if (_eventInfo == null)
             {
                 name = name.Remove(0, getter ? AopConstants.EventAdder.Length : AopConstants.EventRemover.Length);
 
                 _eventInfo = invocation.Method.DeclaringType.GetEvent(name, AopConstants.DefaultBindingFlags);
-                Contract.Assert(_eventInfo != null);
             }
 
             if (getter) OnGet(invocation, context, _eventInfo);
@@ -74,10 +72,9 @@ namespace Tauron.Application.Aop
         /// </param>
         protected virtual void OnGet([NotNull] IInvocation invocation, [NotNull] ObjectContext context, [NotNull] EventInfo eventInfo)
         {
-            Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            Contract.Requires<ArgumentNullException>(eventInfo != null, "eventInfo");
-
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (eventInfo == null) throw new ArgumentNullException(nameof(eventInfo));
             invocation.Proceed();
         }
 
@@ -95,9 +92,9 @@ namespace Tauron.Application.Aop
         /// </param>
         protected virtual void OnSet([NotNull] IInvocation invocation, [NotNull] ObjectContext context, [NotNull] EventInfo eventInfo)
         {
-            Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            Contract.Requires<ArgumentNullException>(eventInfo != null, "eventInfo");
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (eventInfo == null) throw new ArgumentNullException(nameof(eventInfo));
 
             invocation.Proceed();
         }

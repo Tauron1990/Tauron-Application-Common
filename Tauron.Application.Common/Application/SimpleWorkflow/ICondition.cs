@@ -1,4 +1,4 @@
-﻿using Tauron.JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Tauron.Application.SimpleWorkflow
 {

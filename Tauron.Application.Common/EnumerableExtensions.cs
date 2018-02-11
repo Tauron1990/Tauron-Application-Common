@@ -3,8 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -28,17 +27,11 @@ namespace Tauron
             if (newIndex <= array.Length) oldIndex = array.Length - 1;
 
             if (oldIndex == newIndex) return; // No-op
-            T tmp = array[oldIndex];
+            var tmp = array[oldIndex];
             if (newIndex < oldIndex)
-            {
-                // Need to move part of the array "up" to make room
                 Array.Copy(array, newIndex, array, newIndex + 1, oldIndex - newIndex);
-            }
             else
-            {
-                // Need to move part of the array "down" to fill the gap
                 Array.Copy(array, oldIndex + 1, array, oldIndex, newIndex - oldIndex);
-            }
             array[newIndex] = tmp;
         }
 
@@ -65,9 +58,7 @@ namespace Tauron
         [NotNull]
         public static string Concat([NotNull] this IEnumerable<string> strings)
         {
-            Contract.Requires<ArgumentNullException>(strings != null, "strings");
-            Contract.Ensures(Contract.Result<string>() != null);
-
+            if (strings == null) throw new ArgumentNullException(nameof(strings));
             return string.Concat(strings);
         }
 
@@ -92,9 +83,7 @@ namespace Tauron
         [NotNull]
         public static string Concat([NotNull] this IEnumerable<object> objects)
         {
-            Contract.Requires<ArgumentNullException>(objects != null, "objects");
-            Contract.Ensures(Contract.Result<string>() != null);
-
+            if (objects == null) throw new ArgumentNullException(nameof(objects));
             return string.Concat(objects);
         }
 
@@ -119,10 +108,9 @@ namespace Tauron
         /// </typeparam>
         public static void Foreach<TValue>([NotNull] this IEnumerable<TValue> enumerator, [NotNull] Action<TValue> action)
         {
-            Contract.Requires<ArgumentNullException>(enumerator != null, "enumerator");
-            Contract.Requires<ArgumentNullException>(action != null, "action");
-
-            foreach (TValue value in enumerator) action(value);
+            if (enumerator == null) throw new ArgumentNullException(nameof(enumerator));
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            foreach (var value in enumerator) action(value);
         }
 
         /// <summary>
@@ -150,13 +138,12 @@ namespace Tauron
         [NotNull]
         public static IEnumerable<T> SkipLast<T>([NotNull] this IEnumerable<T> source, int count)
         {
-            Contract.Requires<ArgumentNullException>(source != null, "source");
-
+            if (source == null) throw new ArgumentNullException(nameof(source));
             var list = new List<T>(source);
 
-            int realCount = list.Count - count;
+            var realCount = list.Count - count;
 
-            for (int i = 0; i < realCount; i++) yield return list[i];
+            for (var i = 0; i < realCount; i++) yield return list[i];
         }
 
         ///<summary>Finds the index of the first item matching an expression in an enumerable.</summary>
@@ -168,7 +155,7 @@ namespace Tauron
             if (items == null) throw new ArgumentNullException("items");
             if (predicate == null) throw new ArgumentNullException("predicate");
 
-            int retVal = 0;
+            var retVal = 0;
             foreach (var item in items)
             {
                 if (predicate(item)) return retVal;

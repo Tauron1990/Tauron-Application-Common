@@ -27,7 +27,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls.Primitives;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -56,7 +56,7 @@ namespace Tauron.Application.Controls
 
         /// <summary>Gets the topic.</summary>
         [CanBeNull]
-        public object Topic { get; private set; }
+        public object Topic { get; }
 
         #endregion
     }
@@ -64,18 +64,18 @@ namespace Tauron.Application.Controls
     /// <summary>The toggle content button.</summary>
     public sealed class ToggleContentButton : ToggleButton, IToggle
     {
-        #region Public Events
-
-        /// <summary>The switched.</summary>
-        public event Action<IToggle, bool> Switched;
-
-        #endregion
-
         #region Public Properties
 
         /// <summary>Gets or sets the topic.</summary>
         [CanBeNull]
         public object Topic { get; set; }
+
+        #endregion
+
+        #region Public Events
+
+        /// <summary>The switched.</summary>
+        public event Action<IToggle, bool> Switched;
 
         #endregion
 
@@ -136,10 +136,10 @@ namespace Tauron.Application.Controls
 
         public static readonly DependencyProperty TopicProperty = DependencyProperty.RegisterAttached(
             "Topic",
-            typeof (object),
-            typeof (
+            typeof(object),
+            typeof(
                 ToggleButtonList
-                ),
+            ),
             new UIPropertyMetadata
                 (null));
 
@@ -154,11 +154,13 @@ namespace Tauron.Application.Controls
         static ToggleButtonList()
         {
             DefaultStyleKeyProperty.OverrideMetadata(
-                typeof (ToggleButtonList),
-                new FrameworkPropertyMetadata(typeof (ToggleButtonList)));
+                typeof(ToggleButtonList),
+                new FrameworkPropertyMetadata(typeof(ToggleButtonList)));
         }
 
         #endregion
+
+        // Using a DependencyProperty as the backing store for Topic.  This enables animation, styling, binding, etc...
 
         #region Public Events
 
@@ -257,7 +259,7 @@ namespace Tauron.Application.Controls
         /// </param>
         protected override void ItemActivateted([NotNull] ToggleContentButton toggle)
         {
-            EventHandler<TopicChangedEvntArgs> handler = TopicChangedEvent;
+            var handler = TopicChangedEvent;
             if (handler != null) handler(this, new TopicChangedEvntArgs(toggle.Topic));
         }
 
@@ -269,7 +271,7 @@ namespace Tauron.Application.Controls
         /// </param>
         protected override void ItemDeactivatet([NotNull] ToggleContentButton toggle)
         {
-            EventHandler handler = TopicDeactivatet;
+            var handler = TopicDeactivatet;
             if (handler != null) handler(this, EventArgs.Empty);
         }
 
@@ -284,7 +286,7 @@ namespace Tauron.Application.Controls
         /// </param>
         protected override void PrepateItem([NotNull] ToggleContentButton toggle, [NotNull] object item)
         {
-            object topic = GetTopic(toggle);
+            var topic = GetTopic(toggle);
             if (topic == null)
             {
                 var itemdo = item as DependencyObject;
@@ -295,7 +297,5 @@ namespace Tauron.Application.Controls
         }
 
         #endregion
-
-        // Using a DependencyProperty as the backing store for Topic.  This enables animation, styling, binding, etc...
     }
 }

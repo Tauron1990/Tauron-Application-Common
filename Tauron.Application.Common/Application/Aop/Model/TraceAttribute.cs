@@ -1,15 +1,12 @@
 ﻿#region
 
 using System;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Castle.DynamicProxy;
-using Microsoft.Practices.EnterpriseLibrary.Logging;
+using JetBrains.Annotations;
+using NLog;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -33,236 +30,16 @@ namespace Tauron.Application.Aop.Model
         ParameterValue = 4,
 
         /// <summary>The return value.</summary>
-        ReturnValue = 8,
+        ReturnValue = 8
     }
 
     /// <summary>The trace attributte.</summary>
-    [AttributeUsage(AttributeTargets.Event | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = false,
-        Inherited = true)]
+    [AttributeUsage(AttributeTargets.Event | AttributeTargets.Method | AttributeTargets.Property)]
     public sealed class TraceAttribute : AspectBaseAttribute
     {
-        #region Fields
-
-        /// <summary>The _helper.</summary>
-        private LoggerHelper _helper;
-
-        /// <summary>The _log return.</summary>
-        private bool _logReturn;
-
-        /// <summary>The _tracer title.</summary>
-        private string _tracerTitle;
-
-        #endregion
-
-        #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="TraceAttribute" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="TraceAttribute" /> Klasse.
-        ///     Initializes a new instance of the <see cref="TraceAttribute" /> class.
-        /// </summary>
-        public TraceAttribute()
-        {
-            Order = 100;
-            TraceEventType = TraceEventType.Information;
-            LogOptions = TraceAspectOptions.ParameterName;
-            ExceptionPolicy = null;
-            Category = string.Empty;
-            LogTitle = string.Empty;
-        }
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets or sets the category.</summary>
-        /// <value>The category.</value>
-        [CanBeNull]
-        public string Category { get; set; }
-
-        /// <summary>Gets or sets a value indicating whether enable tracer.</summary>
-        /// <value>The enable tracer.</value>
-        public bool EnableTracer { get; set; }
-
-        /// <summary>Gets or sets the exception policy.</summary>
-        /// <value>The exception policy.</value>
-        [CanBeNull]
-        public string ExceptionPolicy { get; set; }
-
-        /// <summary>Gets or sets the log options.</summary>
-        /// <value>The log options.</value>
-        public TraceAspectOptions LogOptions { get; set; }
-
-        /// <summary>Gets or sets the log title.</summary>
-        /// <value>The log title.</value>
-        [CanBeNull]
-        public string LogTitle { get; set; }
-
-        /// <summary>Gets or sets the trace event type.</summary>
-        /// <value>The trace event type.</value>
-        public TraceEventType TraceEventType { get; set; }
-
-        /// <summary>Gets or sets the tracer id.</summary>
-        /// <value>The tracer id.</value>
-        [CanBeNull]
-        public string TracerId { get; set; }
-
-        /// <summary>Gets or sets the tracer title.</summary>
-        /// <value>The tracer title.</value>
-        [CanBeNull]
-        public string TracerTitle
-        {
-            get
-            {
-                return string.IsNullOrEmpty(_tracerTitle) ? LogTitle : _tracerTitle;
-            }
-
-            set { _tracerTitle = value; }
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        ///     The initialize.
-        /// </summary>
-        /// <param name="target">
-        ///     The target.
-        /// </param>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <param name="contextName">
-        ///     The context name.
-        /// </param>
-        protected internal override void Initialize(object target, ObjectContext context, string contextName)
-        {
-            base.Initialize(target, context, contextName);
-
-            bool logParameterName = LogOptions.HasFlag(TraceAspectOptions.ParameterName);
-            bool logParameterType = LogOptions.HasFlag(TraceAspectOptions.ParameterType);
-            bool logparameterValue = LogOptions.HasFlag(TraceAspectOptions.ParameterValue);
-
-            _logReturn = LogOptions.HasFlag(TraceAspectOptions.ReturnValue);
-
-            if (logParameterName || logParameterType || logparameterValue) _helper = new LoggerHelper(logparameterValue, logParameterType);
-        }
-
-        /// <summary>
-        ///     The intercept impl.
-        /// </summary>
-        /// <param name="invocation">
-        ///     The invocation.
-        /// </param>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <exception cref="Exception">
-        /// </exception>
-        protected override void Intercept(IInvocation invocation, ObjectContext context)
-        {
-            bool isLoggingEnabled = Logger.IsLoggingEnabled();
-            if (isLoggingEnabled)
-            {
-                var entry = new LogEntry
-                {
-                    Message =
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            "Enter Method: {0}",
-                            invocation.Method.Name),
-                    Title = LogTitle
-                };
-
-                if (!string.IsNullOrEmpty(Category)) entry.Categories.Add(Category);
-
-                if (_helper != null) _helper.Log(entry, invocation);
-
-                Logger.Write(entry);
-            }
-
-            Tracer tracer = null;
-
-            try
-            {
-                if (EnableTracer && isLoggingEnabled && Logger.Writer.IsTracingEnabled())
-                {
-                    if (TracerId != null)
-                    {
-                        Guid id;
-                        if (Guid.TryParse(TracerId, out id)) tracer = new Tracer(TracerTitle, id);
-                        else
-                        {
-                            Logger.Write(
-                                string.Format("Unkown Activity ID: {0}", TracerId),
-                                string.Empty,
-                                -1,
-                                1,
-                                TraceEventType.Warning);
-                            tracer = new Tracer(TracerTitle);
-                        }
-                    }
-                    else tracer = new Tracer(TracerTitle);
-                }
-
-                invocation.Proceed();
-            }
-            catch (Exception e)
-            {
-                if (ExceptionPolicy == null) throw;
-
-                Exception newEx;
-                if (Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.ExceptionPolicy.HandleException(
-                    e,
-                    ExceptionPolicy,
-                    out newEx))
-                {
-                    if (newEx != null) throw newEx;
-
-                    throw;
-                }
-            }
-            finally
-            {
-                if (tracer != null) tracer.Dispose();
-            }
-
-            if (!isLoggingEnabled) return;
-
-            var logEntry2 = new LogEntry {Message = string.Format("Exit Method: {0}", invocation.Method.Name)};
-            if (_logReturn) logEntry2.ExtendedProperties["ReturnValue"] = invocation.ReturnValue;
-
-            Logger.Write(logEntry2);
-        }
-
-        #endregion
-
         /// <summary>The logger helper.</summary>
         private class LoggerHelper
         {
-            #region Fields
-
-            /// <summary>The _type.</summary>
-            private readonly bool _type;
-
-            /// <summary>The _value.</summary>
-            private readonly bool _value;
-
-            /// <summary>The _initialized.</summary>
-            private bool _initialized;
-
-            /// <summary>The _string nmes.</summary>
-            private string _stringNmes;
-
-            /// <summary>The _types.</summary>
-            private string _types;
-
-            /// <summary>The _parm names.</summary>
-            private string[] _parmNames;
-
-            #endregion
-
             #region Constructors and Destructors
 
             /// <summary>
@@ -288,16 +65,7 @@ namespace Tauron.Application.Aop.Model
 
             /// <summary>The _parm names.</summary>
             [NotNull]
-            private string[] ParmNames
-            {
-                get
-                {
-                    Contract.Requires(_parmNames != null);
-                    Contract.Ensures(Contract.Result<string[]>() != null);
-
-                    return _parmNames;
-                }
-            }
+            private string[] ParmNames { get; set; }
 
             #endregion
 
@@ -312,24 +80,22 @@ namespace Tauron.Application.Aop.Model
             /// <param name="invocation">
             ///     The invocation.
             /// </param>
-            [ContractVerification(false)]
-            public void Log([NotNull] LogEntry entry, [NotNull] IInvocation invocation)
+            public void Log([NotNull] LogEventInfo entry, [NotNull] IInvocation invocation)
             {
-                Contract.Requires<ArgumentNullException>(entry != null, "entry");
-                Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
-
+                if (entry == null) throw new ArgumentNullException(nameof(entry));
+                if (invocation == null) throw new ArgumentNullException(nameof(invocation));
                 lock (this)
                 {
                     if (!_initialized) Initialize(invocation.Method);
                 }
-
-                entry.ExtendedProperties["Parameters"] = _stringNmes;
-                entry.ExtendedProperties["ParameterTypes"] = _types;
+                
+                entry.Properties["Parameters"] = _stringNmes;
+                entry.Properties["ParameterTypes"] = _types;
 
                 if (!_value) return;
 
-                object[] args = invocation.Arguments;
-                for (int i = 0; i < ParmNames.Length; i++) entry.ExtendedProperties["Parameter:" + ParmNames[i]] = args[i];
+                var args = invocation.Arguments;
+                for (var i = 0; i < ParmNames.Length; i++) entry.Properties["Parameter:" + ParmNames[i]] = args[i];
             }
 
             #endregion
@@ -344,21 +110,156 @@ namespace Tauron.Application.Aop.Model
             /// </param>
             private void Initialize([NotNull] MethodInfo info)
             {
-                Contract.Requires<ArgumentNullException>(info != null, "info");
-
-                ParameterInfo[] parms = info.GetParameters();
-                _parmNames = parms.Select(parm => parm.Name).ToArray();
+                if (info == null) throw new ArgumentNullException(nameof(info));
+                var parms = info.GetParameters();
+                ParmNames = parms.Select(parm => parm.Name).ToArray();
                 _stringNmes = ParmNames.Aggregate((working, next) => working + ", " + next);
                 if (_type)
-                {
                     _types = parms.Select(parm => parm.ParameterType)
-                                  .Aggregate("Types: ", (s, type1) => s + type1.ToString() + ", ");
-                }
+                        .Aggregate("Types: ", (s, type1) => s + type1.ToString() + ", ");
 
                 _initialized = true;
             }
 
             #endregion
+
+            #region Fields
+
+            /// <summary>The _type.</summary>
+            private readonly bool _type;
+
+            /// <summary>The _value.</summary>
+            private readonly bool _value;
+
+            /// <summary>The _initialized.</summary>
+            private bool _initialized;
+
+            /// <summary>The _string nmes.</summary>
+            private string _stringNmes;
+
+            /// <summary>The _types.</summary>
+            private string _types;
+
+            #endregion
         }
+
+        #region Constructors and Destructors
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="TraceAttribute" /> class.
+        ///     Initialisiert eine neue Instanz der <see cref="TraceAttribute" /> Klasse.
+        ///     Initializes a new instance of the <see cref="TraceAttribute" /> class.
+        /// </summary>
+        public TraceAttribute()
+        {
+            Order = 100;
+            TraceEventType = LogLevel.Info;
+            LogOptions = TraceAspectOptions.ParameterName;
+            LogTitle = string.Empty;
+        }
+
+        #endregion
+
+        #region Fields
+
+        /// <summary>The _helper.</summary>
+        private LoggerHelper _helper;
+
+        /// <summary>The _log return.</summary>
+        private bool _logReturn;
+
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets or sets the log options.</summary>
+        /// <value>The log options.</value>
+        public TraceAspectOptions LogOptions { get; set; }
+
+        /// <summary>Gets or sets the log title.</summary>
+        /// <value>The log title.</value>
+        [CanBeNull]
+        public string LogTitle { get; set; }
+
+        /// <summary>Gets or sets the trace event type.</summary>
+        /// <value>The trace event type.</value>
+        public LogLevel TraceEventType { get; set; }
+
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        ///     The initialize.
+        /// </summary>
+        /// <param name="target">
+        ///     The target.
+        /// </param>
+        /// <param name="context">
+        ///     The context.
+        /// </param>
+        /// <param name="contextName">
+        ///     The context name.
+        /// </param>
+        protected internal override void Initialize(object target, ObjectContext context, string contextName)
+        {
+            base.Initialize(target, context, contextName);
+
+            var logParameterName = LogOptions.HasFlag(TraceAspectOptions.ParameterName);
+            var logParameterType = LogOptions.HasFlag(TraceAspectOptions.ParameterType);
+            var logparameterValue = LogOptions.HasFlag(TraceAspectOptions.ParameterValue);
+
+            _logReturn = LogOptions.HasFlag(TraceAspectOptions.ReturnValue);
+
+            if (logParameterName || logParameterType || logparameterValue) _helper = new LoggerHelper(logparameterValue, logParameterType);
+        }
+
+        /// <summary>
+        ///     The intercept impl.
+        /// </summary>
+        /// <param name="invocation">
+        ///     The invocation.
+        /// </param>
+        /// <param name="context">
+        ///     The context.
+        /// </param>
+        /// <exception cref="Exception">
+        /// </exception>
+        protected override void Intercept(IInvocation invocation, ObjectContext context)
+        {
+            var logger = LogManager.GetLogger(LogTitle, invocation.TargetType);
+            
+            var isLoggingEnabled = LogManager.IsLoggingEnabled();
+            if (isLoggingEnabled)
+            {
+                var entry = LogEventInfo.Create(TraceEventType, LogTitle, $"Enter Method: {invocation.Method.Name}");
+                
+                _helper?.Log(entry, invocation);
+
+                logger.Log(entry);
+            }
+
+            try
+            {
+                invocation.Proceed();
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                throw;
+            }
+
+            if (!isLoggingEnabled) return;
+
+            var entry2 = LogEventInfo.Create(TraceEventType, LogTitle, $"Exit Method: {invocation.Method.Name}"); 
+            
+            entry2.Properties["ReturnValue"] = invocation.ReturnValue;
+
+           logger.Log(entry2);
+        }
+
+        #endregion
     }
 }

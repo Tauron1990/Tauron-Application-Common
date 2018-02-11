@@ -26,11 +26,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Reflection;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -41,12 +39,6 @@ namespace Tauron.Application.Ioc
     [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
     public class ExportAttribute : Attribute
     {
-        #region Fields
-
-        private readonly Type m_export;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -57,12 +49,15 @@ namespace Tauron.Application.Ioc
         /// <param name="export">
         ///     The export.
         /// </param>
-        public ExportAttribute(Type export)
+        public ExportAttribute([NotNull] Type export)
         {
-            Contract.Requires<ArgumentNullException>(export != null, "export");
-
-            m_export = export;
+            if (export == null) throw new ArgumentNullException(nameof(export));
+            Export = export;
         }
+
+        #endregion
+
+        #region Fields
 
         #endregion
 
@@ -76,16 +71,11 @@ namespace Tauron.Application.Ioc
         /// <summary>Gets the export.</summary>
         /// <value>The export.</value>
         [NotNull]
-        public Type Export
-        {
-            get { return m_export; }
-        }
+        public Type Export { get; }
 
         [CanBeNull]
-        public virtual string DebugName
-        {
-            get { return ContractName; }
-        }
+        [UsedImplicitly]
+        public virtual string DebugName => ContractName;
 
         /// <summary>The get metadata.</summary>
         /// <returns>
@@ -97,11 +87,9 @@ namespace Tauron.Application.Ioc
         {
             get
             {
-                Contract.Ensures(Contract.Result<IEnumerable<Tuple<string, object>>>() != null);
-
                 if (!HasMetadata) yield break;
 
-                foreach (PropertyInfo property in
+                foreach (var property in
                     GetType().GetProperties().Where(property => property.Name != "Metadata")) yield return Tuple.Create(property.Name, property.GetValue(this));
             }
         }
@@ -112,16 +100,10 @@ namespace Tauron.Application.Ioc
 
         /// <summary>Gets a value indicating whether has metadata.</summary>
         /// <value>The has metadata.</value>
-        protected virtual bool HasMetadata
-        {
-            get { return false; }
-        }
+        protected virtual bool HasMetadata => false;
 
         [CanBeNull]
-        protected virtual LifetimeContextAttribute OverrideDefaultPolicy
-        {
-            get { return null; }
-        }
+        protected virtual LifetimeContextAttribute OverrideDefaultPolicy => null;
 
         [CanBeNull]
         internal LifetimeContextAttribute GetOverrideDefaultPolicy()

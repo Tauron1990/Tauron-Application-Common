@@ -4,8 +4,8 @@ using System;
 using System.Reflection;
 using System.Threading;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -43,7 +43,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The countdown event source attribute.</summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public sealed class CountdownEventSourceAttribute : ContextPropertyAttributeBase
     {
         #region Methods
@@ -89,8 +89,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The countdown event attribute.</summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event, AllowMultiple = true,
-        Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event, AllowMultiple = true)]
     public sealed class CountdownEventAttribute : ThreadingBaseAspect
     {
         #region Fields

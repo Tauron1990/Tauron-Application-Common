@@ -3,8 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -12,13 +11,15 @@ namespace Tauron.Application
 {
     /// <summary>The event list manager.</summary>
     [Serializable]
-    [DebuggerNonUserCode, PublicAPI]
+    [DebuggerNonUserCode]
+    [PublicAPI]
     public class EventListManager : BaseObject
     {
         #region Fields
 
         /// <summary>The _handlers.</summary>
-        [NonSerialized] private Dictionary<string, Delegate> _handlers;
+        [NonSerialized]
+        private Dictionary<string, Delegate> _handlers;
 
         #endregion
 
@@ -29,10 +30,7 @@ namespace Tauron.Application
         /// <summary>Gets the handlers.</summary>
         /// <value>The handlers.</value>
         [NotNull]
-        private Dictionary<string, Delegate> Handlers
-        {
-            get { return _handlers ?? (_handlers = new Dictionary<string, Delegate>()); }
-        }
+        private Dictionary<string, Delegate> Handlers => _handlers ?? (_handlers = new Dictionary<string, Delegate>());
 
         #endregion
 
@@ -49,9 +47,8 @@ namespace Tauron.Application
         /// </param>
         protected virtual void AddEvent([NotNull] string name, [NotNull] Delegate handler)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.Requires<ArgumentNullException>(handler != null, "handler");
-
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
             if (Handlers.ContainsKey(name)) Handlers[name] = Delegate.Combine(Handlers[name], handler);
             else Handlers[name] = handler;
         }
@@ -67,12 +64,11 @@ namespace Tauron.Application
         /// </param>
         protected virtual void InvokeEvent([NotNull] string name, [NotNull] params object[] args)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.Requires<ArgumentNullException>(args != null, "args");
-
+            if (args == null) throw new ArgumentNullException(nameof(args));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
             if (!Handlers.ContainsKey(name)) return;
 
-            if(UseDispatcher)
+            if (UseDispatcher)
                 UiSynchronize.Synchronize.Invoke(() => Handlers[name].DynamicInvoke(args));
             else
                 Handlers[name].DynamicInvoke(args);
@@ -89,12 +85,11 @@ namespace Tauron.Application
         /// </param>
         protected virtual void RemoveEvent([NotNull] string name, [NotNull] Delegate handler)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            Contract.Requires<ArgumentNullException>(handler != null, "handler");
-
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
             if (!Handlers.ContainsKey(name)) return;
 
-            Delegate del = Handlers[name];
+            var del = Handlers[name];
             del = Delegate.Remove(del, handler);
 
             if (del == null) Handlers.Remove(name);

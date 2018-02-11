@@ -24,11 +24,9 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -37,47 +35,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     /// <summary>The inject member policy.</summary>
     public class InjectMemberPolicy : IPolicy
     {
-        private MemberInjector _injector;
-
-        private ImportMetadata _metadata;
-
         [NotNull]
-        public ImportMetadata Metadata
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<ImportMetadata>() != null);
-
-                return _metadata;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _metadata = value;
-            }
-        }
+        public ImportMetadata Metadata { get; set; }
 
         /// <summary>Gets or sets the injector.</summary>
         /// <value>The injector.</value>
         [NotNull]
-        public MemberInjector Injector
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<MemberInjector>() != null);
-
-                return _injector;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _injector = value;
-            }
-        }
+        public MemberInjector Injector { get; set; }
 
         [CanBeNull]
         public List<IImportInterceptor> Interceptors { get; set; }

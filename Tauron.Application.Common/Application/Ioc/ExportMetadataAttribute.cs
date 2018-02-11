@@ -25,8 +25,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -53,7 +52,6 @@ namespace Tauron.Application.Ioc
         public ExportMetadataAttribute(string key, object value)
             : base(key, value)
         {
-            Contract.Requires<ArgumentNullException>(key != null, "key");
         }
 
         #endregion
@@ -62,22 +60,11 @@ namespace Tauron.Application.Ioc
 
         /// <summary>Gets the key.</summary>
         /// <value>The key.</value>
-        public string Key
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-
-                return InternalKey;
-            }
-        }
+        public string Key => InternalKey;
 
         /// <summary>Gets the value.</summary>
         /// <value>The value.</value>
-        public object Value
-        {
-            get { return InternalValue; }
-        }
+        public object Value => InternalValue;
 
         #endregion
     }

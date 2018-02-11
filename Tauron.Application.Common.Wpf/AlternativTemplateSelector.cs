@@ -32,7 +32,7 @@ namespace Tauron.Application
 
             // ReSharper restore HeuristicUnreachableCode
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
-            string key = item.GetType().Name;
+            var key = item.GetType().Name;
             var ele = container.As<FrameworkElement>();
             if (ele == null) return null;
 

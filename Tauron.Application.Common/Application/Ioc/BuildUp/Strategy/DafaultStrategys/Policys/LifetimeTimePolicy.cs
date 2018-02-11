@@ -25,7 +25,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using Tauron.Application.Ioc.LifeTime;
 
 #endregion
@@ -37,51 +36,17 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     {
         #region Fields
 
-        private ILifetimeContext lifetimeContext;
-
-        private Type liftimeType;
-
         #endregion
 
         #region Public Properties
 
         /// <summary>Gets or sets the lifetime context.</summary>
         /// <value>The lifetime context.</value>
-        public ILifetimeContext LifetimeContext
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<ILifetimeContext>() != null);
-
-                return lifetimeContext;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                lifetimeContext = value;
-            }
-        }
+        public ILifetimeContext LifetimeContext { get; set; }
 
         /// <summary>Gets or sets the liftime type.</summary>
         /// <value>The liftime type.</value>
-        public Type LiftimeType
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Type>() != null);
-
-                return liftimeType;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                liftimeType = value;
-            }
-        }
+        public Type LiftimeType { get; set; }
 
         /// <summary>Gets or sets a value indicating whether share liftime.</summary>
         /// <value>The share liftime.</value>

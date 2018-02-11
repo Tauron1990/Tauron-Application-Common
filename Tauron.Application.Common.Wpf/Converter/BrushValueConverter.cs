@@ -2,7 +2,7 @@
 
 using System.Windows.Data;
 using System.Windows.Media;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -13,21 +13,6 @@ namespace Tauron.Application.Converter
     /// </summary>
     public sealed class BrushValueConverter : ValueConverterFactoryBase
     {
-        #region Methods
-
-        /// <summary>
-        ///     The create.
-        /// </summary>
-        /// <returns>
-        ///     The <see cref="IValueConverter" />.
-        /// </returns>
-        protected override IValueConverter Create()
-        {
-            return new Converter();
-        }
-
-        #endregion
-
         private class Converter : ValueConverterBase<string, Brush>
         {
             #region Static Fields
@@ -55,5 +40,20 @@ namespace Tauron.Application.Converter
 
             #endregion
         }
+
+        #region Methods
+
+        /// <summary>
+        ///     The create.
+        /// </summary>
+        /// <returns>
+        ///     The <see cref="IValueConverter" />.
+        /// </returns>
+        protected override IValueConverter Create()
+        {
+            return new Converter();
+        }
+
+        #endregion
     }
 }

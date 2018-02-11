@@ -25,12 +25,11 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -39,44 +38,18 @@ namespace Tauron.Application.Aop
     /// <summary>The aspect base attribute.</summary>
     public abstract class AspectBaseAttribute : MemberInterceptionAttribute, ISpecificInterceptor
     {
-        #region Fields
+        #region Explicit Interface Methods
 
-        private string name = string.Empty;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets the context name.</summary>
-        /// <value>The context name.</value>
-        public string ContextName { get; private set; }
-
-        /// <summary>Gets the member type.</summary>
-        /// <value>The member type.</value>
-        public MemberTypes MemberType { get; private set; }
-
-        /// <summary>Gets the name.</summary>
-        /// <value>The name.</value>
-        public string Name
+        /// <summary>
+        ///     The intercept.
+        /// </summary>
+        /// <param name="invocation">
+        ///     The invocation.
+        /// </param>
+        void IInterceptor.Intercept(IInvocation invocation)
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-
-                return name;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                name = value;
-            }
+            Intercept(invocation, ContextManager.FindContext(invocation.InvocationTarget, ContextName));
         }
-
-        /// <summary>Gets or sets the order.</summary>
-        /// <value>The order.</value>
-        public int Order { get; set; }
 
         #endregion
 
@@ -100,18 +73,27 @@ namespace Tauron.Application.Aop
 
         #endregion
 
-        #region Explicit Interface Methods
+        #region Fields
 
-        /// <summary>
-        ///     The intercept.
-        /// </summary>
-        /// <param name="invocation">
-        ///     The invocation.
-        /// </param>
-        void IInterceptor.Intercept(IInvocation invocation)
-        {
-            Intercept(invocation, ContextManager.FindContext(invocation.InvocationTarget, ContextName));
-        }
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets the context name.</summary>
+        /// <value>The context name.</value>
+        public string ContextName { get; private set; }
+
+        /// <summary>Gets the member type.</summary>
+        /// <value>The member type.</value>
+        public MemberTypes MemberType { get; private set; }
+
+        /// <summary>Gets the name.</summary>
+        /// <value>The name.</value>
+        public string Name { get; private set; } = string.Empty;
+
+        /// <summary>Gets or sets the order.</summary>
+        /// <value>The order.</value>
+        public int Order { get; set; }
 
         #endregion
 
@@ -145,8 +127,8 @@ namespace Tauron.Application.Aop
         /// </param>
         protected virtual void Intercept([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
         {
-            Contract.Requires<ArgumentNullException>(invocation != null, "invocation");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+            if (context == null) throw new ArgumentNullException(nameof(context));
 
             invocation.Proceed();
         }

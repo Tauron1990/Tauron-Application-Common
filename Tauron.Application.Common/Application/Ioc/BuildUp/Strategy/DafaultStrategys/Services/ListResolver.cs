@@ -12,7 +12,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 #endregion
 
@@ -21,14 +20,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     /// <summary>The list resolver.</summary>
     public class ListResolver : IResolver
     {
-        #region Fields
-
-        private readonly IEnumerable<IResolver> resolvers;
-
-        private readonly Type target;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -62,18 +53,18 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             {
                 errorTracer.Phase = "Injecting List for " + target;
 
-                Type closed = InjectorBaseConstants.List.MakeGenericType(target.GenericTypeArguments[0]);
+                var closed = InjectorBaseConstants.List.MakeGenericType(target.GenericTypeArguments[0]);
                 if (target.IsAssignableFrom(closed))
                 {
-                    MethodInfo info = closed.GetMethod("Add");
+                    var info = closed.GetMethod("Add");
 
-                   var args = resolvers.Select(resolver => resolver.Create(errorTracer)).TakeWhile(vtemp => !errorTracer.Exceptional).ToList();
+                    var args = resolvers.Select(resolver => resolver.Create(errorTracer)).TakeWhile(vtemp => !errorTracer.Exceptional).ToList();
 
                     if (errorTracer.Exceptional) return null;
 
-                    object temp = Activator.CreateInstance(closed);
+                    var temp = Activator.CreateInstance(closed);
 
-                    foreach (object o in args) info.Invoke(temp, o);
+                    foreach (var o in args) info.Invoke(temp, o);
 
                     return temp;
                 }
@@ -90,6 +81,14 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 return null;
             }
         }
+
+        #endregion
+
+        #region Fields
+
+        private readonly IEnumerable<IResolver> resolvers;
+
+        private readonly Type target;
 
         #endregion
     }

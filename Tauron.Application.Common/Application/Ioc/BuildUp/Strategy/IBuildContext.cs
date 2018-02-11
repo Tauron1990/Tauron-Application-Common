@@ -25,9 +25,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -35,7 +34,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 {
     /// <summary>The BuildContext interface.</summary>
     [PublicAPI]
-    [ContractClass(typeof (BuildContextContracts))]
     public interface IBuildContext
     {
         #region Public Properties
@@ -80,129 +78,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         [CanBeNull]
         BuildParameter[] Parameters { get; }
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (IBuildContext))]
-    internal abstract class BuildContextContracts : IBuildContext
-    {
-        #region Public Properties
-
-        public IResolverExtension[] ResolverExtensions
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IResolverExtension[]>() != null);
-
-                return null;
-            }
-        }
-
-        /// <summary>Gets or sets a value indicating whether build compled.</summary>
-        /// <value>The build compled.</value>
-        /// <exception cref="NotImplementedException"></exception>
-        public bool BuildCompled
-        {
-            get { throw new NotImplementedException(); }
-
-            set { throw new NotImplementedException(); }
-        }
-
-        /// <summary>Gets the container.</summary>
-        /// <value>The container.</value>
-        /// <exception cref="NotImplementedException"></exception>
-        public IContainer Container
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IContainer>() != null);
-
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>Gets or sets the export type.</summary>
-        /// <value>The export type.</value>
-        /// <exception cref="NotImplementedException"></exception>
-        public Type ExportType
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Type>() != null);
-
-                throw new NotImplementedException();
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>Gets the metadata.</summary>
-        /// <value>The metadata.</value>
-        /// <exception cref="NotImplementedException"></exception>
-        public ExportMetadata Metadata
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<ExportMetadata>() != null);
-
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>Gets the mode.</summary>
-        /// <value>The mode.</value>
-        /// <exception cref="NotImplementedException"></exception>
-        public BuildMode Mode
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        /// <summary>Gets the policys.</summary>
-        /// <value>The policys.</value>
-        /// <exception cref="NotImplementedException"></exception>
-        public PolicyList Policys
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<PolicyList>() != null);
-
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>Gets or sets the target.</summary>
-        /// <value>The target.</value>
-        /// <exception cref="NotImplementedException"></exception>
-        public object Target
-        {
-            get { throw new NotImplementedException(); }
-
-            set { throw new NotImplementedException(); }
-        }
-
-        public ErrorTracer ErrorTracer
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<ErrorTracer>() != null);
-
-                return null;
-            }
-        }
-
-        public BuildParameter[] Parameters
-        {
-            get
-            {
-                return null;
-            }
-        }
 
         #endregion
     }

@@ -7,7 +7,7 @@ using Tauron.Application.Ioc;
 namespace Tauron.Application.Implement
 {
     /// <summary>The clipboard manager.</summary>
-    [Export(typeof (IClipboardManager))]
+    [Export(typeof(IClipboardManager))]
     public class ClipboardManager : IClipboardManager
     {
         #region Public Methods and Operators

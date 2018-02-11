@@ -1,10 +1,9 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -19,11 +18,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         {
             private readonly ExportMetadata _buildMetadata;
             private readonly IContainer _container;
-            private readonly object _metadataObject;
-            private readonly InterceptorCallback _interceptor;
             private readonly IResolverExtension[] _extensions;
+            private readonly InterceptorCallback _interceptor;
+            private readonly object _metadataObject;
 
-            public ExportFactoryHelper([NotNull] IContainer container, [NotNull] ExportMetadata buildMetadata, 
+            public ExportFactoryHelper([NotNull] IContainer container, [NotNull] ExportMetadata buildMetadata,
                 [NotNull] object metadataObject, [CanBeNull] InterceptorCallback interceptor,
                 [NotNull] IResolverExtension[] extensions)
             {
@@ -54,7 +53,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 if (extension != null)
                     temp = extension.Progress(_buildMetadata, temp);
 
-                bool flag = _interceptor == null || _interceptor(ref temp);
+                var flag = _interceptor == null || _interceptor(ref temp);
 
                 return !flag ? null : temp;
             }
@@ -66,33 +65,18 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             }
         }
 
-        #region Fields
-
-        private readonly IContainer _container;
-        private readonly Type _factoryType;
-        private readonly bool _isExportFactory;
-        private readonly ExportMetadata _metadata;
-        private readonly object _metadataObject;
-        private readonly Type _metadataType;
-        private readonly InterceptorCallback _interceptor;
-        private readonly bool _isDescriptor;
-        private readonly IResolverExtension[] _extensions;
-
-        #endregion
-
         #region Constructors and Destructors
 
         public SimpleResolver([NotNull] ExportMetadata metadata, [NotNull] IContainer container,
-                              bool isExportFactory, [CanBeNull] Type factoryType, [CanBeNull] object metadataObject,
-                              [CanBeNull] Type metadataType, [CanBeNull] InterceptorCallback interceptor, bool isDescriptor,
-                              [NotNull] IResolverExtension[] extensions)
+            bool isExportFactory, [CanBeNull] Type factoryType, [CanBeNull] object metadataObject,
+            [CanBeNull] Type metadataType, [CanBeNull] InterceptorCallback interceptor, bool isDescriptor,
+            [NotNull] IResolverExtension[] extensions)
         {
-            Contract.Requires<ArgumentNullException>(extensions != null, "extensions");
-            Contract.Requires<ArgumentNullException>(container != null, "container");
-            Contract.Requires<ArgumentNullException>(!isExportFactory || metadataType != null, "metadataType");
-
-            _metadata = metadata;
-            _container = container;
+            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+            if (container == null) throw new ArgumentNullException(nameof(container));
+            if (extensions == null) throw new ArgumentNullException(nameof(extensions));
+            Metadata = metadata;
+            Container = container;
             _isExportFactory = isExportFactory;
             _factoryType = factoryType;
             _metadataObject = metadataObject;
@@ -104,54 +88,24 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         #endregion
 
-        #region Public Properties
-
-        /// <summary>Gets the container.</summary>
-        [NotNull]
-        public IContainer Container
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IContainer>() != null);
-
-                return _container;
-            }
-        }
-
-        /// <summary>Gets the metadata.</summary>
-        [NotNull]
-        public ExportMetadata Metadata
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<ExportMetadata>() != null);
-
-                return _metadata;
-            }
-        }
-
-        #endregion
-
         #region Public Methods and Operators
 
         public object Create([NotNull] ErrorTracer errorTracer)
         {
-            if (_metadata == null) return null;
+            errorTracer.Phase = "Injecting Import For " + Metadata;
 
-            errorTracer.Phase = "Injecting Import For " + _metadata;
-
-            var helper = new ExportFactoryHelper(_container, _metadata, _metadataObject, _interceptor, _extensions);
+            var helper = new ExportFactoryHelper(Container, Metadata, _metadataObject, _interceptor, _extensions);
 
             try
             {
-                if (_isDescriptor) return new ExportDescriptor(_metadata);
+                if (_isDescriptor) return new ExportDescriptor(Metadata);
 
                 if (_isExportFactory)
                     return
                         Activator.CreateInstance(
-                            typeof (InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
+                            typeof(InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
                             new Func<BuildParameter[], object>(helper.BuildUp),
-                            new Func<object>(helper.Metadata), _metadata.Export.ImplementType);
+                            new Func<object>(helper.Metadata), Metadata.Export.ImplementType);
                 try
                 {
                     errorTracer.IncrementIdent();
@@ -169,6 +123,30 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 return null;
             }
         }
+
+        #endregion
+
+        #region Fields
+
+        private readonly Type _factoryType;
+        private readonly bool _isExportFactory;
+        private readonly object _metadataObject;
+        private readonly Type _metadataType;
+        private readonly InterceptorCallback _interceptor;
+        private readonly bool _isDescriptor;
+        private readonly IResolverExtension[] _extensions;
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets the container.</summary>
+        [NotNull]
+        public IContainer Container { get; }
+
+        /// <summary>Gets the metadata.</summary>
+        [NotNull]
+        public ExportMetadata Metadata { get; }
 
         #endregion
     }

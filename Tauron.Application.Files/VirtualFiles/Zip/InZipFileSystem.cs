@@ -26,7 +26,7 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
             _file.Dispose();
         }
 
-        public bool IsRealTime { get { return false; } }
+        public bool IsRealTime => false;
         public bool SaveAfterDispose { get; set; }
 
         public override DateTime LastModified
@@ -39,13 +39,7 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
             }
         }
 
-        public string Source
-        {
-            get
-            {
-                return _file.Name;
-            }
-        }
+        public string Source => _file.Name;
 
         public void Reload(string source)
         {
@@ -60,10 +54,7 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
             Reset(OriginalPath, null);
         }
 
-        public override bool Exist
-        {
-            get { return true; }
-        }
+        public override bool Exist => true;
 
         protected override void DeleteImpl()
         {

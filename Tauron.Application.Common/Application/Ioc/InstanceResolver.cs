@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc
 {
@@ -14,15 +13,11 @@ namespace Tauron.Application.Ioc
         private Func<object> _metadataFactory;
 
         public InstanceResolver([NotNull] Func<BuildParameter[], object> resolver, [NotNull] Func<object> metadataFactory,
-                                [NotNull] Type realType)
+            [NotNull] Type realType)
         {
-            Contract.Requires<ArgumentNullException>(resolver != null, "resolver");
-            Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
-            Contract.Requires<ArgumentNullException>(realType != null, "realType");
-
-            RealType = realType;
-            _resolver = resolver;
-            _metadataFactory = metadataFactory;
+            RealType = realType ?? throw new ArgumentNullException(nameof(realType));
+            _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+            _metadataFactory = metadataFactory ?? throw new ArgumentNullException(nameof(metadataFactory));
         }
 
 
@@ -41,11 +36,11 @@ namespace Tauron.Application.Ioc
 
                 return _metadata;
             }
-        }
+        }    
 
         public TExport Resolve([CanBeNull] BuildParameter[] buildParameters = null)
         {
-            object obj = _resolver(buildParameters);
+            var obj = _resolver(buildParameters);
 
             if (obj == null) return default(TExport);
 
@@ -54,9 +49,23 @@ namespace Tauron.Application.Ioc
 
         public TExport Resolve(bool uiSync, [CanBeNull] BuildParameter[] buildParameters = null)
         {
-            return uiSync 
-                ? UiSynchronize.Synchronize.Invoke(() => Resolve(buildParameters)) 
+            return uiSync
+                ? UiSynchronize.Synchronize.Invoke(() => Resolve(buildParameters))
                 : Resolve(buildParameters);
+        }
+
+        public object ResolveRaw([CanBeNull] BuildParameter[] buildParameters = null)
+        {
+            var obj = _resolver(buildParameters);
+
+            return obj;
+        }
+
+        public object ResolveRaw(bool uiSync, [CanBeNull] BuildParameter[] buildParameters = null)
+        {
+            return uiSync
+                ? UiSynchronize.Synchronize.Invoke(() => ResolveRaw(buildParameters))
+                : ResolveRaw(buildParameters);
         }
     }
 }

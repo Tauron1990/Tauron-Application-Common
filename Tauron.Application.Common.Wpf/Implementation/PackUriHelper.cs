@@ -28,9 +28,8 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Windows.Resources;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -39,7 +38,7 @@ namespace Tauron.Application.Implementation
     // [DebuggerNonUserCode]
     /// <summary>The pack uri helper.</summary>
     [PublicAPI]
-    [Export(typeof (IPackUriHelper))]
+    [Export(typeof(IPackUriHelper))]
     public class PackUriHelper : IPackUriHelper
     {
         #region Public Methods and Operators
@@ -77,7 +76,7 @@ namespace Tauron.Application.Implementation
         {
             if (assembly == null) return pack;
 
-            string fullstring = full ? "pack://application:,,," : string.Empty;
+            var fullstring = full ? "pack://application:,,," : string.Empty;
             return string.Format("{0}/{1};component/{2}", fullstring, assembly, pack);
         }
 
@@ -112,8 +111,8 @@ namespace Tauron.Application.Implementation
         /// </returns>
         public Uri GetUri(string pack, string assembly, bool full)
         {
-            string compledpack = GetString(pack, assembly, full);
-            UriKind uriKind = full ? UriKind.Absolute : UriKind.Relative;
+            var compledpack = GetString(pack, assembly, full);
+            var uriKind = full ? UriKind.Absolute : UriKind.Relative;
 
             return new Uri(compledpack, uriKind);
         }
@@ -187,7 +186,7 @@ namespace Tauron.Application.Implementation
         [MethodImpl(MethodImplOptions.NoInlining)]
         public Stream LoadStream(string pack, string assembly)
         {
-            StreamResourceInfo info = System.Windows.Application.GetResourceStream(GetUri(pack, assembly, true));
+            var info = System.Windows.Application.GetResourceStream(GetUri(pack, assembly, true));
             if (info != null) return info.Stream;
 
             throw new InvalidOperationException();

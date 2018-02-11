@@ -26,20 +26,64 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp;
 using Tauron.Application.Ioc.BuildUp.Exports;
+using Tauron.Application.Ioc.BuildUp.Exports.DefaultExports;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc
 {
-    /// <summary>The default container.</summary>
     public sealed class DefaultContainer : MarshalByRefObject, IContainer
     {
+        #region Constructors and Destructors
+        
+        public DefaultContainer()
+        {
+            _extensions = new List<IContainerExtension>();
+            _componetnts = new ComponentRegistry();
+            _exports = new ExportRegistry();
+            _exportproviders = new ExportProviderRegistry();
+            _exportproviders.ExportsChanged += ExportsChanged;
+            Register(new DefaultExtension());
+            _buildEngine = new BuildEngine(this, _exportproviders, _componetnts);
+            _exports.Register(DefaultExportFactory.Factory.CreateAnonymosWithTarget(typeof(IContainer), this), 0);
+        }
+
+        #endregion
+
+        #region Methods
+
+        private void ExportsChanged(object sender, ExportChangedEventArgs e)
+        {
+            var temp = new List<IExport>();
+
+            foreach (var exportMetadata in
+                e.Removed.Where(exportMetadata => !temp.Contains(exportMetadata.Export)))
+            {
+                _exports.Remove(exportMetadata.Export);
+                temp.Add(exportMetadata.Export);
+            }
+
+            temp.Clear();
+
+            foreach (
+                var exportMetadata in e.Added.Where(exportMetadata => !temp.Contains(exportMetadata.Export)))
+            {
+                var attr = exportMetadata.Export.ImplementType.GetCustomAttribute<ExportLevelAttribute>();
+                if (attr == null)
+                    attr = exportMetadata.Export.ImplementType.Assembly.GetCustomAttribute<ExportLevelAttribute>();
+
+                _exports.Register(exportMetadata.Export, attr == null ? 0 : attr.Level);
+                temp.Add(exportMetadata.Export);
+            }
+        }
+
+        #endregion
+
         #region Fields
 
         /// <summary>The _build engine.</summary>
@@ -56,25 +100,6 @@ namespace Tauron.Application.Ioc
 
         /// <summary>The _extensions.</summary>
         private readonly List<IContainerExtension> _extensions;
-
-        #endregion
-
-        #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initialisiert eine neue Instanz der <see cref="DefaultContainer" /> Klasse.
-        /// </summary>
-        [ContractVerification(false)]
-        public DefaultContainer()
-        {
-            _extensions = new List<IContainerExtension>();
-            _componetnts = new ComponentRegistry();
-            _exports = new ExportRegistry();
-            _exportproviders = new ExportProviderRegistry();
-            _exportproviders.ExportsChanged += ExportsChanged;
-            Register(new DefaultExtension());
-            _buildEngine = new BuildEngine(this, _exportproviders, _componetnts);
-        }
 
         #endregion
 
@@ -150,7 +175,7 @@ namespace Tauron.Application.Ioc
         /// <returns>
         ///     The <see cref="object" />.
         /// </returns>
-        public object BuildUp(Type type,  ErrorTracer errorTracer, BuildParameter[] buildParameters, params object[] constructorArguments)
+        public object BuildUp(Type type, ErrorTracer errorTracer, BuildParameter[] buildParameters, params object[] constructorArguments)
         {
             try
             {
@@ -188,9 +213,8 @@ namespace Tauron.Application.Ioc
         /// <returns>
         ///     The <see cref="ExportMetadata" />.
         /// </returns>
-        public ExportMetadata FindExport(Type interfaceType, string name,  ErrorTracer errorTracer, bool isOptional)
+        public ExportMetadata FindExport(Type interfaceType, string name, ErrorTracer errorTracer, bool isOptional)
         {
-
             try
             {
                 return isOptional ? _exports.FindOptional(interfaceType, name, errorTracer) : FindExport(interfaceType, name, errorTracer);
@@ -272,8 +296,8 @@ namespace Tauron.Application.Ioc
         public ExportMetadata FindExport(Type interfaceType, string name, ErrorTracer errorTracer, bool isOptional, int level)
         {
             return isOptional
-                       ? _exports.FindOptional(interfaceType, name, errorTracer, level)
-                       : _exports.FindSingle(interfaceType, name, errorTracer, level);
+                ? _exports.FindOptional(interfaceType, name, errorTracer, level)
+                : _exports.FindSingle(interfaceType, name, errorTracer, level);
         }
 
         public IEnumerable<ExportMetadata> FindExports(Type interfaceType, string name, ErrorTracer errorTracer, int level)
@@ -314,35 +338,6 @@ namespace Tauron.Application.Ioc
         {
             extension.Initialize(_componetnts);
             _extensions.Add(extension);
-        }
-
-        #endregion
-
-        #region Methods
-
-        private void ExportsChanged(object sender, ExportChangedEventArgs e)
-        {
-            var temp = new List<IExport>();
-
-            foreach (ExportMetadata exportMetadata in
-                e.Removed.Where(exportMetadata => !temp.Contains(exportMetadata.Export)))
-            {
-                _exports.Remove(exportMetadata.Export);
-                temp.Add(exportMetadata.Export);
-            }
-
-            temp.Clear();
-
-            foreach (
-                ExportMetadata exportMetadata in e.Added.Where(exportMetadata => !temp.Contains(exportMetadata.Export)))
-            {
-                var attr = exportMetadata.Export.ImplementType.GetCustomAttribute<ExportLevelAttribute>();
-                if(attr == null)
-                    attr = exportMetadata.Export.ImplementType.Assembly.GetCustomAttribute<ExportLevelAttribute>();
-
-                _exports.Register(exportMetadata.Export, attr == null ? 0 : attr.Level);
-                temp.Add(exportMetadata.Export);
-            }
         }
 
         #endregion

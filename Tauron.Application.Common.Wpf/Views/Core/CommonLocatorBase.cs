@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
 using Tauron.Application.Models;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Views.Core
 {
-    [ContractClass(typeof(CommonLocatorBaseContracts))]
     public abstract class CommonLocatorBase : IViewLocator
     {
-        private Dictionary<string, ExportNameHelper> _views = new Dictionary<string, ExportNameHelper>(); 
+        private Dictionary<string, ExportNameHelper> _views = new Dictionary<string, ExportNameHelper>();
 
         public void Register(ExportNameHelper export)
         {
@@ -30,7 +28,7 @@ namespace Tauron.Application.Views.Core
 
         public DependencyObject CreateViewForModel(Type model)
         {
-            string name = GetName(model);
+            var name = GetName(model);
             if (name == null) return null;
 
             var temp = NamingHelper.CreatePossibilyNames(name)
@@ -44,19 +42,6 @@ namespace Tauron.Application.Views.Core
 
             return temp;
         }
-
-
-        [NotNull]
-        public abstract DependencyObject Match([NotNull] string name);
-
-        [CanBeNull]
-        public abstract string GetName([NotNull] Type model);
-
-        [CanBeNull]
-        public abstract DependencyObject Match([NotNull] ISortableViewExportMetadata name);
-
-        [NotNull]
-        public abstract IEnumerable<InstanceResolver<Control, ISortableViewExportMetadata>> GetAllViewsImpl([NotNull] string name);
 
         public DependencyObject CreateView(string name)
         {
@@ -72,8 +57,6 @@ namespace Tauron.Application.Views.Core
             return win != null ? new WpfWindow(win) : CreateWindowImpl(name, parameters);
         }
 
-        [NotNull]
-        public abstract IWindow CreateWindowImpl([NotNull] string name, [CanBeNull]object[] parameters);
         public abstract Type GetViewType(string name);
 
         public IEnumerable<DependencyObject> GetAllViews(string name)
@@ -85,39 +68,21 @@ namespace Tauron.Application.Views.Core
         {
             return GetName(model.GetType());
         }
-    }
 
-    [ContractClassFor(typeof(CommonLocatorBase))]
-    abstract class CommonLocatorBaseContracts : CommonLocatorBase
-    {
-        public override string GetName(Type model)
-        {
-            Contract.Requires<ArgumentNullException>(model != null, "model");
-            return null;
-        }
 
-        public override DependencyObject Match(ISortableViewExportMetadata name)
-        {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            return null;
-        }
+        [NotNull]
+        public abstract DependencyObject Match([NotNull] string name);
 
-        public override IEnumerable<InstanceResolver<Control, ISortableViewExportMetadata>> GetAllViewsImpl(string name)
-        {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            return null;
-        }
+        [CanBeNull]
+        public abstract string GetName([NotNull] Type model);
 
-        public override IWindow CreateWindowImpl(string name, object[] parameters)
-        {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            return null;
-        }
+        [CanBeNull]
+        public abstract DependencyObject Match([NotNull] ISortableViewExportMetadata name);
 
-        public override Type GetViewType(string name)
-        {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
-            return null;
-        }
+        [NotNull]
+        public abstract IEnumerable<InstanceResolver<Control, ISortableViewExportMetadata>> GetAllViewsImpl([NotNull] string name);
+
+        [NotNull]
+        public abstract IWindow CreateWindowImpl([NotNull] string name, [CanBeNull] object[] parameters);
     }
 }

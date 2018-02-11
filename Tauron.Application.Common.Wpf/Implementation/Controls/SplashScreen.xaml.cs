@@ -1,9 +1,7 @@
-﻿using System.Windows;
-
-namespace Tauron.Application.Implementation.Controls
+﻿namespace Tauron.Application.Implementation.Controls
 {
     /// <summary>
-    /// Interaktionslogik für SplashScreen.xaml
+    ///     Interaktionslogik für SplashScreen.xaml
     /// </summary>
     public partial class SplashScreen
     {

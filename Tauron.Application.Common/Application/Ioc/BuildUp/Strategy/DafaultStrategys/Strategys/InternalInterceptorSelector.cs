@@ -55,7 +55,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// </returns>
         public IInterceptor[] SelectInterceptors(Type type, MethodInfo method, IInterceptor[] interceptors)
         {
-            string name = method.Name;
+            var name = method.Name;
             if (method.IsSpecialName)
             {
                 if (name.StartsWith(AopConstants.PropertyGetter, StringComparison.Ordinal)) name = name.Remove(0, AopConstants.PropertyGetter.Length);
@@ -68,22 +68,22 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             }
 
             return interceptors.Where(
-                inter =>
-                {
-                    var sinter = inter as ISpecificInterceptor;
-                    if (sinter != null)
+                    inter =>
                     {
-                        return sinter.Name == name ||
-                               sinter.Name == AopConstants.InternalUniversalInterceptorName;
-                    }
+                        var sinter = inter as ISpecificInterceptor;
+                        if (sinter != null)
+                            return sinter.Name == name ||
+                                   sinter.Name == AopConstants.InternalUniversalInterceptorName;
 
-                    return true;
-                }).OrderBy(
+                        return true;
+                    })
+                .OrderBy(
                     inter =>
                     {
                         var sinter = inter as ISpecificInterceptor;
                         return sinter == null ? 0 : sinter.Order;
-                    }).ToArray();
+                    })
+                .ToArray();
         }
 
         #endregion

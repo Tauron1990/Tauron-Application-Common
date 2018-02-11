@@ -24,17 +24,13 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
-    /// <summary>The member injector.</summary>
-    [ContractClass(typeof (MemberInjectorContracts))]
     public abstract class MemberInjector
     {
         #region Public Methods and Operators
@@ -54,25 +50,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <param name="interceptor"></param>
         /// <param name="errorTracer"></param>
         /// <param name="parameters"></param>
-        public abstract void Inject([NotNull] object target, [NotNull] IContainer container, [NotNull] ImportMetadata metadata, [CanBeNull] IImportInterceptor interceptor, [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] parameters);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (MemberInjector))]
-    internal abstract class MemberInjectorContracts : MemberInjector
-    {
-        #region Public Methods and Operators
-
-        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
-        {
-            Contract.Requires<ArgumentNullException>(target != null, "target");
-            Contract.Requires<ArgumentNullException>(container != null, "container");
-            Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
-            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
-
-            throw new NotImplementedException();
-        }
+        public abstract void Inject([NotNull] object target, [NotNull] IContainer container, [NotNull] ImportMetadata metadata, [CanBeNull] IImportInterceptor interceptor, [NotNull] ErrorTracer errorTracer,
+            [CanBeNull] BuildParameter[] parameters);
 
         #endregion
     }

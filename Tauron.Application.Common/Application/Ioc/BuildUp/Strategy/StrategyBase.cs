@@ -24,8 +24,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 

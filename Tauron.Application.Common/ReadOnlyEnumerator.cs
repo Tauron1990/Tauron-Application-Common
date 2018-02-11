@@ -3,9 +3,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -30,8 +28,7 @@ namespace Tauron
 
         public ReadOnlyEnumerator([NotNull] IEnumerable<T> enumerable)
         {
-            Contract.Requires<ArgumentNullException>(enumerable != null, "enumerable");
-
+            if (enumerable == null) throw new ArgumentNullException(nameof(enumerable));
             _enumerable = enumerable;
         }
 
@@ -45,8 +42,6 @@ namespace Tauron
         /// </returns>
         public IEnumerator<T> GetEnumerator()
         {
-            Contract.Ensures(Contract.Result<IEnumerator<T>>() != null);
-
             return _enumerable.GetEnumerator();
         }
 
@@ -60,21 +55,7 @@ namespace Tauron
         /// </returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            Contract.Ensures(Contract.Result<IEnumerator>() != null);
-
             return GetEnumerator();
-        }
-
-        #endregion
-
-        #region Methods
-
-        [ContractInvariantMethod]
-        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic",
-            Justification = "Required for code contracts.")]
-        private void ObjectInvariant()
-        {
-            Contract.Invariant(_enumerable != null);
         }
 
         #endregion

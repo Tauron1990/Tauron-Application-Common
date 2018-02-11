@@ -2,8 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -44,14 +43,17 @@ namespace Tauron
         ///     Der Wert, der entwerder erstellt wurde oder schon enthalten war.
         /// </returns>
         public static TValue AddIfNotExis<TKey, TValue>([NotNull] this IDictionary<TKey, TValue> dic,
-            TKey key, [NotNull] Func<TValue> creator)
+            [NotNull] TKey key, [NotNull] Func<TValue> creator)
         {
-            Contract.Requires<ArgumentNullException>(dic != null, "dic");
-            Contract.Requires<ArgumentNullException>(creator != null, "creator");
-
+            if (dic == null) throw new ArgumentNullException(nameof(dic));
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (creator == null) throw new ArgumentNullException(nameof(creator));
             TValue temp;
 
-            if (dic.ContainsKey(key)) temp = dic[key];
+            if (dic.ContainsKey(key))
+            {
+                temp = dic[key];
+            }
             else
             {
                 temp = creator();
@@ -99,11 +101,9 @@ namespace Tauron
         public static TValue TryGetAndCast<TValue>([NotNull] this IDictionary<string, object> dic, [NotNull] string key)
             where TValue : class
         {
-            Contract.Requires<ArgumentNullException>(dic != null, "dic");
-            Contract.Requires<ArgumentNullException>(key != null, "key");
-
-            object obj;
-            if (dic.TryGetValue(key, out obj)) return obj as TValue;
+            if (dic == null) throw new ArgumentNullException(nameof(dic));
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (dic.TryGetValue(key, out var obj)) return obj as TValue;
 
             return null;
         }

@@ -26,7 +26,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 #endregion
 
@@ -48,7 +47,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </returns>
         public IEnumerable<ImportMetadata> SelectImport(IExport exportType)
         {
-            foreach (MethodInfo methodInfo in exportType.ImplementType.GetMethods(AopConstants.DefaultBindingFlags))
+            foreach (var methodInfo in exportType.ImplementType.GetMethods(AopConstants.DefaultBindingFlags))
             {
                 var attr = methodInfo.GetCustomAttribute<InjectAttribute>();
                 if (attr == null) continue;

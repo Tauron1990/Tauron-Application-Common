@@ -3,14 +3,14 @@
 using System;
 using System.Windows.Controls;
 using System.Windows.Markup;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application
 {
     /// <summary>The alternative template selector extension.</summary>
-    [MarkupExtensionReturnType(typeof (DataTemplateSelector))]
+    [MarkupExtensionReturnType(typeof(DataTemplateSelector))]
     [PublicAPI]
     public sealed class AlternativeTemplateSelectorExtension : MarkupExtension
     {

@@ -26,7 +26,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 
 #endregion
@@ -36,12 +35,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     /// <summary>The object context policy.</summary>
     public class ObjectContextPolicy : IPolicy
     {
-        #region Fields
-
-        private List<Tuple<ObjectContextPropertyAttribute, MemberInfo>> contextPropertys;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -56,6 +49,10 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         #endregion
 
+        #region Fields
+
+        #endregion
+
         #region Public Properties
 
         /// <summary>Gets or sets the context name.</summary>
@@ -64,22 +61,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         /// <summary>Gets or sets the context propertys.</summary>
         /// <value>The context propertys.</value>
-        public List<Tuple<ObjectContextPropertyAttribute, MemberInfo>> ContextPropertys
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<List<Tuple<ObjectContextPropertyAttribute, MemberInfo>>>() != null);
-                Contract.Ensures(
-                    Contract.ForAll(
-                        Contract
-                            .Result<List<Tuple<ObjectContextPropertyAttribute, MemberInfo>>>(),
-                        mem => mem != null && mem.Item1 != null && mem.Item2 != null));
-
-                return contextPropertys;
-            }
-
-            private set { contextPropertys = value; }
-        }
+        public List<Tuple<ObjectContextPropertyAttribute, MemberInfo>> ContextPropertys { get; }
 
         #endregion
     }

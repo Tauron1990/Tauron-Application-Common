@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Models
 {
     [AttributeUsage(
         AttributeTargets.Constructor | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Parameter
-        | AttributeTargets.Property, AllowMultiple = false)]
+        | AttributeTargets.Property)]
     public sealed class InjectModelAttribute : InjectAttribute
     {
         public InjectModelAttribute([NotNull] string name)
             : base(typeof(IModel))
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
+            if (name == null) throw new ArgumentNullException(nameof(name));
             ContractName = name;
         }
 

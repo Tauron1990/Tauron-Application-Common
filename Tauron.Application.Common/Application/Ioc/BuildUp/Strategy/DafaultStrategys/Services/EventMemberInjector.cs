@@ -25,8 +25,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
 #endregion
@@ -36,19 +36,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     /// <summary>The event member injector.</summary>
     public class EventMemberInjector : MemberInjector
     {
-        #region Fields
-
-        /// <summary>The _manager.</summary>
-        private readonly IEventManager _manager;
-
-        /// <summary>The _member.</summary>
-        private readonly MemberInfo _member;
-
-        /// <summary>The _metadata.</summary>
-        private readonly ImportMetadata _metadata;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -63,12 +50,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         /// <param name="member">
         ///     The member.
         /// </param>
-        public EventMemberInjector(ImportMetadata metadata, IEventManager manager, MemberInfo member)
+        public EventMemberInjector([NotNull] ImportMetadata metadata, [NotNull] IEventManager manager, [NotNull] MemberInfo member)
         {
-            Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
-            Contract.Requires<ArgumentNullException>(manager != null, "manager");
-            Contract.Requires<ArgumentNullException>(member != null, "member");
-
+            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+            if (manager == null) throw new ArgumentNullException(nameof(manager));
+            if (member == null) throw new ArgumentNullException(nameof(member));
             _metadata = metadata;
             _manager = manager;
             _member = member;
@@ -80,7 +66,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
         {
-            errorTracer.Phase = "EventManager Inject " + metadata.ContractName; 
+            errorTracer.Phase = "EventManager Inject " + metadata.ContractName;
 
             try
             {
@@ -96,6 +82,19 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 errorTracer.Exception = e;
             }
         }
+
+        #endregion
+
+        #region Fields
+
+        /// <summary>The _manager.</summary>
+        private readonly IEventManager _manager;
+
+        /// <summary>The _member.</summary>
+        private readonly MemberInfo _member;
+
+        /// <summary>The _metadata.</summary>
+        private readonly ImportMetadata _metadata;
 
         #endregion
     }

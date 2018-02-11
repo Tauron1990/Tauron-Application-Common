@@ -2,6 +2,6 @@
 {
     public interface ISortableViewExportMetadata : INameExportMetadata
     {
-         int Order { get; }
+        int Order { get; }
     }
 }

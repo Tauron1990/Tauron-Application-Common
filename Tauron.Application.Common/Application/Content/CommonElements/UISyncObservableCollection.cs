@@ -6,9 +6,8 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -19,9 +18,28 @@ namespace Tauron.Application
     /// </summary>
     /// <typeparam name="TType">
     /// </typeparam>
-    [DebuggerNonUserCode, PublicAPI, Serializable]
+    [DebuggerNonUserCode]
+    [PublicAPI]
+    [Serializable]
     public class UISyncObservableCollection<TType> : ObservableCollection<TType>
     {
+        private class DispoableBlocker : IDisposable
+        {
+            private readonly UISyncObservableCollection<TType> _collection;
+
+            public DispoableBlocker(UISyncObservableCollection<TType> collection)
+            {
+                _collection = collection;
+                _collection._isBlocked = true;
+            }
+
+            public void Dispose()
+            {
+                _collection._isBlocked = false;
+                _collection.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            }
+        }
+
         private class DummySync : IUISynchronize
         {
             public Task BeginInvoke(Action action)
@@ -41,6 +59,8 @@ namespace Tauron.Application
                 return action();
             }
         }
+
+        private bool _isBlocked;
 
         private IUISynchronize _synchronize;
 
@@ -65,6 +85,17 @@ namespace Tauron.Application
             }
         }
 
+        public void AddRange([NotNull] IEnumerable<TType> enumerable)
+        {
+            if (enumerable == null) throw new ArgumentNullException(nameof(enumerable));
+            foreach (var item in enumerable) Add(item);
+        }
+
+        public IDisposable BlockChangedMessages()
+        {
+            return new DispoableBlocker(this);
+        }
+
         #region Methods
 
         /// <summary>
@@ -75,6 +106,7 @@ namespace Tauron.Application
         /// </param>
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
+            if (_isBlocked) return;
             InternalUISynchronize.Invoke(() => base.OnCollectionChanged(e));
         }
 
@@ -86,16 +118,10 @@ namespace Tauron.Application
         /// </param>
         protected override void OnPropertyChanged([NotNull] PropertyChangedEventArgs e)
         {
+            if (_isBlocked) return;
             InternalUISynchronize.Invoke(() => base.OnPropertyChanged(e));
         }
 
         #endregion
-
-        public void AddRange([NotNull] IEnumerable<TType> enumerable)
-        {
-            Contract.Requires<ArgumentNullException>(enumerable != null, "enumerable");
-
-            foreach (var item in enumerable) Add(item);
-        }
     }
 }

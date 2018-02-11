@@ -26,7 +26,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
 #endregion
@@ -36,110 +36,12 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     /// <summary>The lazy resolver.</summary>
     public class LazyResolver : IResolver
     {
-        #region Fields
-
-        private readonly IMetadataFactory factory;
-
-        private readonly Type lazy;
-
-        private readonly SimpleResolver resolver;
-
-        #endregion
-
-        #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="LazyResolver" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="LazyResolver" /> Klasse.
-        /// </summary>
-        /// <param name="resolver">
-        ///     The resolver.
-        /// </param>
-        /// <param name="lazy">
-        ///     The lazy.
-        /// </param>
-        /// <param name="factory">
-        ///     The factory.
-        /// </param>
-        public LazyResolver(SimpleResolver resolver, Type lazy, IMetadataFactory factory)
-        {
-            this.resolver = resolver;
-            this.lazy = lazy;
-            this.factory = factory;
-        }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>The create.</summary>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        public object Create(ErrorTracer errorTracer)
-        {
-            return CreateLazy(
-                lazy,
-                factory,
-                resolver.Metadata == null ? new Dictionary<string, object>() : resolver.Metadata.Metadata,
-                resolver, errorTracer);
-        }
-
-        #endregion
-
-        #region Methods
-
-        private static object CreateLazy(
-            Type lazytype,
-            IMetadataFactory metadataFactory,
-            IDictionary<string, object> metadataValue,
-            SimpleResolver creator, ErrorTracer errorTracer)
-        {
-            Contract.Requires<ArgumentNullException>(lazytype != null, "lazytype");
-            Contract.Requires<ArgumentNullException>(metadataFactory != null, "metadataFactory");
-            Contract.Requires<ArgumentNullException>(metadataValue != null, "metadataValue");
-            Contract.Requires<ArgumentNullException>(creator != null, "creator");
-            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
-            Contract.Ensures(Contract.Result<object>() != null);
-
-            errorTracer.Phase = "Injecting Lazy For " + lazytype.Name;
-
-            try
-            {
-                Type openGeneric = lazytype.GetGenericTypeDefinition();
-
-                Type trampolineBase = typeof (LazyTrampoline<>);
-                var trampolineGenerics = new Type[1];
-                trampolineGenerics[0] = lazytype.GenericTypeArguments[0];
-
-                Type trampoline = trampolineBase.MakeGenericType(trampolineGenerics);
-
-                var trampolineImpl = (LazyTrampolineBase) Activator.CreateInstance(trampoline, creator);
-                Type metadata = openGeneric == InjectorBaseConstants.Lazy ? null : lazytype.GenericTypeArguments[1];
-
-                if (metadata == null) return Activator.CreateInstance(lazytype, trampolineImpl.CreateFunc());
-
-                return Activator.CreateInstance(
-                    lazytype,
-                    trampolineImpl.CreateFunc(),
-                    metadataFactory.CreateMetadata(metadata, metadataValue));
-            }
-            catch (Exception e)
-            {
-                errorTracer.Exceptional = true;
-                errorTracer.Exception = e;
-                return null;
-            }
-        }
-
-        #endregion
-
         /// <summary>
         ///     The lazy trampoline.
         /// </summary>
         /// <typeparam name="T">
         /// </typeparam>
-        internal class LazyTrampoline<T> : LazyTrampolineBase
+        private class LazyTrampoline<T> : LazyTrampolineBase
         {
             #region Fields
 
@@ -158,10 +60,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             /// <param name="resolver">
             ///     The resolver.
             /// </param>
-            public LazyTrampoline(SimpleResolver resolver)
+            public LazyTrampoline([NotNull] SimpleResolver resolver)
             {
-                Contract.Requires<ArgumentNullException>(resolver != null, "resolver");
-
+                if (resolver == null) throw new ArgumentNullException(nameof(resolver));
                 _resolver = resolver;
             }
 
@@ -188,16 +89,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             /// </returns>
             private T Create()
             {
-                Contract.Requires(_resolver != null);
-                Contract.Ensures(Contract.Result<T>() != null);
-
                 return (T) _resolver.Create(new ErrorTracer());
             }
 
             #endregion
         }
 
-        internal abstract class LazyTrampolineBase
+        private abstract class LazyTrampolineBase
         {
             #region Public Methods and Operators
 
@@ -209,5 +107,101 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             #endregion
         }
+
+        #region Constructors and Destructors
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="LazyResolver" /> class.
+        ///     Initialisiert eine neue Instanz der <see cref="LazyResolver" /> Klasse.
+        /// </summary>
+        /// <param name="resolver">
+        ///     The resolver.
+        /// </param>
+        /// <param name="lazy">
+        ///     The lazy.
+        /// </param>
+        /// <param name="factory">
+        ///     The factory.
+        /// </param>
+        public LazyResolver(SimpleResolver resolver, Type lazy, IMetadataFactory factory)
+        {
+            _resolver = resolver;
+            _lazy = lazy;
+            _factory = factory;
+        }
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>The create.</summary>
+        /// <returns>
+        ///     The <see cref="object" />.
+        /// </returns>
+        public object Create(ErrorTracer errorTracer)
+        {
+            return CreateLazy(
+                _lazy,
+                _factory,
+                _resolver.Metadata.Metadata ?? new Dictionary<string, object>(),
+                _resolver, errorTracer);
+        }
+
+        #endregion
+
+        #region Methods
+
+        private static object CreateLazy(
+            [NotNull] Type lazytype,
+            [NotNull] IMetadataFactory metadataFactory,
+            [NotNull] IDictionary<string, object> metadataValue,
+            [NotNull] SimpleResolver creator, [NotNull] ErrorTracer errorTracer)
+        {
+            if (lazytype == null) throw new ArgumentNullException(nameof(lazytype));
+            if (metadataFactory == null) throw new ArgumentNullException(nameof(metadataFactory));
+            if (metadataValue == null) throw new ArgumentNullException(nameof(metadataValue));
+            if (creator == null) throw new ArgumentNullException(nameof(creator));
+            if (errorTracer == null) throw new ArgumentNullException(nameof(errorTracer));
+            errorTracer.Phase = "Injecting Lazy For " + lazytype.Name;
+
+            try
+            {
+                var openGeneric = lazytype.GetGenericTypeDefinition();
+
+                var trampolineBase = typeof(LazyTrampoline<>);
+                var trampolineGenerics = new Type[1];
+                trampolineGenerics[0] = lazytype.GenericTypeArguments[0];
+
+                var trampoline = trampolineBase.MakeGenericType(trampolineGenerics);
+
+                var trampolineImpl = (LazyTrampolineBase) Activator.CreateInstance(trampoline, creator);
+                var metadata = openGeneric == InjectorBaseConstants.Lazy ? null : lazytype.GenericTypeArguments[1];
+
+                if (metadata == null) return Activator.CreateInstance(lazytype, trampolineImpl.CreateFunc());
+
+                return Activator.CreateInstance(
+                    lazytype,
+                    trampolineImpl.CreateFunc(),
+                    metadataFactory.CreateMetadata(metadata, metadataValue));
+            }
+            catch (Exception e)
+            {
+                errorTracer.Exceptional = true;
+                errorTracer.Exception = e;
+                return null;
+            }
+        }
+
+        #endregion
+
+        #region Fields
+
+        private readonly IMetadataFactory _factory;
+
+        private readonly Type _lazy;
+
+        private readonly SimpleResolver _resolver;
+
+        #endregion
     }
 }

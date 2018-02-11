@@ -2,7 +2,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -57,13 +57,13 @@ namespace Tauron.Application.Commands
 
         private bool OnCanExecute([CanBeNull] object parameter)
         {
-            Func<object, bool> handler = CanExecuteEvent;
+            var handler = CanExecuteEvent;
             return handler == null || handler(parameter);
         }
 
         private void OnExecute([CanBeNull] object parameter)
         {
-            Action<object> handler = ExecuteEvent;
+            var handler = ExecuteEvent;
             if (handler != null) handler(parameter);
         }
 

@@ -25,24 +25,17 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc.LifeTime
 {
     /// <summary>The lifetime context attribute.</summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class)]
     [PublicAPI]
     public abstract class LifetimeContextAttribute : ExportMetadataBaseAttribute
     {
-        #region Fields
-
-        private readonly Type lifeTimeType;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -53,15 +46,18 @@ namespace Tauron.Application.Ioc.LifeTime
         /// <param name="lifeTimeType">
         ///     The life time type.
         /// </param>
-        protected LifetimeContextAttribute(Type lifeTimeType)
+        protected LifetimeContextAttribute([NotNull] Type lifeTimeType)
             : base(AopConstants.LiftimeMetadataName, null)
         {
-            Contract.Requires<ArgumentNullException>(lifeTimeType != null, "lifeTimeType");
-
-            this.lifeTimeType = lifeTimeType;
+            if (lifeTimeType == null) throw new ArgumentNullException(nameof(lifeTimeType));
+            LifeTimeType = lifeTimeType;
             ShareLiftime = true;
             InternalValue = this;
         }
+
+        #endregion
+
+        #region Fields
 
         #endregion
 
@@ -69,15 +65,8 @@ namespace Tauron.Application.Ioc.LifeTime
 
         /// <summary>Gets the life time type.</summary>
         /// <value>The life time type.</value>
-        public Type LifeTimeType
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Type>() != null);
-
-                return lifeTimeType;
-            }
-        }
+        [NotNull]
+        public Type LifeTimeType { get; }
 
         /// <summary>Gets or sets a value indicating whether share liftime.</summary>
         /// <value>The share liftime.</value>

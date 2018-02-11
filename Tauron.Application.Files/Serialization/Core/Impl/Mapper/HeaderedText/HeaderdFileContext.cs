@@ -21,29 +21,13 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.HeaderedText
         }
 
         [NotNull]
-        public string Content
-        {
-            get
-            {
-                return _file.Content;
-            }
-        }
+        public string Content => _file.Content;
 
         [NotNull]
-        public HeaderedFileWriter CurrentWriter
-        {
-// ReSharper disable once AssignNullToNotNullAttribute
-            get { return _file.CurrentWriter; } 
-        }
+        public HeaderedFileWriter CurrentWriter => _file.CurrentWriter;
 
         [NotNull]
-        public FileContext Context
-        {
-            get
-            {
-                return _file.Context;
-            }
-        }
+        public FileContext Context => _file.Context;
 
         protected override void Dispose(bool disposing)
         {

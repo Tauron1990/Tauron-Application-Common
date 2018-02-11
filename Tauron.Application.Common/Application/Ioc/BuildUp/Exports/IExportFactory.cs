@@ -24,10 +24,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -35,7 +33,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
 {
     /// <summary>The ExportFactory interface.</summary>
     [PublicAPI]
-    [ContractClass(typeof (ExportFactoryContracts))]
     public interface IExportFactory : IInitializeable
     {
         #region Public Properties
@@ -43,40 +40,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         /// <summary>Gets the technology name.</summary>
         /// <value>The technology name.</value>
         string TechnologyName { get; }
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (IExportFactory))]
-    internal abstract class ExportFactoryContracts : IExportFactory
-    {
-        #region Public Properties
-
-        /// <summary>Gets the technology name.</summary>
-        /// <value>The technology name.</value>
-        /// <exception cref="NotImplementedException"></exception>
-        public string TechnologyName
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-                throw new NotImplementedException();
-            }
-        }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The initialize.
-        /// </summary>
-        /// <param name="components">
-        ///     The components.
-        /// </param>
-        public void Initialize(ComponentRegistry components)
-        {
-        }
 
         #endregion
     }

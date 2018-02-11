@@ -24,15 +24,13 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Diagnostics.Contracts;
+
 
 #endregion
 
 namespace Tauron.Application.Ioc.Components
 {
     /// <summary>The Initializeable interface.</summary>
-    [ContractClass(typeof (InitializeableContracts))]
     public interface IInitializeable
     {
         #region Public Methods and Operators
@@ -44,25 +42,6 @@ namespace Tauron.Application.Ioc.Components
         ///     The components.
         /// </param>
         void Initialize(ComponentRegistry components);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (IInitializeable))]
-    internal abstract class InitializeableContracts : IInitializeable
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The initialize.
-        /// </summary>
-        /// <param name="components">
-        ///     The components.
-        /// </param>
-        public void Initialize(ComponentRegistry components)
-        {
-            Contract.Requires<ArgumentNullException>(components != null, "arg");
-        }
 
         #endregion
     }

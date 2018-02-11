@@ -25,15 +25,15 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc
 {
     /// <summary>The weak shared attribute.</summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class)]
     [PublicAPI]
     public sealed class WeakSharedAttribute : LifetimeContextAttribute
     {
@@ -45,7 +45,7 @@ namespace Tauron.Application.Ioc
         ///     Initializes a new instance of the <see cref="WeakSharedAttribute" /> class.
         /// </summary>
         public WeakSharedAttribute()
-            : base(typeof (WeakSharedLifetime))
+            : base(typeof(WeakSharedLifetime))
         {
         }
 

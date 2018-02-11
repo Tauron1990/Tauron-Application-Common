@@ -4,21 +4,59 @@ using System;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Implementation
 {
-    [Export(typeof (IImageHelper))]
+    [Export(typeof(IImageHelper))]
     public class ImageHelper : IImageHelper
     {
+        private class KeyedImage : IWeakReference
+        {
+            #region Fields
+
+            private readonly WeakReference _source;
+
+            #endregion
+
+            #region Constructors and Destructors
+
+            public KeyedImage([NotNull] Uri key, [NotNull] ImageSource source)
+            {
+                Key = key;
+                _source = new WeakReference(source);
+            }
+
+            #endregion
+
+            #region Public Methods and Operators
+
+            [CanBeNull]
+            public ImageSource GetImage()
+            {
+                return _source.Target as ImageSource;
+            }
+
+            #endregion
+
+            #region Public Properties
+
+            [NotNull]
+            public Uri Key { get; }
+
+            public bool IsAlive => _source.IsAlive;
+
+            #endregion
+        }
+
         #region Fields
 
         private readonly WeakReferenceCollection<KeyedImage> _cache = new WeakReferenceCollection<KeyedImage>();
 
-        [Inject] 
+        [Inject]
         private IPackUriHelper _packUriHelper;
 
         #endregion
@@ -39,14 +77,14 @@ namespace Tauron.Application.Implementation
         /// </returns>
         public ImageSource Convert(Uri target, string assembly)
         {
-            KeyedImage source = _cache.FirstOrDefault(img => img.Key == target);
+            var source = _cache.FirstOrDefault(img => img.Key == target);
             if (source != null)
             {
-                ImageSource temp = source.GetImage();
+                var temp = source.GetImage();
                 if (temp != null) return temp;
             }
 
-            bool flag = target.IsAbsoluteUri && target.Scheme == Uri.UriSchemeFile && target.OriginalString.ExisFile();
+            var flag = target.IsAbsoluteUri && target.Scheme == Uri.UriSchemeFile && target.OriginalString.ExisFile();
             if (!flag) flag = target.IsAbsoluteUri;
 
             if (!flag) flag = target.OriginalString.ExisFile();
@@ -62,7 +100,7 @@ namespace Tauron.Application.Implementation
             {
                 return BitmapFrame.Create(_packUriHelper.LoadStream(target.OriginalString, assembly));
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 CommonWpfConstans.LogCommon(true, "ImageHelper: Faild To Create image: {0}", e);
 
@@ -77,46 +115,5 @@ namespace Tauron.Application.Implementation
         }
 
         #endregion
-
-        private class KeyedImage : IWeakReference
-        {
-            #region Fields
-
-            private readonly WeakReference _source;
-
-            #endregion
-
-            #region Constructors and Destructors
-
-            public KeyedImage([NotNull] Uri key, [NotNull] ImageSource source)
-            {
-                Key = key;
-                _source = new WeakReference(source);
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            [NotNull]
-            public Uri Key { get; private set; }
-
-            public bool IsAlive
-            {
-                get { return _source.IsAlive; }
-            }
-
-            #endregion
-
-            #region Public Methods and Operators
-
-            [CanBeNull]
-            public ImageSource GetImage()
-            {
-                return _source.Target as ImageSource;
-            }
-
-            #endregion
-        }
     }
 }

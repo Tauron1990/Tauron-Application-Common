@@ -74,6 +74,26 @@ namespace Tauron.Interop
             PROGRESS_QUIET = 3
         }
 
+        /// <summary>The copy file flags.</summary>
+        [Flags]
+        internal enum CopyFileFlags : uint
+        {
+            /// <summary>The cop y_ fil e_ fai l_ i f_ exists.</summary>
+            COPY_FILE_FAIL_IF_EXISTS = 0x00000001,
+
+            /// <summary>The cop y_ fil e_ n o_ buffering.</summary>
+            COPY_FILE_NO_BUFFERING = 0x00001000,
+
+            /// <summary>The cop y_ fil e_ restartable.</summary>
+            COPY_FILE_RESTARTABLE = 0x00000002,
+
+            /// <summary>The cop y_ fil e_ ope n_ sourc e_ fo r_ write.</summary>
+            COPY_FILE_OPEN_SOURCE_FOR_WRITE = 0x00000004,
+
+            /// <summary>The cop y_ fil e_ allo w_ decrypte d_ destination.</summary>
+            COPY_FILE_ALLOW_DECRYPTED_DESTINATION = 0x00000008
+        }
+
         /// <summary>The wm drawclipboard.</summary>
         internal const int WmDrawclipboard = 0x0308;
 
@@ -171,7 +191,7 @@ namespace Tauron.Interop
         /// </exception>
         public static string[] CommandLineToArgvW(string cmdLine)
         {
-            IntPtr argv = IntPtr.Zero;
+            var argv = IntPtr.Zero;
             try
             {
                 int numArgs;
@@ -181,9 +201,9 @@ namespace Tauron.Interop
 
                 var result = new string[numArgs];
 
-                for (int i = 0; i < numArgs; i++)
+                for (var i = 0; i < numArgs; i++)
                 {
-                    IntPtr currArg = Marshal.ReadIntPtr(argv, i*Marshal.SizeOf(typeof (IntPtr)));
+                    var currArg = Marshal.ReadIntPtr(argv, i * Marshal.SizeOf(typeof(IntPtr)));
                     result[i] = Marshal.PtrToStringUni(currArg);
                 }
 
@@ -257,25 +277,5 @@ namespace Tauron.Interop
             uint dwFlags,
             IntPtr hToken,
             out IntPtr pszPath);
-
-        /// <summary>The copy file flags.</summary>
-        [Flags]
-        internal enum CopyFileFlags : uint
-        {
-            /// <summary>The cop y_ fil e_ fai l_ i f_ exists.</summary>
-            COPY_FILE_FAIL_IF_EXISTS = 0x00000001,
-
-            /// <summary>The cop y_ fil e_ n o_ buffering.</summary>
-            COPY_FILE_NO_BUFFERING = 0x00001000,
-
-            /// <summary>The cop y_ fil e_ restartable.</summary>
-            COPY_FILE_RESTARTABLE = 0x00000002,
-
-            /// <summary>The cop y_ fil e_ ope n_ sourc e_ fo r_ write.</summary>
-            COPY_FILE_OPEN_SOURCE_FOR_WRITE = 0x00000004,
-
-            /// <summary>The cop y_ fil e_ allo w_ decrypte d_ destination.</summary>
-            COPY_FILE_ALLOW_DECRYPTED_DESTINATION = 0x00000008
-        }
     }
 }

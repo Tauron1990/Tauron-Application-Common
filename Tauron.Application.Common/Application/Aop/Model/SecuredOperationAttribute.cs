@@ -1,26 +1,22 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Security;
 using System.Threading;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Aop.Model
 {
     /// <summary>The secured operation attribute.</summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event, AllowMultiple = true,
-        Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event, AllowMultiple = true)]
     [PublicAPI]
     public sealed class SecuredOperationAttribute : AspectBaseAttribute
     {
         #region Fields
-
-        private readonly string _roles;
 
         #endregion
 
@@ -28,9 +24,9 @@ namespace Tauron.Application.Aop.Model
 
         public SecuredOperationAttribute([NotNull] string roles)
         {
-            Contract.Requires<ArgumentNullException>(roles != null, "roles");
+            if (roles == null) throw new ArgumentNullException(nameof(roles));
 
-            _roles = roles;
+            Roles = roles;
         }
 
         #endregion
@@ -38,15 +34,7 @@ namespace Tauron.Application.Aop.Model
         #region Public Properties
 
         [NotNull]
-        public string Roles
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-
-                return _roles;
-            }
-        }
+        public string Roles { get; }
 
         #endregion
 
@@ -63,22 +51,13 @@ namespace Tauron.Application.Aop.Model
         /// </param>
         /// <exception cref="SecurityException">
         /// </exception>
-        protected override void Intercept([NotNull] IInvocation invocation, [NotNull] ObjectContext context)
+        protected override void Intercept(IInvocation invocation, ObjectContext context)
         {
             var able = invocation.InvocationTarget as ISecurable;
-            if (able != null)
-            {
-                Contract.Assert(Thread.CurrentPrincipal != null);
 
-// ReSharper disable once PossibleNullReferenceException
-                if (!able.IsUserInRole(Thread.CurrentPrincipal.Identity, _roles))
-                {
-                    throw new SecurityException(
-                        string.Format(
-                            "The user {0} does not have the required permissions.",
-                            Thread.CurrentPrincipal.Identity.Name));
-                }
-            }
+            if (!able?.IsUserInRole(Thread.CurrentPrincipal.Identity, Roles) == true)
+                throw new SecurityException(
+                    $"The user {Thread.CurrentPrincipal.Identity.Name} does not have the required permissions.");
 
             invocation.Proceed();
         }

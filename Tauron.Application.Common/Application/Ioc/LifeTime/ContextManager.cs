@@ -26,9 +26,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -38,10 +37,54 @@ namespace Tauron.Application.Ioc.LifeTime
     [PublicAPI]
     public static class ContextManager
     {
+        /// <summary>The weak context.</summary>
+        private class WeakContext : IWeakReference
+        {
+            #region Fields
+
+            /// <summary>The _holder.</summary>
+            private readonly WeakReference _holder;
+
+            #endregion
+
+            #region Constructors and Destructors
+
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="WeakContext" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="WeakContext" /> Klasse.
+            ///     Initializes a new instance of the <see cref="WeakContext" /> class.
+            /// </summary>
+            /// <param name="owner">
+            ///     The owner.
+            /// </param>
+            public WeakContext(object owner)
+            {
+                _holder = new WeakReference(owner);
+            }
+
+            #endregion
+
+            #region Public Properties
+
+            /// <summary>Gets or sets the context.</summary>
+            /// <value>The context.</value>
+            public ObjectContext Context { get; set; }
+
+            /// <summary>Gets the owner.</summary>
+            /// <value>The owner.</value>
+            public object Owner => _holder.Target;
+
+            /// <summary>Gets a value indicating whether is alive.</summary>
+            /// <value>The is alive.</value>
+            public bool IsAlive => _holder.IsAlive;
+
+            #endregion
+        }
+
         #region Static Fields
 
         /// <summary>The _aspect contexts.</summary>
-        private static readonly Dictionary<string, WeakContext> _aspectContexts = Initialize();
+        private static readonly Dictionary<string, WeakContext> AspectContexts = Initialize();
 
         /// <summary>The _weak contexts.</summary>
         private static WeakReferenceCollection<WeakContext> _weakContexts;
@@ -64,21 +107,17 @@ namespace Tauron.Application.Ioc.LifeTime
         /// </returns>
         public static ObjectContext FindContext(object target, string contextName)
         {
-            Contract.Ensures(Contract.Result<ObjectContext>() != null);
-
             if (contextName != null)
             {
-                WeakContext weakHolder = _aspectContexts[contextName];
-                Contract.Assume(weakHolder != null);
-                ObjectContext context = weakHolder.Context;
-                Contract.Assume(context != null);
+                var weakHolder = AspectContexts[contextName];
+                var context = weakHolder.Context;
                 return context;
             }
 
             var holder = target as IContextHolder;
             if (holder != null) return holder.Context;
 
-            WeakContext temp = _weakContexts.FirstOrDefault(con => ReferenceEquals(target, con.Owner));
+            var temp = _weakContexts.FirstOrDefault(con => ReferenceEquals(target, con.Owner));
             if (temp == null) throw new InvalidOperationException();
 
             return temp.Context;
@@ -96,18 +135,12 @@ namespace Tauron.Application.Ioc.LifeTime
         /// <returns>
         ///     The <see cref="ObjectContext" />.
         /// </returns>
-        public static ObjectContext GetContext(string name, object owner)
+        public static ObjectContext GetContext(string name, [NotNull] object owner)
         {
-            Contract.Requires<ArgumentNullException>(owner != null, "owner");
-            Contract.Ensures(Contract.Result<ObjectContext>() != null);
-
+            if (owner == null) throw new ArgumentNullException(nameof(owner));
             WeakContext context;
-            if (_aspectContexts.TryGetValue(name, out context))
-            {
-                Contract.Assume(context != null);
-
+            if (AspectContexts.TryGetValue(name, out context))
                 return context.Context;
-            }
 
             var tempContext = new ObjectContext();
             AddContext(name, tempContext, owner);
@@ -124,13 +157,11 @@ namespace Tauron.Application.Ioc.LifeTime
         /// <returns>
         ///     The <see cref="ObjectContext" />.
         /// </returns>
-        public static ObjectContext GetContext(object target)
+        public static ObjectContext GetContext([NotNull] object target)
         {
-            Contract.Requires<ArgumentNullException>(target != null, "target");
-            Contract.Ensures(Contract.Result<ObjectContext>() != null);
-
+            if (target == null) throw new ArgumentNullException(nameof(target));
             var context = new ObjectContext();
-            _weakContexts.Add(new WeakContext(target));
+            _weakContexts.Add(new WeakContext(target) {Context = context});
             return context;
         }
 
@@ -150,28 +181,23 @@ namespace Tauron.Application.Ioc.LifeTime
         /// <param name="owner">
         ///     The owner.
         /// </param>
-        private static void AddContext(string name, ObjectContext context, object owner)
+        private static void AddContext([NotNull] string name, ObjectContext context, object owner)
         {
-            Contract.Requires<ArgumentNullException>(owner != null, "owner");
-
-            _aspectContexts[name] = new WeakContext(owner) {Context = context};
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
+            AspectContexts[name] = new WeakContext(owner) {Context = context};
         }
 
         /// <summary>The clean contexts.</summary>
         private static void CleanContexts()
         {
-            lock (_aspectContexts)
+            lock (AspectContexts)
             {
-                string[] reference =
-                    _aspectContexts.Where(pair => !pair.Value.IsAlive).Select(pair => pair.Key).ToArray();
-                foreach (string equalableWeakReference in reference) _aspectContexts.Remove(equalableWeakReference);
+                var reference =
+                    AspectContexts.Where(pair => !pair.Value.IsAlive).Select(pair => pair.Key).ToArray();
+                foreach (var equalableWeakReference in reference) AspectContexts.Remove(equalableWeakReference);
             }
         }
 
-        /// <summary>The initialize.</summary>
-        /// <returns>
-        ///     The <see cref="Dictionary" />.
-        /// </returns>
         private static Dictionary<string, WeakContext> Initialize()
         {
             WeakCleanUp.RegisterAction(CleanContexts);
@@ -180,74 +206,5 @@ namespace Tauron.Application.Ioc.LifeTime
         }
 
         #endregion
-
-        /// <summary>The weak context.</summary>
-        private class WeakContext : IWeakReference
-        {
-            #region Fields
-
-            /// <summary>The _holder.</summary>
-            private readonly WeakReference _holder;
-
-            private ObjectContext context;
-
-            #endregion
-
-            #region Constructors and Destructors
-
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="WeakContext" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="WeakContext" /> Klasse.
-            ///     Initializes a new instance of the <see cref="WeakContext" /> class.
-            /// </summary>
-            /// <param name="owner">
-            ///     The owner.
-            /// </param>
-            public WeakContext(object owner)
-            {
-                Contract.Requires<ArgumentNullException>(owner != null, "owner");
-
-                _holder = new WeakReference(owner);
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            /// <summary>Gets or sets the context.</summary>
-            /// <value>The context.</value>
-            public ObjectContext Context
-            {
-                get
-                {
-                    Contract.Ensures(Contract.Result<ObjectContext>() != null);
-
-                    return context;
-                }
-
-                set
-                {
-                    Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                    context = value;
-                }
-            }
-
-            /// <summary>Gets the owner.</summary>
-            /// <value>The owner.</value>
-            public object Owner
-            {
-                get { return _holder.Target; }
-            }
-
-            /// <summary>Gets a value indicating whether is alive.</summary>
-            /// <value>The is alive.</value>
-            public bool IsAlive
-            {
-                get { return _holder.IsAlive; }
-            }
-
-            #endregion
-        }
     }
 }

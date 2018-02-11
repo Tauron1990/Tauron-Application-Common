@@ -25,11 +25,10 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -40,7 +39,6 @@ namespace Tauron.Application.Ioc
         AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Class,
         AllowMultiple = true)]
     [PublicAPI]
-    [ContractClass(typeof (MemberInterceptionAttributeContracts))]
     public abstract class MemberInterceptionAttribute : Attribute
     {
         #region Public Methods and Operators
@@ -73,53 +71,6 @@ namespace Tauron.Application.Ioc
         ///     The context name.
         /// </param>
         protected internal abstract void Initialize(object target, ObjectContext context, string contextName);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (MemberInterceptionAttribute))]
-    internal abstract class MemberInterceptionAttributeContracts : MemberInterceptionAttribute
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The create.
-        /// </summary>
-        /// <param name="info">
-        ///     The info.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IInterceptor" />.
-        /// </returns>
-        public override IInterceptor Create(MemberInfo info)
-        {
-            Contract.Requires<ArgumentNullException>(info != null, "info");
-            Contract.Ensures(Contract.Result<IInterceptor>() != null);
-            return null;
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        ///     The initialize.
-        /// </summary>
-        /// <param name="target">
-        ///     The target.
-        /// </param>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <param name="contextName">
-        ///     The context name.
-        /// </param>
-        protected internal override void Initialize(object target, ObjectContext context, string contextName)
-        {
-            Contract.Requires<ArgumentNullException>(target != null, "target");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-            Contract.Requires<ArgumentNullException>(contextName != null, "contextName");
-        }
 
         #endregion
     }

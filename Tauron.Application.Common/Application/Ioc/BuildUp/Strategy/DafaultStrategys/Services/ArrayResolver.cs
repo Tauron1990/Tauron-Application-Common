@@ -40,13 +40,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             try
             {
-                Array arr = Array.CreateInstance(_target, _resolvers.Length);
+                var arr = Array.CreateInstance(_target, _resolvers.Length);
 
-                int index = 0;
+                var index = 0;
 
-                foreach (IResolver resolver in _resolvers)
+                foreach (var resolver in _resolvers)
                 {
-                    object val = resolver.Create(errorTracer);
+                    var val = resolver.Create(errorTracer);
 
                     if (errorTracer.Exceptional) return arr;
 

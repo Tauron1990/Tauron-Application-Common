@@ -26,8 +26,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Strategy;
 using Tauron.Application.Ioc.Components;
 
@@ -55,10 +55,9 @@ namespace Tauron.Application.Ioc.BuildUp
         /// <param name="registry">
         ///     The registry.
         /// </param>
-        public Pipeline(ComponentRegistry registry)
+        public Pipeline([NotNull] ComponentRegistry registry)
         {
-            Contract.Requires<ArgumentNullException>(registry != null, "registry");
-
+            if (registry == null) throw new ArgumentNullException(nameof(registry));
             this.registry = registry;
         }
 
@@ -74,8 +73,6 @@ namespace Tauron.Application.Ioc.BuildUp
         /// </param>
         public void Build(IBuildContext context)
         {
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-
             try
             {
                 IEnumerable<IStrategy> strategies = registry.GetAll<IStrategy>().ToArray();
@@ -113,13 +110,12 @@ namespace Tauron.Application.Ioc.BuildUp
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        private static bool Invoke(IEnumerable<IStrategy> strategies, Action<IStrategy> invoker, IBuildContext context)
+        private static bool Invoke([NotNull] IEnumerable<IStrategy> strategies, [NotNull] Action<IStrategy> invoker, [NotNull] IBuildContext context)
         {
-            Contract.Requires<ArgumentNullException>(strategies != null, "strategies");
-            Contract.Requires<ArgumentNullException>(invoker != null, "invoker");
-            Contract.Requires<ArgumentNullException>(context != null, "context");
-
-            foreach (IStrategy strategy in strategies)
+            if (strategies == null) throw new ArgumentNullException(nameof(strategies));
+            if (invoker == null) throw new ArgumentNullException(nameof(invoker));
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            foreach (var strategy in strategies)
             {
                 if (context.BuildCompled || context.ErrorTracer.Exceptional) return true;
 

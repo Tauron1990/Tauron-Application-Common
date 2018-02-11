@@ -37,9 +37,30 @@ namespace Tauron.Application.Implementation
     #endregion
 
     /// <summary>The wpf iui controller factory.</summary>
-    [Export(typeof (IUIControllerFactory))]
+    [Export(typeof(IUIControllerFactory))]
     public class WpfIuiControllerFactory : IUIControllerFactory
     {
+        private readonly App _app;
+
+        public WpfIuiControllerFactory()
+        {
+            
+        }
+
+        public WpfIuiControllerFactory(App app)
+        {
+            _app = app;
+        }
+
+        #region Explicit Interface Methods
+
+        void IUIControllerFactory.SetSynchronizationContext()
+        {
+            SetSynchronizationContext();
+        }
+
+        #endregion
+
         #region Public Methods and Operators
 
         /// <summary>The create controller.</summary>
@@ -48,22 +69,13 @@ namespace Tauron.Application.Implementation
         /// </returns>
         public IUIController CreateController()
         {
-            return new WpfApplicationController();
+            return new WpfApplicationController(_app);
         }
 
         /// <summary>The set synchronization context.</summary>
         public static void SetSynchronizationContext()
         {
             UiSynchronize.Synchronize = new WPFSynchronize(App.Current.Dispatcher);
-        }
-
-        #endregion
-
-        #region Explicit Interface Methods
-
-        void IUIControllerFactory.SetSynchronizationContext()
-        {
-            SetSynchronizationContext();
         }
 
         #endregion

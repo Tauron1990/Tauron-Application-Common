@@ -25,10 +25,9 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -50,10 +49,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
         /// <summary>Gets the technology name.</summary>
         /// <value>The technology name.</value>
-        public string TechnologyName
-        {
-            get { return AopConstants.DefaultExportFactoryName; }
-        }
+        public string TechnologyName => AopConstants.DefaultExportFactoryName;
 
         #endregion
 
@@ -61,7 +57,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
         private DefaultExportFactory()
         {
-            
         }
 
         /// <summary>
@@ -84,10 +79,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns>
         ///     The <see cref="IExport" />.
         /// </returns>
-        public IExport Create(Type type, ref int level)
+        public IExport Create([NotNull] Type type, ref int level)
         {
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-
+            if (type == null) throw new ArgumentNullException(nameof(type));
             if (!DefaultExport.IsExport(type)) return null;
 
             var export = new DefaultExport(
@@ -116,11 +110,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns>
         ///     The <see cref="IExport" />.
         /// </returns>
-        public IExport CreateAnonymos(Type type, object[] args)
+        public IExport CreateAnonymos([NotNull] Type type, object[] args)
         {
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-            Contract.Ensures(Contract.Result<IExport>() != null);
-
+            if (type == null) throw new ArgumentNullException(nameof(type));
             var export = new DefaultExport(
                 type,
                 new ExternalExportInfo(
@@ -151,12 +143,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         [NotNull]
         public IExport CreateAnonymosWithTarget([NotNull] Type type, [NotNull] object target)
         {
-            Contract.Requires<ArgumentNullException>(type != null, "type");
-            Contract.Requires<ArgumentNullException>(target != null, "target");
-            Contract.Ensures(Contract.Result<IExport>() != null);
-
-            var info = new ExternalExportInfo(true, true, true, true, (context, service) => target,
-                type.ToString());
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            var info = new ExternalExportInfo(true, true, true, true, (context, service) => target, null);
 
             var export = new DefaultExport(type, info, true);
             export.ImportMetadata = _chain.SelectImport(export);
@@ -173,10 +162,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <returns>
         ///     The <see cref="IExport" />.
         /// </returns>
-        public IExport CreateMethodExport(MethodInfo info, ref int currentLevel)
+        public IExport CreateMethodExport([NotNull] MethodInfo info, ref int currentLevel)
         {
-            Contract.Requires<ArgumentNullException>(info != null, "info");
-
+            if (info == null) throw new ArgumentNullException(nameof(info));
             if (!info.IsStatic || !DefaultExport.IsExport(info)) return null;
 
             var attr = info.GetCustomAttribute<ExportLevelAttribute>();

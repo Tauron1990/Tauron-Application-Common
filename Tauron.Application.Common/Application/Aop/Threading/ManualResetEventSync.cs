@@ -4,8 +4,8 @@ using System;
 using System.Reflection;
 using System.Threading;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -44,7 +44,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The manual reset event source attribute.</summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public sealed class ManualResetEventSourceAttribute : ContextPropertyAttributeBase
     {
         #region Methods
@@ -61,7 +61,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="target">
         ///     The target.
         /// </param>
-        protected internal override void Register( ObjectContext context,  MemberInfo info,  object target)
+        protected internal override void Register(ObjectContext context, MemberInfo info, object target)
         {
             context.Register<ManualResetEventHolder, ManualResetEventHolder>(
                 new ManualResetEventHolder(
@@ -99,8 +99,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The manual reset event attribute.</summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Property, AllowMultiple = false,
-        Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Property)]
     public sealed class ManualResetEventAttribute : ThreadingBaseAspect
     {
         #region Fields
@@ -151,12 +150,12 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="contextName">
         ///     The context name.
         /// </param>
-        protected internal override void Initialize( object target,  ObjectContext context,  string contextName)
+        protected internal override void Initialize(object target, ObjectContext context, string contextName)
         {
             _holder = BaseHolder.GetOrAdd<ManualResetEventHolder, ManualResetEventHolder>(
                 context,
                 () =>
-                new ManualResetEventHolder(),
+                    new ManualResetEventHolder(),
                 HolderName);
 
             base.Initialize(target, context, contextName);
@@ -174,18 +173,22 @@ namespace Tauron.Application.Aop.Threading
         protected override void Intercept(IInvocation invocation, ObjectContext context)
         {
             if (Position == MethodInvocationPosition.Before)
-            {
-                if (EventBehavior == ManualResetEventBehavior.Wait) _holder.Value.Wait();
+                if (EventBehavior == ManualResetEventBehavior.Wait)
+                {
+                    _holder.Value.Wait();
+                }
                 else
                 {
                     _holder.Value.Set();
                     _holder.Value.Reset();
                 }
-            }
 
             invocation.Proceed();
 
-            if (EventBehavior == ManualResetEventBehavior.Wait) _holder.Value.Wait();
+            if (EventBehavior == ManualResetEventBehavior.Wait)
+            {
+                _holder.Value.Wait();
+            }
             else
             {
                 _holder.Value.Set();

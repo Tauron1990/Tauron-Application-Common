@@ -26,8 +26,8 @@
 
 using System;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Strategy;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -87,6 +87,27 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
 
         #endregion
 
+        #region Public Methods and Operators
+
+        /// <summary>
+        ///     The create.
+        /// </summary>
+        /// <param name="context">
+        ///     The context.
+        /// </param>
+        /// <param name="service">
+        ///     The service.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="object" />.
+        /// </returns>
+        public object Create(IBuildContext context, ProxyGenerator service)
+        {
+            return _createInstance(context, service);
+        }
+
+        #endregion
+
         #region Public Properties
 
         /// <summary>Gets a value indicating whether can use buildup.</summary>
@@ -108,27 +129,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         /// <summary>Gets a value indicating whether handles liftime.</summary>
         /// <value>The handles liftime.</value>
         public bool HandlesLiftime { get; private set; }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The create.
-        /// </summary>
-        /// <param name="context">
-        ///     The context.
-        /// </param>
-        /// <param name="service">
-        ///     The service.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        public object Create(IBuildContext context, ProxyGenerator service)
-        {
-            return _createInstance(context, service);
-        }
 
         #endregion
     }

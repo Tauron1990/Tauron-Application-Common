@@ -67,7 +67,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             context.ErrorTracer.Phase = "Contruct Object for " + context.Metadata;
 
-            context.Target = policy.Constructor.Invoke(context, policy.Generator);  //(context, policy.Generator);
+            context.Target = policy.Constructor.Invoke(context, policy.Generator); //(context, policy.Generator);
         }
 
         /// <summary>
@@ -93,14 +93,17 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                             : context.Metadata.Export.ExternalInfo.Create,
                     Generator =
                         _service.Generate(context.Metadata, context.Metadata.Export.ImportMetadata.ToArray(),
-                                          out interceptor)
+                            out interceptor)
                 });
 
             if (interceptor == null) return;
 
             var pol = context.Policys.Get<ExternalImportInterceptorPolicy>();
 
-            if (pol != null) pol.Interceptors.Add(interceptor);
+            if (pol != null)
+            {
+                pol.Interceptors.Add(interceptor);
+            }
             else
             {
                 pol = new ExternalImportInterceptorPolicy();

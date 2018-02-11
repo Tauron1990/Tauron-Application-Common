@@ -26,8 +26,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -37,18 +36,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
     [PublicAPI]
     public sealed class ExportMetadata : IEquatable<ExportMetadata>
     {
-        #region Fields
-
-        private IExport _export;
-
-        private Type _interfaceType;
-
-        private Type _lifetime;
-
-        private Dictionary<string, object> _metadata;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -70,19 +57,22 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         ///     The export.
         /// </param>
         public ExportMetadata([NotNull] Type interfaceType, [CanBeNull] string contractName, [NotNull] Type lifetime,
-                              [NotNull] Dictionary<string, object> metadata, [NotNull] IExport export)
+            [NotNull] Dictionary<string, object> metadata, [NotNull] IExport export)
         {
-            Contract.Requires<ArgumentNullException>(interfaceType != null, "interfaceType");
-            Contract.Requires<ArgumentNullException>(lifetime != null, "lifetime");
-            Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
-            Contract.Requires<ArgumentNullException>(export != null, "export");
-
+            if (interfaceType == null) throw new ArgumentNullException(nameof(interfaceType));
+            if (lifetime == null) throw new ArgumentNullException(nameof(lifetime));
+            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+            if (export == null) throw new ArgumentNullException(nameof(export));
             InterfaceType = interfaceType;
             ContractName = contractName;
             Lifetime = lifetime;
             Metadata = metadata;
             Export = export;
         }
+
+        #endregion
+
+        #region Fields
 
         #endregion
 
@@ -96,82 +86,22 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         /// <summary>Gets or sets the export.</summary>
         /// <value>The export.</value>
         [NotNull]
-        public IExport Export
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IExport>() != null);
-
-                return _export;
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _export = value;
-            }
-        }
+        public IExport Export { get; set; }
 
         /// <summary>Gets the interface type.</summary>
         /// <value>The interface type.</value>
         [NotNull]
-        public Type InterfaceType
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Type>() != null);
-
-                return _interfaceType;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _interfaceType = value;
-            }
-        }
+        public Type InterfaceType { get; private set; }
 
         /// <summary>Gets the lifetime.</summary>
         /// <value>The lifetime.</value>
         [NotNull]
-        public Type Lifetime
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Type>() != null);
-
-                return _lifetime;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _lifetime = value;
-            }
-        }
+        public Type Lifetime { get; private set; }
 
         /// <summary>Gets the metadata.</summary>
         /// <value>The metadata.</value>
         [NotNull]
-        public Dictionary<string, object> Metadata
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Dictionary<string, object>>() != null);
-
-                return _metadata;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _metadata = value;
-            }
-        }
+        public Dictionary<string, object> Metadata { get; private set; }
 
         #endregion
 
@@ -242,9 +172,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         {
             unchecked
             {
-                int hashCode = InterfaceType.GetHashCode();
-                hashCode = (hashCode*397) ^ (ContractName != null ? ContractName.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Lifetime.GetHashCode();
+                var hashCode = InterfaceType.GetHashCode();
+                hashCode = (hashCode * 397) ^ (ContractName?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ Lifetime.GetHashCode();
                 return hashCode;
             }
         }
@@ -257,7 +187,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         {
             object name;
             if (!Metadata.TryGetValue("DebugName", out name)) name = ContractName;
-            return ErrorTracer.FormatExport(_interfaceType, name);
+            return ErrorTracer.FormatExport(InterfaceType, name);
         }
 
         #endregion

@@ -25,13 +25,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
                 _stringBuilder = new StringBuilder();
             }
 
-            public override Encoding Encoding
-            {
-                get
-                {
-                    return Encoding.UTF8;
-                }
-            }
+            public override Encoding Encoding => Encoding.UTF8;
 
             public override void Write(char value)
             {
@@ -161,25 +155,13 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
         }
 
         [NotNull]
-        protected TextWriter TextWriter
-        {
-            get
-            {
-                return Original.ContextMode == ContextMode.Binary
-                           ? new ConsistentTextWriter(Original.BinaryWriter)
-                           : Original.TextWriter;
-            }
-        }
+        protected TextWriter TextWriter => Original.ContextMode == ContextMode.Binary
+            ? new ConsistentTextWriter(Original.BinaryWriter)
+            : Original.TextWriter;
 
         [NotNull]
-        protected TextReader TextReader
-        {
-            get
-            {
-                return Original.ContextMode == ContextMode.Text
-                           ? Original.TextReader
-                           : new ConsistentTextReader(Original.BinaryReader);
-            }
-        }
+        protected TextReader TextReader => Original.ContextMode == ContextMode.Text
+            ? Original.TextReader
+            : new ConsistentTextReader(Original.BinaryReader);
     }
 }

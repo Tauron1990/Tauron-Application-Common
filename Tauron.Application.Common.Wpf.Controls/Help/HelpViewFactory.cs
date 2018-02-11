@@ -25,11 +25,10 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Windows;
+using JetBrains.Annotations;
 using Tauron.Application.Help.View;
 using Tauron.Application.Help.ViewModels;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -75,7 +74,7 @@ namespace Tauron.Application.Help
         [NotNull]
         public static HelpViewModel GetHelpViewModel([NotNull] string filePath, [CanBeNull] string topic, [CanBeNull] string group)
         {
-            Contract.Requires<ArgumentNullException>(filePath != null, "filePath");
+            if (filePath == null) throw new ArgumentNullException(nameof(filePath));
 
             var temp = new HelpViewModel(filePath);
             temp.Activate(topic, group);
@@ -96,11 +95,11 @@ namespace Tauron.Application.Help
         /// </param>
         public static void ShowHelp([NotNull] string filePath, [CanBeNull] string topic, [CanBeNull] string group)
         {
-            Contract.Requires<ArgumentNullException>(filePath != null, "filePath");
+            if (filePath == null) throw new ArgumentNullException(nameof(filePath));
 
-            Window window = _windowRef;
+            var window = _windowRef;
 
-            if (window != null) window.Activate();
+            window?.Activate();
 
             window = GetHelpView();
             window.Closed += (sender, e) => _windowRef = null;
@@ -123,9 +122,9 @@ namespace Tauron.Application.Help
         /// </param>
         public static void ShowHelpLock([NotNull] string filePath, [CanBeNull] string topic, [CanBeNull] string group)
         {
-            Contract.Requires<ArgumentNullException>(filePath != null, "filePath");
+            if (filePath == null) throw new ArgumentNullException(nameof(filePath));
 
-            Window window = GetHelpView();
+            var window = GetHelpView();
             window.DataContext = GetHelpViewModel(filePath, topic, group);
             window.ShowDialog();
         }

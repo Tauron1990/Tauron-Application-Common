@@ -1,13 +1,11 @@
-﻿
-#region
+﻿#region
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -18,8 +16,6 @@ namespace Tauron.Application
     public abstract class MemberInfoAttribute : Attribute
     {
         #region Fields
-
-        private readonly string _memberName;
 
         #endregion
 
@@ -35,7 +31,7 @@ namespace Tauron.Application
         /// </param>
         protected MemberInfoAttribute([CanBeNull] string memberName)
         {
-            _memberName = memberName;
+            MemberName = memberName;
         }
 
         #endregion
@@ -46,10 +42,7 @@ namespace Tauron.Application
         ///     Der Name des Kommandos
         /// </summary>
         [CanBeNull]
-        public string MemberName
-        {
-            get { return _memberName; }
-        }
+        public string MemberName { get; }
 
         /// <summary>Gets or sets a value indicating whether synchronize.</summary>
         public bool Synchronize { get; set; }
@@ -67,21 +60,23 @@ namespace Tauron.Application
         /// <typeparam name="TAttribute">
         /// </typeparam>
         /// <returns>
-        ///     The <see>
+        ///     The
+        ///     <see>
         ///         <cref>IEnumerable</cref>
         ///     </see>
         ///     .
         /// </returns>
-        [NotNull,SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+        [NotNull]
+        [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         public static IEnumerable<Tuple<string, MemberInfo>> GetMembers<TAttribute>([NotNull] Type targetType)
             where TAttribute : MemberInfoAttribute
         {
             return
                 targetType.FindMemberAttributes<TAttribute>(true)
-                          .Select(
-                              attribute =>
-                              Tuple.Create(attribute.Item2.ProvideMemberName(attribute.Item1), attribute.Item1));
+                    .Select(
+                        attribute =>
+                            Tuple.Create(attribute.Item2.ProvideMemberName(attribute.Item1), attribute.Item1));
         }
 
         /// <summary>
@@ -102,8 +97,9 @@ namespace Tauron.Application
         public static void InvokeMembers<TAttribute>([NotNull] object instance, [NotNull] string targetMember, [NotNull] params object[] parameters)
             where TAttribute : MemberInfoAttribute
         {
-            Contract.Requires<ArgumentNullException>(instance != null, "instance");
-
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+            if (string.IsNullOrEmpty(targetMember)) throw new ArgumentException("Value cannot be null or empty.", nameof(targetMember));
             foreach (var member in
                 GetMembers<TAttribute>(instance.GetType()).Where(member => member.Item1 == targetMember)) member.Item2.SetInvokeMember(instance, parameters);
         }
@@ -120,8 +116,7 @@ namespace Tauron.Application
         [NotNull]
         public virtual string ProvideMemberName([NotNull] MemberInfo info)
         {
-            Contract.Requires<ArgumentNullException>(info != null, "instance");
-
+            if (info == null) throw new ArgumentNullException(nameof(info));
             return MemberName ?? info.Name;
         }
 

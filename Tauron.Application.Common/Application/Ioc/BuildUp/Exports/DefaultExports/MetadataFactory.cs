@@ -27,9 +27,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using Castle.DynamicProxy;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -38,12 +37,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
     /// <summary>The metadata base.</summary>
     public abstract class MetadataBase
     {
-        #region Fields
-
-        private Dictionary<string, object> metadata;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -54,10 +47,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// <param name="metadata">
         ///     The metadata.
         /// </param>
-        protected MetadataBase(IDictionary<string, object> metadata)
+        protected MetadataBase([NotNull] IDictionary<string, object> metadata)
         {
-            Contract.Requires<ArgumentNullException>(metadata != null, "metadata");
-
+            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
             Metadata = new Dictionary<string, object>(metadata);
         }
 
@@ -67,22 +59,11 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
         /// <summary>Gets or sets the metadata.</summary>
         /// <value>The metadata.</value>
-        public Dictionary<string, object> Metadata
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<Dictionary<string, object>>() != null);
+        public Dictionary<string, object> Metadata { get; }
 
-                return metadata;
-            }
+        #endregion
 
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                metadata = value;
-            }
-        }
+        #region Fields
 
         #endregion
     }
@@ -101,11 +82,10 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         /// </param>
         public void Intercept(IInvocation invocation)
         {
-            string name = invocation.Method.Name.Remove(0, 4);
+            var name = invocation.Method.Name.Remove(0, 4);
             var metadata = (MetadataBase) invocation.Proxy;
 
-            object value;
-            metadata.Metadata.TryGetValue(name, out value);
+            metadata.Metadata.TryGetValue(name, out var value);
             invocation.ReturnValue = value;
         }
 
@@ -142,7 +122,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
             lock (this)
             {
                 return _generator.CreateClassProxy(
-                    typeof (MetadataBase),
+                    typeof(MetadataBase),
                     new[] {interfaceType},
                     ProxyGenerationOptions.Default,
                     new object[] {metadata},

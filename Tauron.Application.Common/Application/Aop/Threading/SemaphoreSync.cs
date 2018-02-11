@@ -4,8 +4,8 @@ using System;
 using System.Reflection;
 using System.Threading;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -43,7 +43,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The semaphore source attribute.</summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     [PublicAPI]
     public sealed class SemaphoreSourceAttribute : ContextPropertyAttributeBase
     {
@@ -61,7 +61,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="target">
         ///     The target.
         /// </param>
-        protected internal override void Register( ObjectContext context,  MemberInfo info,  object target)
+        protected internal override void Register(ObjectContext context, MemberInfo info, object target)
         {
             context.Register<SemaphoreHolder, SemaphoreHolder>(
                 new SemaphoreHolder(
@@ -77,8 +77,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The semaphore attribute.</summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Event, AllowMultiple = true,
-        Inherited = true)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Event, AllowMultiple = true)]
     public sealed class SemaphoreAttribute : ThreadingBaseAspect
     {
         #region Fields
@@ -102,7 +101,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="contextName">
         ///     The context name.
         /// </param>
-        protected internal override void Initialize( object target,  ObjectContext context,  string contextName)
+        protected internal override void Initialize(object target, ObjectContext context, string contextName)
         {
             _holder = BaseHolder.GetOrAdd<SemaphoreHolder, SemaphoreHolder>(
                 context,

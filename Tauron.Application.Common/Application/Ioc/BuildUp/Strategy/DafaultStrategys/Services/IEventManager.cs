@@ -25,9 +25,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Reflection;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -35,7 +34,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
     /// <summary>The EventManager interface.</summary>
     [PublicAPI]
-    [ContractClass(typeof (EventManagerContracts))]
     public interface IEventManager
     {
         #region Public Methods and Operators
@@ -78,82 +76,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         ///     The publisher.
         /// </param>
         void AddPublisher(string topic, EventInfo eventInfo, object publisher, ErrorTracer errorTracer);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (IEventManager))]
-    internal abstract class EventManagerContracts : IEventManager
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The add event handler.
-        /// </summary>
-        /// <param name="topic">
-        ///     The topic.
-        /// </param>
-        /// <param name="handler">
-        ///     The handler.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void AddEventHandler(string topic, Delegate handler, ErrorTracer errorTracer)
-        {
-            Contract.Requires<ArgumentNullException>(topic != null, "topic");
-            Contract.Requires<ArgumentNullException>(handler != null, "handler");
-            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The add event handler.
-        /// </summary>
-        /// <param name="topic">
-        ///     The topic.
-        /// </param>
-        /// <param name="handler">
-        ///     The handler.
-        /// </param>
-        /// <param name="target">
-        ///     The target.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void AddEventHandler(string topic, MethodInfo handler, object target, ErrorTracer errorTracer)
-        {
-            Contract.Requires<ArgumentNullException>(topic != null, "topic");
-            Contract.Requires<ArgumentNullException>(handler != null, "handler");
-            Contract.Requires<ArgumentNullException>(target != null, "target");
-            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The add publisher.
-        /// </summary>
-        /// <param name="topic">
-        ///     The topic.
-        /// </param>
-        /// <param name="eventInfo">
-        ///     The event info.
-        /// </param>
-        /// <param name="publisher">
-        ///     The publisher.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void AddPublisher(string topic, EventInfo eventInfo, object publisher, ErrorTracer errorTracer)
-        {
-            Contract.Requires<ArgumentNullException>(topic != null, "topic");
-            Contract.Requires<ArgumentNullException>(eventInfo != null, "eventInfo");
-            Contract.Requires<ArgumentNullException>(publisher != null, "publisher");
-            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
-
-            throw new NotImplementedException();
-        }
 
         #endregion
     }

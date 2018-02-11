@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -15,19 +15,51 @@ namespace Tauron.Application
     [PublicAPI]
     public sealed class FrameworkObject : IWeakReference
     {
-        #region Fields
+        [DebuggerStepThrough]
+        private class ElementReference<TReference> : IWeakReference
+            where TReference : class
+        {
+            #region Constructors and Destructors
 
-        private readonly ElementReference<FrameworkContentElement> _fce;
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="ElementReference{TReference}" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="ElementReference{TReference}" /> Klasse.
+            /// </summary>
+            /// <param name="reference">
+            ///     The reference.
+            /// </param>
+            /// <param name="isWeak">
+            ///     The is weak.
+            /// </param>
+            public ElementReference([NotNull] TReference reference, bool isWeak)
+            {
+                if (reference == null) throw new ArgumentNullException(nameof(reference));
 
-        private readonly ElementReference<FrameworkElement> _fe;
+                if (isWeak) _weakRef = new WeakReference<TReference>(reference);
+                else _reference = reference;
+            }
 
-        private readonly bool _isFce;
+            #endregion
 
-        private readonly bool _isFe;
+            #region Fields
 
-        private readonly bool _isValid;
+            private readonly TReference _reference;
 
-        #endregion
+            private readonly WeakReference<TReference> _weakRef;
+
+            #endregion
+
+            #region Public Properties
+
+            /// <summary>Gets the target.</summary>
+            [NotNull]
+            public TReference Target => _weakRef != null ? _weakRef.TypedTarget() : _reference;
+
+            /// <summary>Gets a value indicating whether is alive.</summary>
+            public bool IsAlive => _weakRef == null || _weakRef.IsAlive();
+
+            #endregion
+        }
 
         #region Constructors and Destructors
 
@@ -48,13 +80,39 @@ namespace Tauron.Application
 
             _isFe = fe != null;
             _isFce = fce != null;
-            _isValid = _isFce || _isFe;
+            IsValid = _isFce || _isFe;
 
             // ReSharper disable AssignNullToNotNullAttribute
             if (_isFe) _fe = new ElementReference<FrameworkElement>(fe, isWeak);
             else if (_isFce) _fce = new ElementReference<FrameworkContentElement>(fce, isWeak);
             // ReSharper restore AssignNullToNotNullAttribute
         }
+
+        #endregion
+
+        #region Explicit Interface Properties
+
+        bool IWeakReference.IsAlive
+        {
+            get
+            {
+                if (_isFe) return _fe.IsAlive;
+
+                return _isFce && _fce.IsAlive;
+            }
+        }
+
+        #endregion
+
+        #region Fields
+
+        private readonly ElementReference<FrameworkContentElement> _fce;
+
+        private readonly ElementReference<FrameworkElement> _fe;
+
+        private readonly bool _isFce;
+
+        private readonly bool _isFe;
 
         #endregion
 
@@ -144,10 +202,7 @@ namespace Tauron.Application
         }
 
         /// <summary>Gets a value indicating whether is valid.</summary>
-        public bool IsValid
-        {
-            get { return _isValid; }
-        }
+        public bool IsValid { get; }
 
         /// <summary>Gets the original.</summary>
         [CanBeNull]
@@ -194,20 +249,6 @@ namespace Tauron.Application
 
         #endregion
 
-        #region Explicit Interface Properties
-
-        bool IWeakReference.IsAlive
-        {
-            get
-            {
-                if (_isFe) return _fe.IsAlive;
-
-                return _isFce && _fce.IsAlive;
-            }
-        }
-
-        #endregion
-
         #region Public Methods and Operators
 
         /// <summary>
@@ -243,58 +284,5 @@ namespace Tauron.Application
         }
 
         #endregion
-
-        [DebuggerStepThrough]
-        private class ElementReference<TReference> : IWeakReference
-            where TReference : class
-        {
-            #region Fields
-
-            private readonly TReference _reference;
-
-            private readonly WeakReference<TReference> _weakRef;
-
-            #endregion
-
-            #region Constructors and Destructors
-
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="ElementReference{TReference}" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="ElementReference{TReference}" /> Klasse.
-            /// </summary>
-            /// <param name="reference">
-            ///     The reference.
-            /// </param>
-            /// <param name="isWeak">
-            ///     The is weak.
-            /// </param>
-            public ElementReference([NotNull] TReference reference, bool isWeak)
-            {
-                if (reference == null) throw new ArgumentNullException("reference");
-
-                if (isWeak) _weakRef = new WeakReference<TReference>(reference);
-                else _reference = reference;
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            /// <summary>Gets the target.</summary>
-            [NotNull]
-            public TReference Target
-            {
-// ReSharper disable once AssignNullToNotNullAttribute
-                get { return _weakRef != null ? _weakRef.TypedTarget() : _reference; }
-            }
-
-            /// <summary>Gets a value indicating whether is alive.</summary>
-            public bool IsAlive
-            {
-                get { return _weakRef == null || _weakRef.IsAlive(); }
-            }
-
-            #endregion
-        }
     }
 }

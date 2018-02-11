@@ -64,7 +64,7 @@ namespace Tauron.Application.Implementation
         /// <summary>The close splash.</summary>
         public void CloseSplash()
         {
-            IUISynchronize context = UiSynchronize.Synchronize;
+            var context = UiSynchronize.Synchronize;
             context.Invoke(
                 () =>
                 {
@@ -77,7 +77,7 @@ namespace Tauron.Application.Implementation
         /// <summary>The show splash.</summary>
         public void ShowSplash()
         {
-            IUISynchronize context = UiSynchronize.Synchronize;
+            var context = UiSynchronize.Synchronize;
             context.Invoke(
                 () =>
                 {

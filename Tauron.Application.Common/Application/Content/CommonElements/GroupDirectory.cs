@@ -7,7 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.Serialization;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -27,387 +27,6 @@ namespace Tauron.Application
     public class GroupDictionary<TKey, TValue> : Dictionary<TKey, ICollection<TValue>>
         where TKey : class where TValue : class
     {
-        #region Serializable
-
-        /// <summary>
-        ///     Implementiert die <see cref="T:System.Runtime.Serialization.ISerializable" />-Schnittstelle und gibt die zum
-        ///     Serialisieren der
-        ///     <see cref="T:System.Collections.Generic.Dictionary`2" />
-        ///     -Instanz erforderlichen Daten zurück.
-        /// </summary>
-        /// <param name="info">
-        ///     Ein <see cref="T:System.Runtime.Serialization.SerializationInfo" />-Objekt mit den zum Serialisieren der
-        ///     <see cref="T:System.Collections.Generic.Dictionary`2" />
-        ///     -Instanz erforderlichen Informationen.
-        /// </param>
-        /// <param name="context">
-        ///     Eine <see cref="T:System.Runtime.Serialization.StreamingContext" />-Struktur, die die Quelle und das Ziel des
-        ///     serialisierten Streams enthält, der der
-        ///     <see cref="T:System.Collections.Generic.Dictionary`2" />
-        ///     -Instanz zugeordnet ist.
-        /// </param>
-        /// <exception cref="T:System.ArgumentNullException">
-        ///     <paramref name="info" /> ist null.
-        /// </exception>
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("listType", _listType, typeof (Type));
-
-            base.GetObjectData(info, context);
-        }
-
-#pragma warning disable 628
-
-        /// <summary>
-        ///     Initialisiert eine neue Instanz der <see cref="GroupDictionary{TKey,TValue}" /> Klasse.
-        /// </summary>
-        /// <param name="info">
-        /// </param>
-        /// <param name="context">
-        /// </param>
-        [SuppressMessage("Microsoft.Design", "CA1047:DoNotDeclareProtectedMembersInSealedTypes")]
-        protected GroupDictionary([NotNull] SerializationInfo info, StreamingContext context)
-#pragma warning restore 628
-            : base(info, context)
-        {
-            Contract.Requires<ArgumentNullException>(info != null, "info");
-
-            _listType = (Type) info.GetValue("listType", typeof (Type));
-        }
-
-        #endregion Serializable
-
-        /// <summary>The _list type.</summary>
-        private readonly Type _listType;
-
-        /// <summary>The _generic temp.</summary>
-        private Type _genericTemp;
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="GroupDictionary{TKey,TValue}" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="GroupDictionary{TKey,TValue}" /> Klasse.
-        /// </summary>
-        /// <param name="listType">
-        ///     The list type.
-        /// </param>
-        public GroupDictionary([NotNull] Type listType)
-        {
-            Contract.Requires<ArgumentNullException>(listType != null, "listType");
-
-            _listType = listType;
-        }
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="GroupDictionary{TKey,TValue}" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="GroupDictionary{TKey,TValue}" /> Klasse.
-        /// </summary>
-        public GroupDictionary()
-        {
-            _listType = typeof (List<TValue>);
-        }
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="GroupDictionary{TKey,TValue}" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="GroupDictionary{TKey,TValue}" /> Klasse.
-        /// </summary>
-        /// <param name="singleList">
-        ///     The single list.
-        /// </param>
-        public GroupDictionary(bool singleList)
-        {
-            _listType = singleList ? typeof (HashSet<TValue>) : typeof (List<TValue>);
-        }
-
-        public GroupDictionary(GroupDictionary<TKey, TValue> groupDictionary)
-            : base(groupDictionary)
-        {
-            _listType = groupDictionary._listType;
-            _genericTemp = groupDictionary._genericTemp;
-            
-        }
-
-        /// <summary>Gibt eine Collection zurück die Alle in den Listen enthaltenen Werte Darstellen.</summary>
-        /// <value>The all values.</value>
-        [NotNull]
-        public ICollection<TValue> AllValues
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<ICollection<TValue>>() != null);
-
-                return new AllValueCollection(this);
-            }
-        }
-
-        /// <summary>
-        ///     Gibt eine Liste mit entsprechenden Schlüssel zurück. Ist keine Liste bkannt
-        ///     wird eine erstellt.
-        /// </summary>
-        /// <param name="key">
-        ///     Der Schlüssel nach dem gesucht werden soll.
-        /// </param>
-        /// <returns>
-        ///     Eine Passende Collection.
-        /// </returns>
-        [ContractVerification(false)]
-        public new ICollection<TValue> this[[NotNull]TKey key]
-        {
-            get
-            {
-                Contract.Requires<ArgumentNullException>(key != null, "TKey");
-                Contract.Ensures(Contract.Result<ICollection<TValue>>() != null);
-
-                if (!ContainsKey(key)) Add(key);
-
-                return base[key];
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(key != null, "key");
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                base[key] = value;
-            }
-        }
-
-        /// <summary>The create list.</summary>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        [NotNull]
-        private object CreateList()
-        {
-            Contract.Ensures(Contract.Result<object>() != null);
-
-            if (!typeof (ICollection<TValue>).IsAssignableFrom(_listType)) throw new InvalidOperationException();
-
-            if (_genericTemp != null) return Activator.CreateInstance(_genericTemp);
-
-            if (_listType.ContainsGenericParameters)
-            {
-                if (_listType.GetGenericArguments().Length != 1) throw new InvalidOperationException();
-
-                _genericTemp = _listType.MakeGenericType(typeof (TValue));
-            }
-            else
-            {
-                Type[] generic = _listType.GetGenericArguments();
-                if (generic.Length > 1) throw new InvalidOperationException();
-
-                if (generic.Length == 0) _genericTemp = _listType;
-
-                if (_genericTemp == null && generic[0] == typeof (TValue)) _genericTemp = _listType;
-                else _genericTemp = _listType.GetGenericTypeDefinition().MakeGenericType(typeof (TValue));
-            }
-
-            if (_genericTemp == null) throw new InvalidOperationException();
-
-            return Activator.CreateInstance(_genericTemp);
-        }
-
-        /// <summary>
-        ///     Fügt einen schlüssel zur liste hinzu.
-        /// </summary>
-        /// <param name="key">
-        ///     Der Schlüssel der hinzugefügt werden soll.
-        /// </param>
-        public void Add([NotNull] TKey key)
-        {
-            Contract.Requires<ArgumentNullException>(key != null, "key");
-
-            if (!ContainsKey(key)) base[key] = (ICollection<TValue>) CreateList();
-        }
-
-        /// <summary>
-        ///     Fügt eineesn schlüssel und ein Element hinzu bei .
-        /// </summary>
-        /// <param name="key">
-        ///     Der Schlüssel unter dem ein wert hinzugefügt werden soll.
-        /// </param>
-        /// <param name="value">
-        ///     Der wert der Hinzugefügt werden soll.
-        /// </param>
-        public void Add([NotNull] TKey key, [NotNull] TValue value)
-        {
-            Contract.Requires<ArgumentNullException>(key != null, "key");
-            Contract.Requires<ArgumentNullException>(value != null, "value");
-
-            if (!ContainsKey(key)) Add(key);
-
-            ICollection<TValue> list = base[key];
-            if (list != null) list.Add(value);
-        }
-
-        /// <summary>
-        ///     Fügt eine ganze liste von werten hinzu.
-        /// </summary>
-        /// <param name="key">
-        ///     Der Schlüssel zu dem ein wert hinzugefügt werden soll.
-        /// </param>
-        /// <param name="value">
-        ///     Die werte die hinzugefügt werden sollen.
-        /// </param>
-        public void AddRange([NotNull] TKey key, [NotNull] IEnumerable<TValue> value)
-        {
-            Contract.Requires<ArgumentNullException>(key != null, "key");
-            Contract.Requires<ArgumentNullException>(value != null, "value");
-
-            if (!ContainsKey(key)) Add(key);
-
-            ICollection<TValue> values = base[key];
-            if (values == null) return;
-            foreach (TValue item in value.Where(item => item != null)) values.Add(item);
-        }
-
-        /// <summary>
-        ///     Entfernt einen wert unabhänig vom schlüssel.
-        /// </summary>
-        /// <param name="value">
-        ///     Der wert der entfernt werden soll.
-        /// </param>
-        /// <returns>
-        ///     Ob der wert Entfernt werden konnte.
-        /// </returns>
-        public bool RemoveValue([NotNull] TValue value)
-        {
-            return RemoveImpl(null, value, false, true);
-        }
-
-        /// <summary>
-        ///     Entfernt einen wert unabhänig vom schlüssel.
-        /// </summary>
-        /// <param name="value">
-        ///     Der wert der entfernt werden soll.
-        /// </param>
-        /// <param name="removeEmptyLists">
-        ///     Gibt an ob leere listen entfernt werden sollen.
-        /// </param>
-        /// <returns>
-        ///     Ob der wert Entfernt werden konnte.
-        /// </returns>
-        public bool Remove([NotNull] TValue value, bool removeEmptyLists)
-        {
-            return RemoveImpl(null, value, removeEmptyLists, true);
-        }
-
-        /// <summary>
-        ///     Entfernt einen Wert aus der Liste eines bestimten schlüssels.
-        /// </summary>
-        /// <param name="key">
-        ///     Der schlüssel der den Wert enthält der Enfernt werden soll.
-        /// </param>
-        /// <param name="value">
-        ///     Der wert der Enfernt werden soll.
-        /// </param>
-        /// <returns>
-        ///     Ob der wert Enfernt werden konnte.
-        /// </returns>
-        public bool Remove([NotNull] TKey key, [NotNull] TValue value)
-        {
-            Contract.Requires<ArgumentNullException>(key != null, "key");
-
-            return RemoveImpl(key, value, false, false);
-        }
-
-        /// <summary>
-        ///     Entfernt einen Wert aus der Liste eines bestimten schlüssels.
-        /// </summary>
-        /// <param name="key">
-        ///     Der schlüssel der den Wert enthält der Enfernt werden soll.
-        /// </param>
-        /// <param name="value">
-        ///     Der wert der Enfernt werden soll.
-        /// </param>
-        /// <param name="removeListIfEmpty">
-        ///     Gibt an ob alle leeren listen entfernt werden sollen.
-        /// </param>
-        /// <returns>
-        ///     Ob der wert Enfernt werden konnte.
-        /// </returns>
-        public bool Remove([NotNull] TKey key, [NotNull] TValue value, bool removeListIfEmpty)
-        {
-            Contract.Requires<ArgumentNullException>(key != null, "key");
-
-            return RemoveImpl(key, value, removeListIfEmpty, false);
-        }
-
-        /// <summary>
-        ///     The remove impl.
-        /// </summary>
-        /// <param name="key">
-        ///     The key.
-        /// </param>
-        /// <param name="val">
-        ///     The val.
-        /// </param>
-        /// <param name="removeEmpty">
-        ///     The remove empty.
-        /// </param>
-        /// <param name="removeAll">
-        ///     The remove all.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="bool" />.
-        /// </returns>
-        private bool RemoveImpl([CanBeNull] TKey key, [CanBeNull] TValue val, bool removeEmpty, bool removeAll)
-        {
-            bool ok = false;
-
-            if (removeAll)
-            {
-                IEnumerator keys = Keys.ToArray().GetEnumerator();
-                IEnumerator vals = Values.ToArray().GetEnumerator();
-                while (keys.MoveNext() && vals.MoveNext())
-                {
-                    var coll = (ICollection<TValue>) vals.Current;
-                    var currkey = (TKey) keys.Current;
-                    ok |= RemoveList(coll, val);
-                    if (removeEmpty && coll.Count == 0) ok |= Remove(currkey);
-                }
-            }	
-
-                #region Single
-
-            else
-            {
-                ok = ContainsKey(key);
-                if (!ok) return ok;
-                ICollection<TValue> col = base[key];
-                Contract.Assume(col != null);
-                ok |= RemoveList(col, val);
-                if (!removeEmpty) return ok;
-                if (col.Count == 0) ok |= Remove(key);
-            }
-
-            #endregion Single
-
-            return ok;
-        }
-
-        /// <summary>
-        ///     The remove list.
-        /// </summary>
-        /// <param name="vals">
-        ///     The vals.
-        /// </param>
-        /// <param name="val">
-        ///     The val.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="bool" />.
-        /// </returns>
-        private static bool RemoveList([NotNull] ICollection<TValue> vals, [NotNull] TValue val)
-        {
-            Contract.Requires<ArgumentNullException>(vals != null, "vals");
-
-            bool ok = false;
-            while (vals.Remove(val)) ok = true;
-
-            return ok;
-        }
-
         #region Nested type: AllValueCollection
 
         /// <summary>The all value collection.</summary>
@@ -432,9 +51,35 @@ namespace Tauron.Application
             /// </param>
             public AllValueCollection([NotNull] GroupDictionary<TKey, TValue> list)
             {
-                Contract.Requires<ArgumentNullException>(list != null, "list");
-
+                if (list == null) throw new ArgumentNullException(nameof(list));
                 _list = list;
+            }
+
+            #endregion
+
+            #region Properties
+
+            /// <summary>Gets the get all.</summary>
+            /// <value>The get all.</value>
+            [NotNull]
+            private IEnumerable<TValue> GetAll
+            {
+                get { return _list.SelectMany(pair => pair.Value); }
+            }
+
+            #endregion
+
+            #region Explicit Interface Methods
+
+            /// <summary>Gibt einen Enumerator zurück, der eine Auflistung durchläuft.</summary>
+            /// <returns>
+            ///     Ein <see cref="T:System.Collections.IEnumerator" />-Objekt, das zum Durchlaufen der Auflistung verwendet werden
+            ///     kann.
+            /// </returns>
+            /// <filterpriority>2</filterpriority>
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
             }
 
             #endregion
@@ -448,10 +93,7 @@ namespace Tauron.Application
             ///     Die Anzahl der Elemente, die in <see cref="T:System.Collections.Generic.ICollection`1" /> enthalten sind.
             /// </returns>
             /// <value>The count.</value>
-            public int Count
-            {
-                get { return GetAll.Count(); }
-            }
+            public int Count => GetAll.Count();
 
             /// <summary>
             ///     Ruft einen Wert ab, der angibt, ob <see cref="T:System.Collections.Generic.ICollection`1" /> schreibgeschützt ist.
@@ -460,28 +102,7 @@ namespace Tauron.Application
             ///     True, wenn <see cref="T:System.Collections.Generic.ICollection`1" /> schreibgeschützt ist, andernfalls false.
             /// </returns>
             /// <value>The is read only.</value>
-            public bool IsReadOnly
-            {
-                get { return true; }
-            }
-
-            #endregion
-
-            #region Properties
-
-            /// <summary>Gets the get all.</summary>
-            /// <value>The get all.</value>
-            [NotNull]
-            private IEnumerable<TValue> GetAll
-            {
-                get
-                {
-                    Contract.Requires(_list != null);
-                    Contract.Ensures(Contract.Result<IEnumerable<TValue>>() != null);
-
-                    return _list.SelectMany(pair => pair.Value);
-                }
-            }
+            public bool IsReadOnly => true;
 
             #endregion
 
@@ -570,8 +191,6 @@ namespace Tauron.Application
             /// <filterpriority>1</filterpriority>
             public IEnumerator<TValue> GetEnumerator()
             {
-                Contract.Ensures(Contract.Result<IEnumerator<TValue>>() != null);
-
                 return GetAll.GetEnumerator();
             }
 
@@ -597,25 +216,366 @@ namespace Tauron.Application
             }
 
             #endregion
-
-            #region Explicit Interface Methods
-
-            /// <summary>Gibt einen Enumerator zurück, der eine Auflistung durchläuft.</summary>
-            /// <returns>
-            ///     Ein <see cref="T:System.Collections.IEnumerator" />-Objekt, das zum Durchlaufen der Auflistung verwendet werden
-            ///     kann.
-            /// </returns>
-            /// <filterpriority>2</filterpriority>
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                Contract.Ensures(Contract.Result<IEnumerator>() != null);
-
-                return GetEnumerator();
-            }
-
-            #endregion
         }
 
         #endregion Nested type: AllValueCollection
+
+        [NotNull]
+        private readonly SerializationInfo _info;
+
+        /// <summary>The _list type.</summary>
+        private readonly Type _listType;
+
+        /// <summary>The _generic temp.</summary>
+        private Type _genericTemp;
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="GroupDictionary{TKey,TValue}" /> class.
+        ///     Initialisiert eine neue Instanz der <see cref="GroupDictionary{TKey,TValue}" /> Klasse.
+        /// </summary>
+        /// <param name="listType">
+        ///     The list type.
+        /// </param>
+        public GroupDictionary([NotNull] Type listType)
+        {
+            if (listType == null) throw new ArgumentNullException(nameof(listType));
+            _listType = listType;
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="GroupDictionary{TKey,TValue}" /> class.
+        ///     Initialisiert eine neue Instanz der <see cref="GroupDictionary{TKey,TValue}" /> Klasse.
+        /// </summary>
+        public GroupDictionary()
+        {
+            _listType = typeof(List<TValue>);
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="GroupDictionary{TKey,TValue}" /> class.
+        ///     Initialisiert eine neue Instanz der <see cref="GroupDictionary{TKey,TValue}" /> Klasse.
+        /// </summary>
+        /// <param name="singleList">
+        ///     The single list.
+        /// </param>
+        public GroupDictionary(bool singleList)
+        {
+            _listType = singleList ? typeof(HashSet<TValue>) : typeof(List<TValue>);
+        }
+
+        public GroupDictionary(GroupDictionary<TKey, TValue> groupDictionary)
+            : base(groupDictionary)
+        {
+            _listType = groupDictionary._listType;
+            _genericTemp = groupDictionary._genericTemp;
+        }
+
+        /// <summary>Gibt eine Collection zurück die Alle in den Listen enthaltenen Werte Darstellen.</summary>
+        /// <value>The all values.</value>
+        [NotNull]
+        public ICollection<TValue> AllValues => new AllValueCollection(this);
+
+        /// <summary>
+        ///     Gibt eine Liste mit entsprechenden Schlüssel zurück. Ist keine Liste bkannt
+        ///     wird eine erstellt.
+        /// </summary>
+        /// <param name="key">
+        ///     Der Schlüssel nach dem gesucht werden soll.
+        /// </param>
+        /// <returns>
+        ///     Eine Passende Collection.
+        /// </returns>
+        public new ICollection<TValue> this[[NotNull] TKey key]
+        {
+            get
+            {
+                if (!ContainsKey(key)) Add(key);
+
+                return base[key];
+            }
+
+            set => base[key] = value;
+        }
+
+        /// <summary>The create list.</summary>
+        /// <returns>
+        ///     The <see cref="object" />.
+        /// </returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        [NotNull]
+        private object CreateList()
+        {
+            if (!typeof(ICollection<TValue>).IsAssignableFrom(_listType)) throw new InvalidOperationException();
+
+            if (_genericTemp != null) return Activator.CreateInstance(_genericTemp);
+
+            if (_listType.ContainsGenericParameters)
+            {
+                if (_listType.GetGenericArguments().Length != 1) throw new InvalidOperationException();
+
+                _genericTemp = _listType.MakeGenericType(typeof(TValue));
+            }
+            else
+            {
+                var generic = _listType.GetGenericArguments();
+                if (generic.Length > 1) throw new InvalidOperationException();
+
+                if (generic.Length == 0) _genericTemp = _listType;
+
+                if (_genericTemp == null && generic[0] == typeof(TValue)) _genericTemp = _listType;
+                else _genericTemp = _listType.GetGenericTypeDefinition().MakeGenericType(typeof(TValue));
+            }
+
+            if (_genericTemp == null) throw new InvalidOperationException();
+
+            return Activator.CreateInstance(_genericTemp);
+        }
+
+        /// <summary>
+        ///     Fügt einen schlüssel zur liste hinzu.
+        /// </summary>
+        /// <param name="key">
+        ///     Der Schlüssel der hinzugefügt werden soll.
+        /// </param>
+        public void Add([NotNull] TKey key)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (!ContainsKey(key)) base[key] = (ICollection<TValue>) CreateList();
+        }
+
+        /// <summary>
+        ///     Fügt eineesn schlüssel und ein Element hinzu bei .
+        /// </summary>
+        /// <param name="key">
+        ///     Der Schlüssel unter dem ein wert hinzugefügt werden soll.
+        /// </param>
+        /// <param name="value">
+        ///     Der wert der Hinzugefügt werden soll.
+        /// </param>
+        public void Add([NotNull] TKey key, [NotNull] TValue value)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (!ContainsKey(key)) Add(key);
+
+            var list = base[key];
+            list?.Add(value);
+        }
+
+        /// <summary>
+        ///     Fügt eine ganze liste von werten hinzu.
+        /// </summary>
+        /// <param name="key">
+        ///     Der Schlüssel zu dem ein wert hinzugefügt werden soll.
+        /// </param>
+        /// <param name="value">
+        ///     Die werte die hinzugefügt werden sollen.
+        /// </param>
+        public void AddRange([NotNull] TKey key, [NotNull] IEnumerable<TValue> value)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (!ContainsKey(key)) Add(key);
+
+            var values = base[key];
+            if (values == null) return;
+            foreach (var item in value.Where(item => item != null)) values.Add(item);
+        }
+
+        /// <summary>
+        ///     Entfernt einen wert unabhänig vom schlüssel.
+        /// </summary>
+        /// <param name="value">
+        ///     Der wert der entfernt werden soll.
+        /// </param>
+        /// <returns>
+        ///     Ob der wert Entfernt werden konnte.
+        /// </returns>
+        public bool RemoveValue([NotNull] TValue value)
+        {
+            return RemoveImpl(null, value, false, true);
+        }
+
+        /// <summary>
+        ///     Entfernt einen wert unabhänig vom schlüssel.
+        /// </summary>
+        /// <param name="value">
+        ///     Der wert der entfernt werden soll.
+        /// </param>
+        /// <param name="removeEmptyLists">
+        ///     Gibt an ob leere listen entfernt werden sollen.
+        /// </param>
+        /// <returns>
+        ///     Ob der wert Entfernt werden konnte.
+        /// </returns>
+        public bool Remove([NotNull] TValue value, bool removeEmptyLists)
+        {
+            return RemoveImpl(null, value, removeEmptyLists, true);
+        }
+
+        /// <summary>
+        ///     Entfernt einen Wert aus der Liste eines bestimten schlüssels.
+        /// </summary>
+        /// <param name="key">
+        ///     Der schlüssel der den Wert enthält der Enfernt werden soll.
+        /// </param>
+        /// <param name="value">
+        ///     Der wert der Enfernt werden soll.
+        /// </param>
+        /// <returns>
+        ///     Ob der wert Enfernt werden konnte.
+        /// </returns>
+        public bool Remove([NotNull] TKey key, [NotNull] TValue value)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            return RemoveImpl(key, value, false, false);
+        }
+
+        /// <summary>
+        ///     Entfernt einen Wert aus der Liste eines bestimten schlüssels.
+        /// </summary>
+        /// <param name="key">
+        ///     Der schlüssel der den Wert enthält der Enfernt werden soll.
+        /// </param>
+        /// <param name="value">
+        ///     Der wert der Enfernt werden soll.
+        /// </param>
+        /// <param name="removeListIfEmpty">
+        ///     Gibt an ob alle leeren listen entfernt werden sollen.
+        /// </param>
+        /// <returns>
+        ///     Ob der wert Enfernt werden konnte.
+        /// </returns>
+        public bool Remove([NotNull] TKey key, [NotNull] TValue value, bool removeListIfEmpty)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            return RemoveImpl(key, value, removeListIfEmpty, false);
+        }
+
+        /// <summary>
+        ///     The remove impl.
+        /// </summary>
+        /// <param name="key">
+        ///     The key.
+        /// </param>
+        /// <param name="val">
+        ///     The val.
+        /// </param>
+        /// <param name="removeEmpty">
+        ///     The remove empty.
+        /// </param>
+        /// <param name="removeAll">
+        ///     The remove all.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        private bool RemoveImpl([CanBeNull] TKey key, [CanBeNull] TValue val, bool removeEmpty, bool removeAll)
+        {
+            var ok = false;
+
+            if (removeAll)
+            {
+                var keys = Keys.ToArray().GetEnumerator();
+                var vals = Values.ToArray().GetEnumerator();
+                while (keys.MoveNext() && vals.MoveNext())
+                {
+                    var coll = (ICollection<TValue>) vals.Current;
+                    var currkey = (TKey) keys.Current;
+                    ok |= RemoveList(coll, val);
+                    if (removeEmpty && coll.Count == 0) ok |= Remove(currkey);
+                }
+            }
+
+            #region Single
+
+            else
+            {
+                ok = ContainsKey(key);
+                if (!ok) return ok;
+                var col = base[key];
+
+                ok |= RemoveList(col, val);
+                if (!removeEmpty) return ok;
+                if (col.Count == 0) ok |= Remove(key);
+            }
+
+            #endregion Single
+
+            return ok;
+        }
+
+        /// <summary>
+        ///     The remove list.
+        /// </summary>
+        /// <param name="vals">
+        ///     The vals.
+        /// </param>
+        /// <param name="val">
+        ///     The val.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="bool" />.
+        /// </returns>
+        private static bool RemoveList([NotNull] ICollection<TValue> vals, [NotNull] TValue val)
+        {
+            if (vals == null) throw new ArgumentNullException(nameof(vals));
+            if (val == null) throw new ArgumentNullException(nameof(val));
+            var ok = false;
+            while (vals.Remove(val)) ok = true;
+
+            return ok;
+        }
+
+        #region Serializable
+
+        /// <summary>
+        ///     Implementiert die <see cref="T:System.Runtime.Serialization.ISerializable" />-Schnittstelle und gibt die zum
+        ///     Serialisieren der
+        ///     <see cref="T:System.Collections.Generic.Dictionary`2" />
+        ///     -Instanz erforderlichen Daten zurück.
+        /// </summary>
+        /// <param name="info">
+        ///     Ein <see cref="T:System.Runtime.Serialization.SerializationInfo" />-Objekt mit den zum Serialisieren der
+        ///     <see cref="T:System.Collections.Generic.Dictionary`2" />
+        ///     -Instanz erforderlichen Informationen.
+        /// </param>
+        /// <param name="context">
+        ///     Eine <see cref="T:System.Runtime.Serialization.StreamingContext" />-Struktur, die die Quelle und das Ziel des
+        ///     serialisierten Streams enthält, der der
+        ///     <see cref="T:System.Collections.Generic.Dictionary`2" />
+        ///     -Instanz zugeordnet ist.
+        /// </param>
+        /// <exception cref="T:System.ArgumentNullException">
+        ///     <paramref name="info" /> ist null.
+        /// </exception>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("listType", _listType, typeof(Type));
+
+            base.GetObjectData(info, context);
+        }
+
+#pragma warning disable 628
+
+        /// <summary>
+        ///     Initialisiert eine neue Instanz der <see cref="GroupDictionary{TKey,TValue}" /> Klasse.
+        /// </summary>
+        /// <param name="info">
+        /// </param>
+        /// <param name="context">
+        /// </param>
+        [SuppressMessage("Microsoft.Design", "CA1047:DoNotDeclareProtectedMembersInSealedTypes")]
+        protected GroupDictionary([NotNull] SerializationInfo info, StreamingContext context)
+#pragma warning restore 628
+            : base(info, context)
+        {
+            _info = info;
+            _listType = (Type) info.GetValue("listType", typeof(Type));
+        }
+
+        #endregion Serializable
     }
 }

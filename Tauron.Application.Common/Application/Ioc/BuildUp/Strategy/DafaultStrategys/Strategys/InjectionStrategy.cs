@@ -46,6 +46,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         private IMetadataFactory _factory;
 
         private IImportInterceptorFactory[] _interceptorFactories;
+
         #endregion
 
         #region Public Methods and Operators
@@ -75,7 +76,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             if (context.Target == null) return;
 
-            foreach (InjectMemberPolicy policy in context.Policys.GetAll<InjectMemberPolicy>())
+            foreach (var policy in context.Policys.GetAll<InjectMemberPolicy>())
             {
                 policy.Injector.Inject(context.Target, context.Container, policy.Metadata,
                     policy.Interceptors == null ? null : new CompositeInterceptor(policy.Interceptors),
@@ -97,7 +98,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             context.ErrorTracer.Phase = "Loading Injections for " + context.Metadata;
 
-            MemberInfo[] members = context.ExportType.GetMembers(AopConstants.DefaultBindingFlags);
+            var members = context.ExportType.GetMembers(AopConstants.DefaultBindingFlags);
 
             List<IImportInterceptor> importInterceptors = null;
             var intpol = context.Policys.Get<ExternalImportInterceptorPolicy>();
@@ -105,19 +106,17 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             foreach (
                 var temp in
-                    _interceptorFactories.Select(
+                _interceptorFactories.Select(
                         importInterceptorFactory => importInterceptorFactory.CreateInterceptor(context.Metadata))
-                                         .Where(temp => temp != null))
-            {
+                    .Where(temp => temp != null))
                 if (importInterceptors == null) importInterceptors = new List<IImportInterceptor> {temp};
                 else importInterceptors.Add(temp);
-            }
 
-            foreach (ImportMetadata importMetadata in context.Metadata.Export.ImportMetadata)
+            foreach (var importMetadata in context.Metadata.Export.ImportMetadata)
             {
                 var policy = new InjectMemberPolicy {Metadata = importMetadata, Interceptors = importInterceptors};
 
-                MemberInfo info = members.FirstOrDefault(inf => inf.Name == importMetadata.MemberName);
+                var info = members.FirstOrDefault(inf => inf.Name == importMetadata.MemberName);
                 if (info == null) continue;
 
                 switch (info.MemberType)

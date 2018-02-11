@@ -27,8 +27,8 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
+using JetBrains.Annotations;
 using Ookii.Dialogs.Wpf;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -37,15 +37,54 @@ namespace Tauron.Application.Controls
     /// <summary>The simple progress dialog.</summary>
     public sealed class SimpleProgressDialog : IProgressDialog
     {
-        #region Fields
+        private class DialogReporter : IProgress<ActiveProgress>
+        {
+            #region Constructors and Destructors
 
-        private readonly ProgressDialog _dialog;
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="DialogReporter" /> class.
+            ///     Initialisiert eine neue Instanz der <see cref="DialogReporter" /> Klasse.
+            /// </summary>
+            /// <param name="dialog">
+            ///     The dialog.
+            /// </param>
+            /// <param name="text">
+            ///     The text.
+            /// </param>
+            public DialogReporter([NotNull] ProgressDialog dialog, [NotNull] string text)
+            {
+                _dialog = dialog;
+                _text = text;
+            }
 
-        private readonly IWindow _owner;
+            #endregion
 
-        private readonly Action<IProgress<ActiveProgress>> _worker;
+            #region Public Methods and Operators
 
-        #endregion
+            /// <summary>
+            ///     The report.
+            /// </summary>
+            /// <param name="value">
+            ///     The value.
+            /// </param>
+            public void Report([NotNull] ActiveProgress value)
+            {
+                _dialog.ReportProgress(
+                    (int) value.OverAllProgress,
+                    _text,
+                    string.Format("{0} : {1}%", value.Message, (int) value.Percent));
+            }
+
+            #endregion
+
+            #region Fields
+
+            private readonly ProgressDialog _dialog;
+
+            private readonly string _text;
+
+            #endregion
+        }
 
         #region Constructors and Destructors
 
@@ -94,10 +133,20 @@ namespace Tauron.Application.Controls
         /// <summary>Gets or sets the progress bar style.</summary>
         public ProgressStyle ProgressBarStyle
         {
-            get { return (ProgressStyle) _dialog.ProgressBarStyle; }
+            get => (ProgressStyle) _dialog.ProgressBarStyle;
 
-            set { _dialog.ProgressBarStyle = (ProgressBarStyle) value; }
+            set => _dialog.ProgressBarStyle = (ProgressBarStyle) value;
         }
+
+        #endregion
+
+        #region Fields
+
+        private readonly ProgressDialog _dialog;
+
+        private readonly IWindow _owner;
+
+        private readonly Action<IProgress<ActiveProgress>> _worker;
 
         #endregion
 
@@ -117,11 +166,9 @@ namespace Tauron.Application.Controls
                 {
                     if (_owner == null) _dialog.ShowDialog();
                     else
-                    {
                         _dialog.ShowDialog(
                             (Window)
                             _owner.TranslateForTechnology());
-                    }
                 });
         }
 
@@ -141,54 +188,5 @@ namespace Tauron.Application.Controls
         }
 
         #endregion
-
-        private class DialogReporter : IProgress<ActiveProgress>
-        {
-            #region Fields
-
-            private readonly ProgressDialog _dialog;
-
-            private readonly string _text;
-
-            #endregion
-
-            #region Constructors and Destructors
-
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="DialogReporter" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="DialogReporter" /> Klasse.
-            /// </summary>
-            /// <param name="dialog">
-            ///     The dialog.
-            /// </param>
-            /// <param name="text">
-            ///     The text.
-            /// </param>
-            public DialogReporter([NotNull] ProgressDialog dialog, [NotNull] string text)
-            {
-                _dialog = dialog;
-                _text = text;
-            }
-
-            #endregion
-
-            #region Public Methods and Operators
-
-            /// <summary>
-            ///     The report.
-            /// </summary>
-            /// <param name="value">
-            ///     The value.
-            /// </param>
-            public void Report([NotNull] ActiveProgress value)
-            {
-                _dialog.ReportProgress(
-                    (int) value.OverAllProgress,
-                    _text,
-                    string.Format("{0} : {1}%", value.Message, (int) value.Percent));
-            }
-
-            #endregion
-        }
     }
 }

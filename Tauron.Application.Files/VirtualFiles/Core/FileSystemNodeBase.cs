@@ -11,13 +11,7 @@ namespace Tauron.Application.Files.VirtualFiles.Core
 
         private Lazy<TInfo> _infoObject; 
 
-        protected TInfo InfoObject
-        {
-            get
-            {
-                return _infoObject.Value;
-            }
-        }
+        protected TInfo InfoObject => _infoObject.Value;
 
         public void Delete()
         {

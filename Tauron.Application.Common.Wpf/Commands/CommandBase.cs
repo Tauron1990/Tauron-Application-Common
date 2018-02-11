@@ -3,7 +3,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Windows.Input;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -18,9 +18,9 @@ namespace Tauron.Application.Commands
         /// </summary>
         public virtual event EventHandler CanExecuteChanged
         {
-            add { CommandManager.RequerySuggested += value; }
+            add => CommandManager.RequerySuggested += value;
 
-            remove { CommandManager.RequerySuggested -= value; }
+            remove => CommandManager.RequerySuggested -= value;
         }
 
         #endregion

@@ -2,12 +2,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Practices.EnterpriseLibrary.ExceptionHandling;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
+using NLog;
 
 #endregion
 
@@ -17,6 +15,14 @@ namespace Tauron.Application
     [PublicAPI]
     public sealed class WeakDelegate : IWeakReference, IEquatable<WeakDelegate>
     {
+        #region Public Properties
+
+        /// <summary>Gets a value indicating whether is alive.</summary>
+        /// <value>The is alive.</value>
+        public bool IsAlive => _reference == null || _reference.IsAlive;
+
+        #endregion
+
         #region Fields
 
         /// <summary>The _method.</summary>
@@ -31,8 +37,7 @@ namespace Tauron.Application
 
         public WeakDelegate([NotNull] Delegate @delegate)
         {
-            Contract.Requires<ArgumentNullException>(@delegate != null, "delegate");
-
+            if (@delegate == null) throw new ArgumentNullException(nameof(@delegate));
             _method = @delegate.Method;
 
             if (!_method.IsStatic) _reference = new WeakReference(@delegate.Target);
@@ -40,22 +45,10 @@ namespace Tauron.Application
 
         public WeakDelegate([NotNull] MethodBase methodInfo, [NotNull] object target)
         {
-            Contract.Requires<ArgumentNullException>(methodInfo != null, "methodInfo");
-            Contract.Requires<ArgumentNullException>(target != null, "target");
-
+            if (methodInfo == null) throw new ArgumentNullException(nameof(methodInfo));
+            if (target == null) throw new ArgumentNullException(nameof(target));
             _method = methodInfo;
             _reference = new WeakReference(target);
-        }
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets a value indicating whether is alive.</summary>
-        /// <value>The is alive.</value>
-        public bool IsAlive
-        {
-            get { return _reference == null || _reference.IsAlive; }
         }
 
         #endregion
@@ -71,7 +64,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public bool Equals([CanBeNull] WeakDelegate other)
+        public bool Equals(WeakDelegate other)
         {
             if (ReferenceEquals(null, other)) return false;
 
@@ -86,8 +79,8 @@ namespace Tauron.Application
         /// <returns></returns>
         public static bool operator ==(WeakDelegate left, WeakDelegate right)
         {
-            bool leftnull = ReferenceEquals(left, null);
-            bool rightNull = ReferenceEquals(right, null);
+            var leftnull = ReferenceEquals(left, null);
+            var rightNull = ReferenceEquals(right, null);
 
             return !leftnull ? left.Equals(right) : rightNull;
         }
@@ -98,8 +91,8 @@ namespace Tauron.Application
         /// <returns></returns>
         public static bool operator !=(WeakDelegate left, WeakDelegate right)
         {
-            bool leftnull = ReferenceEquals(left, null);
-            bool rightNull = ReferenceEquals(right, null);
+            var leftnull = ReferenceEquals(left, null);
+            var rightNull = ReferenceEquals(right, null);
 
             if (!leftnull) return !left.Equals(right);
             return !rightNull;
@@ -114,7 +107,7 @@ namespace Tauron.Application
         /// <returns>
         ///     The <see cref="bool" />.
         /// </returns>
-        public override bool Equals([CanBeNull]object obj)
+        public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
 
@@ -132,7 +125,7 @@ namespace Tauron.Application
             unchecked
             {
                 object target;
-                return (((target = _reference.Target) != null ? target.GetHashCode() : 0)*397)
+                return (((target = _reference.Target) != null ? target.GetHashCode() : 0) * 397)
                        ^ _method.GetHashCode();
             }
         }
@@ -151,43 +144,12 @@ namespace Tauron.Application
         {
             if (_method.IsStatic) return _method.Invoke(null, parms);
 
-            object target = _reference.Target;
+            var target = _reference.Target;
             return target == null ? null : _method.Invoke(target, parms);
         }
 
         #endregion
     }
-
-    /////// <summary>The gc notification.</summary>
-    ////[DebuggerNonUserCode]
-    ////public sealed class GCNotification
-    ////{
-    ////    #region Fields
-
-    ////    /// <summary>The _invoke clean up.</summary>
-    ////    private readonly Action _invokeCleanUp;
-
-    ////    #endregion
-
-    ////    #region Constructors and Destructors
-
-    ////    /// <summary>Initialisiert eine neue Instanz der <see cref="GCNotification"/> Klasse.
-    ////    ///     Initializes a new instance of the <see cref="GCNotification"/> class.</summary>
-    ////    /// <param name="invokeCleanUp">The invoke clean up.</param>
-    ////    public GCNotification(Action invokeCleanUp)
-    ////    {
-    ////        this._invokeCleanUp = invokeCleanUp;
-    ////    }
-
-    ////    /// <summary>Finalisiert eine Instanz der <see cref="GCNotification"/> Klasse.
-    ////    ///     Finalizes an instance of the <see cref="GCNotification"/> class.</summary>
-    ////    ~GCNotification()
-    ////    {
-    ////        Task.Factory.StartNew(this._invokeCleanUp);
-    ////    }
-
-    ////    #endregion
-    ////}
 
     /// <summary>The weak clean up.</summary>
     [PublicAPI]
@@ -205,6 +167,9 @@ namespace Tauron.Application
         /// <summary>The actions.</summary>
         private static readonly List<WeakDelegate> Actions = Initialize();
 
+        private static Timer _timer;
+
+        private static readonly Logger Logger = LogManager.GetLogger(nameof(WeakCleanUp));
         #endregion
 
         #region Public Methods and Operators
@@ -217,9 +182,11 @@ namespace Tauron.Application
         /// </param>
         public static void RegisterAction([NotNull] Action action)
         {
-            Contract.Requires<ArgumentNullException>(action != null, "action");
-
-            lock (Actions) Actions.Add(new WeakDelegate(action));
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            lock (Actions)
+            {
+                Actions.Add(new WeakDelegate(action));
+            }
         }
 
         #endregion
@@ -230,97 +197,32 @@ namespace Tauron.Application
         /// <returns>The List.</returns>
         private static List<WeakDelegate> Initialize()
         {
-            Task.Factory.StartNew(InvokeCleanUp, TaskCreationOptions.LongRunning);
+            _timer = new Timer(InvokeCleanUp, null, TimeSpan.Zero, TimeSpan.FromMinutes(15));
             return new List<WeakDelegate>();
         }
 
         /// <summary>The invoke clean up.</summary>
-        private static void InvokeCleanUp()
+        private static void InvokeCleanUp(object state)
         {
-            var resetEvent = new AutoResetEvent(false);
-            try
+            lock (Actions)
             {
-// ReSharper disable once ObjectCreationAsStatement
-                new GCNotifier(resetEvent);
-
-                while (true)
-                {
-                    resetEvent.WaitOne();
-
-                    var dead = new List<WeakDelegate>();
-                    foreach (WeakDelegate weakDelegate in Actions.ToArray())
-                    {
-                        Contract.Assume(weakDelegate != null);
-
-                        if (weakDelegate != null && weakDelegate.IsAlive)
+                var dead = new List<WeakDelegate>();
+                foreach (var weakDelegate in Actions.ToArray())
+                    if (weakDelegate != null && weakDelegate.IsAlive)
+                        try
                         {
-                            try
-                            {
-                                weakDelegate.Invoke();
-                            }
-                            catch (Exception ex)
-                            {
-                                try
-                                {
-                                    ExceptionPolicy.HandleException(ex, WeakCleanUpExceptionPolicy);
-                                }
-                                catch (ExceptionHandlingException)
-                                {
-                                }
-                            }
+                            weakDelegate.Invoke();
                         }
-                        else dead.Add(weakDelegate);
-                    }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex);
+                        }
+                    else dead.Add(weakDelegate);
 
-                    dead.ForEach(del => Actions.Remove(del));
-                }
-            }
-            finally
-            {
-                resetEvent.Dispose();
+                dead.ForEach(del => Actions.Remove(del));
             }
         }
 
         #endregion
-
-        private class GCNotifier
-        {
-            #region Fields
-
-            private readonly AutoResetEvent _resetEvent;
-
-            #endregion
-
-            #region Constructors and Destructors
-
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="GCNotifier" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="GCNotifier" /> Klasse.
-            /// </summary>
-            /// <param name="resetEvent">
-            ///     The reset event.
-            /// </param>
-            public GCNotifier(AutoResetEvent resetEvent)
-            {
-                _resetEvent = resetEvent;
-            }
-
-            /// <summary>
-            ///     Finalizes an instance of the <see cref="GCNotifier" /> class.
-            ///     Finalisiert eine Instanz der <see cref="GCNotifier" /> Klasse.
-            /// </summary>
-            ~GCNotifier()
-            {
-                if (Environment.HasShutdownStarted) return;
-
-                if (AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
-
-                _resetEvent.Set();
-// ReSharper disable once ObjectCreationAsStatement
-                new GCNotifier(_resetEvent);
-            }
-
-            #endregion
-        }
     }
 }

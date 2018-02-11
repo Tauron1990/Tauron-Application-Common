@@ -26,9 +26,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -36,28 +35,12 @@ namespace Tauron.Application.Ioc
 {
     /// <summary>The export provider.</summary>
     [PublicAPI]
-    [ContractClass(typeof (ExportProviderContracts))]
     public abstract class ExportProvider
     {
         #region Public Events
 
         /// <summary>The exports changed.</summary>
         public event EventHandler<ExportChangedEventArgs> ExportsChanged;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets a value indicating whether broadcast changes.</summary>
-        /// <value>The broadcast changes.</value>
-        public virtual bool BroadcastChanges
-        {
-            get { return false; }
-        }
-
-        /// <summary>Gets the technology.</summary>
-        /// <value>The technology.</value>
-        public abstract string Technology { get; }
 
         #endregion
 
@@ -84,56 +67,24 @@ namespace Tauron.Application.Ioc
         /// <param name="e">
         ///     The e.
         /// </param>
-        protected virtual void OnExportsChanged(ExportChangedEventArgs e)
+        protected virtual void OnExportsChanged([NotNull] ExportChangedEventArgs e)
         {
-            Contract.Requires<ArgumentNullException>(e != null, "e");
-
-            EventHandler<ExportChangedEventArgs> handler = ExportsChanged;
-            if (handler != null) handler(this, e);
+            if (e == null) throw new ArgumentNullException(nameof(e));
+            var handler = ExportsChanged;
+            handler?.Invoke(this, e);
         }
 
         #endregion
-    }
 
-    [ContractClassFor(typeof (ExportProvider))]
-    internal abstract class ExportProviderContracts : ExportProvider
-    {
         #region Public Properties
+
+        /// <summary>Gets a value indicating whether broadcast changes.</summary>
+        /// <value>The broadcast changes.</value>
+        public virtual bool BroadcastChanges => false;
 
         /// <summary>Gets the technology.</summary>
         /// <value>The technology.</value>
-        /// <exception cref="NotImplementedException"></exception>
-        public override string Technology
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-
-                throw new NotImplementedException();
-            }
-        }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The create exports.
-        /// </summary>
-        /// <param name="factory">
-        ///     The factory.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
-        {
-            Contract.Ensures(Contract.Result<IEnumerable<Tuple<IExport, int>>>() != null);
-
-            throw new NotImplementedException();
-        }
+        public abstract string Technology { get; }
 
         #endregion
     }
@@ -142,14 +93,6 @@ namespace Tauron.Application.Ioc
     [PublicAPI]
     public class ExportChangedEventArgs : EventArgs
     {
-        #region Fields
-
-        private readonly IEnumerable<ExportMetadata> added;
-
-        private readonly IEnumerable<ExportMetadata> removed;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -163,15 +106,16 @@ namespace Tauron.Application.Ioc
         ///     The removed export.
         /// </param>
         public ExportChangedEventArgs(
-            IEnumerable<ExportMetadata> addedExport,
-            IEnumerable<ExportMetadata> removedExport)
+            [NotNull] IEnumerable<ExportMetadata> addedExport,
+            [NotNull] IEnumerable<ExportMetadata> removedExport)
         {
-            Contract.Requires<ArgumentNullException>(addedExport != null, "addedExport");
-            Contract.Requires<ArgumentNullException>(removedExport != null, "removedExport");
-
-            added = addedExport;
-            removed = removedExport;
+            Added = addedExport ?? throw new ArgumentNullException(nameof(addedExport));
+            Removed = removedExport ?? throw new ArgumentNullException(nameof(removedExport));
         }
+
+        #endregion
+
+        #region Fields
 
         #endregion
 
@@ -179,27 +123,11 @@ namespace Tauron.Application.Ioc
 
         /// <summary>Gets or sets the added.</summary>
         /// <value>The added.</value>
-        public IEnumerable<ExportMetadata> Added
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<ExportMetadata>>() != null);
-
-                return added;
-            }
-        }
+        public IEnumerable<ExportMetadata> Added { get; }
 
         /// <summary>Gets or sets the removed.</summary>
         /// <value>The removed.</value>
-        public IEnumerable<ExportMetadata> Removed
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<ExportMetadata>>() != null);
-
-                return removed;
-            }
-        }
+        public IEnumerable<ExportMetadata> Removed { get; }
 
         #endregion
     }

@@ -1,9 +1,8 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -11,15 +10,9 @@ namespace Tauron.Application.Aop.Threading
 {
     /// <summary>The context property attribute base.</summary>
     [PublicAPI]
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public abstract class ContextPropertyAttributeBase : ObjectContextPropertyAttribute
     {
-        #region Fields
-
-        private string _holderName;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -39,22 +32,11 @@ namespace Tauron.Application.Aop.Threading
         /// <summary>Gets or sets the holder name.</summary>
         /// <value>The holder name.</value>
         [NotNull]
-        public string HolderName
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
+        public string HolderName { get; set; }
 
-                return _holderName;
-            }
+        #endregion
 
-            set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _holderName = value;
-            }
-        }
+        #region Fields
 
         #endregion
     }

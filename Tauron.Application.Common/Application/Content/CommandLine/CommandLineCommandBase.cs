@@ -1,9 +1,8 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -24,24 +23,9 @@ namespace Tauron.Application
         /// </param>
         protected CommandLineCommandBase([NotNull] string comandName)
         {
-            Contract.Requires<ArgumentNullException>(comandName != null, "comandName");
-
+            if (string.IsNullOrWhiteSpace(comandName)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(comandName));
             CommandName = comandName;
         }
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets the command name.</summary>
-        /// <value>The command name.</value>
-        [NotNull]
-        public string CommandName { get; private set; }
-
-        /// <summary>Gets or sets the factory.</summary>
-        /// <value>The factory.</value>
-        [CanBeNull]
-        public IShellFactory Factory { get; protected set; }
 
         #endregion
 
@@ -60,6 +44,20 @@ namespace Tauron.Application
         {
             CommonConstants.LogCommon(false, "Command: {0} Empty Executet", CommandName);
         }
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets the command name.</summary>
+        /// <value>The command name.</value>
+        [NotNull]
+        public string CommandName { get; private set; }
+
+        /// <summary>Gets or sets the factory.</summary>
+        /// <value>The factory.</value>
+        [CanBeNull]
+        public IShellFactory Factory { get; protected set; }
 
         #endregion
     }

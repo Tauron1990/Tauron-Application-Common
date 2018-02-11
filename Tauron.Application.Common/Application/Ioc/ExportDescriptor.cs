@@ -1,17 +1,17 @@
-﻿using Tauron.Application.Ioc.BuildUp.Exports;
-using Tauron.JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using Tauron.Application.Ioc.BuildUp.Exports;
 
 namespace Tauron.Application.Ioc
 {
     [PublicAPI]
     public class ExportDescriptor
     {
-        [NotNull]
-        public ExportMetadata Meta { get; set; }
-
         public ExportDescriptor([NotNull] ExportMetadata meta)
         {
             Meta = meta;
         }
+
+        [NotNull]
+        public ExportMetadata Meta { get; set; }
     }
 }

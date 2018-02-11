@@ -2,10 +2,9 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics.Contracts;
 using System.Threading;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -13,10 +12,33 @@ namespace Tauron.Application.Implement
 {
     /// <summary>The single thread scheduler.</summary>
     [PublicAPI]
-    [Export(typeof (ISingleThreadScheduler))]
+    [Export(typeof(ISingleThreadScheduler))]
     [NotShared]
     public sealed class SingleThreadScheduler : ISingleThreadScheduler, IDisposable
     {
+        #region Public Properties
+
+        /// <summary>Gets or sets a value indicating whether is background.</summary>
+        /// <value>The is background.</value>
+        public bool IsBackground
+        {
+            get => _thread.IsBackground;
+
+            set => _thread.IsBackground = value;
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>The enter loop.</summa>
+        private void EnterLoop()
+        {
+            foreach (var item in _tasks.GetConsumingEnumerable()) item();
+        }
+
+        #endregion
+
         #region Fields
 
         /// <summary>The _tasks.</summary>
@@ -54,19 +76,6 @@ namespace Tauron.Application.Implement
 
         #endregion
 
-        #region Public Properties
-
-        /// <summary>Gets or sets a value indicating whether is background.</summary>
-        /// <value>The is background.</value>
-        public bool IsBackground
-        {
-            get { return _thread.IsBackground; }
-
-            set { _thread.IsBackground = value; }
-        }
-
-        #endregion
-
         #region Public Methods and Operators
 
         /// <summary>The dispose.</summary>
@@ -86,17 +95,6 @@ namespace Tauron.Application.Implement
         public void Queue(Action task)
         {
             _tasks.Add(task);
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>The enter loop.</summary>
-        [ContractVerification(false)]
-        private void EnterLoop()
-        {
-            foreach (Action item in _tasks.GetConsumingEnumerable()) item();
         }
 
         #endregion

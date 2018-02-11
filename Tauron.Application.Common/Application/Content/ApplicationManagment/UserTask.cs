@@ -1,9 +1,8 @@
 #region
 
 using System;
-using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -12,15 +11,6 @@ namespace Tauron.Application
     /// <summary>The user task.</summary>
     public class UserTask : ITask
     {
-        #region Fields
-
-        /// <summary>The _callback.</summary>
-        private readonly Action _callback;
-
-        private readonly TaskCompletionSource<object> _task;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -36,26 +26,10 @@ namespace Tauron.Application
         /// </param>
         public UserTask([NotNull] Action callback, bool sync)
         {
-            Contract.Requires<ArgumentNullException>(callback != null, "callback");
-
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
             _callback = callback;
             Synchronize = sync;
             _task = new TaskCompletionSource<object>();
-        }
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets a value indicating whether synchronize.</summary>
-        /// <value>The synchronize.</value>
-        public bool Synchronize { get; private set; }
-
-        /// <summary>Gets the task.</summary>
-        [NotNull]
-        public Task Task
-        {
-            get { return _task.Task; }
         }
 
         #endregion
@@ -75,6 +49,26 @@ namespace Tauron.Application
                 _task.SetException(e);
             }
         }
+
+        #endregion
+
+        #region Fields
+
+        /// <summary>The _callback.</summary>
+        private readonly Action _callback;
+
+        private readonly TaskCompletionSource<object> _task;
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Gets a value indicating whether synchronize.</summary>
+        /// <value>The synchronize.</value>
+        public bool Synchronize { get; }
+
+        /// <summary>Gets the task.</summary>
+        public Task Task => _task.Task;
 
         #endregion
     }

@@ -25,11 +25,11 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -38,6 +38,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
     /// <summary>The default build context.</summary>
     public sealed class DefaultBuildContext : IBuildContext
     {
+        public override string ToString()
+        {
+            return Metadata.ToString();
+        }
+
         #region Constructors and Destructors
 
         /// <summary>
@@ -58,13 +63,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         /// <param name="errorTracer"></param>
         [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1027:TabsMustNotBeUsed",
             Justification = "Reviewed. Suppression is OK here.")]
-        public DefaultBuildContext(IExport targetExport, BuildMode mode, IContainer container, string contractName, 
-            ErrorTracer errorTracer, BuildParameter[] parameters, IResolverExtension[] resolverExtensions)
+        public DefaultBuildContext([NotNull] IExport targetExport, BuildMode mode, [NotNull] IContainer container, [CanBeNull] string contractName,
+            [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] parameters, [CanBeNull] IResolverExtension[] resolverExtensions)
         {
-            Contract.Requires<ArgumentNullException>(targetExport != null, "targetExport");
-            Contract.Requires<ArgumentNullException>(container != null, "container");
-            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
-
+            if (targetExport == null) throw new ArgumentNullException(nameof(targetExport));
+            if (container == null) throw new ArgumentNullException(nameof(container));
+            if (errorTracer == null) throw new ArgumentNullException(nameof(errorTracer));
+            if (!Enum.IsDefined(typeof(BuildMode), mode)) throw new InvalidEnumArgumentException(nameof(mode), (int) mode, typeof(BuildMode));
             Metadata = targetExport.GetNamedExportMetadata(contractName);
             errorTracer.Export = Metadata.ToString();
             ExportType = targetExport.ImplementType;
@@ -91,10 +96,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         /// <param name="parameters"></param>
         public DefaultBuildContext([NotNull] BuildObject buildObject, [NotNull] IContainer container, [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] parameters)
         {
-            Contract.Requires<ArgumentNullException>(buildObject != null, "buildObject");
-            Contract.Requires<ArgumentNullException>(container != null, "container");
-            Contract.Requires<ArgumentNullException>(errorTracer != null, "errorTracer");
-
+            if (buildObject == null) throw new ArgumentNullException(nameof(buildObject));
+            if (container == null) throw new ArgumentNullException(nameof(container));
+            if (errorTracer == null) throw new ArgumentNullException(nameof(errorTracer));
             Metadata = buildObject.Metadata;
             errorTracer.Export = Metadata.ToString();
             Mode = BuildMode.BuildUpObject;
@@ -144,10 +148,5 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public IResolverExtension[] ResolverExtensions { get; set; }
 
         #endregion
-
-        public override string ToString()
-        {
-            return Metadata.ToString();
-        }
     }
 }

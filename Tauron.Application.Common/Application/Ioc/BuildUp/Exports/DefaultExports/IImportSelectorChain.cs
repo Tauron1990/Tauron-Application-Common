@@ -24,10 +24,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -35,7 +32,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 {
     /// <summary>The ImportSelectorChain interface.</summary>
     [PublicAPI]
-    [ContractClass(typeof (ImportSelectorChainContarcts))]
     public interface IImportSelectorChain : IImportSelector
     {
         #region Public Methods and Operators
@@ -47,45 +43,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         ///     The selector.
         /// </param>
         void Register(IImportSelector selector);
-
-        #endregion
-    }
-
-    [ContractClassFor(typeof (IImportSelectorChain))]
-    internal abstract class ImportSelectorChainContarcts : IImportSelectorChain
-    {
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The register.
-        /// </summary>
-        /// <param name="selector">
-        ///     The selector.
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public void Register(IImportSelector selector)
-        {
-            Contract.Requires<ArgumentNullException>(selector != null, "selector");
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     The select import.
-        /// </summary>
-        /// <param name="exportType">
-        ///     The export type.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IEnumerable" />.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public IEnumerable<ImportMetadata> SelectImport(IExport exportType)
-        {
-            throw new NotImplementedException();
-        }
 
         #endregion
     }

@@ -15,21 +15,9 @@ namespace Tauron.Application.Files.VirtualFiles.LocalFileSystem
         {
         }
 
-        public override DateTime LastModified
-        {
-            get
-            {
-                return InfoObject.LastWriteTime;
-            }
-        }
+        public override DateTime LastModified => InfoObject.LastWriteTime;
 
-        public override bool Exist
-        {
-            get
-            {
-                return InfoObject.Exists;
-            }
-        }
+        public override bool Exist => InfoObject.Exists;
 
         protected override void DeleteImpl()
         {

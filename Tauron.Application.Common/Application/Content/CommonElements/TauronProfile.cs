@@ -4,10 +4,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
+using NLog;
 
 #endregion
 
@@ -21,18 +20,6 @@ namespace Tauron.Application
 
         /// <summary>The content splitter.</summary>
         private static readonly char[] ContentSplitter = {'='};
-
-        #endregion
-
-        #region Fields
-
-        /// <summary>The _default path.</summary>
-        private readonly string _defaultPath;
-
-        /// <summary>The _settings.</summary>
-        private readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
-
-        private string _application;
 
         #endregion
 
@@ -51,39 +38,59 @@ namespace Tauron.Application
         /// </param>
         protected TauronProfile([NotNull] string application, [NotNull] string dafaultPath)
         {
-            Contract.Requires<ArgumentNullException>(application != null, "application");
-            Contract.Requires<ArgumentNullException>(dafaultPath != null, "_defaultPath");
-
+            if (string.IsNullOrWhiteSpace(application)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(application));
+            if (string.IsNullOrWhiteSpace(dafaultPath)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(dafaultPath));
             Application = application;
             _defaultPath = dafaultPath;
-            Category = "Tauron Profile";
+            LogCategory = "Tauron Profile";
         }
+
+        #endregion
+
+        #region Indexers
+
+        public virtual string this[[NotNull] string key]
+        {
+            get => _settings[key];
+
+            set
+            {
+                IlligalCharCheck(key);
+
+                _settings[key] = value;
+            }
+        }
+
+        #endregion
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            return _settings.Select(k => k.Key).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #region Fields
+
+        /// <summary>The _default path.</summary>
+        private readonly string _defaultPath;
+
+        /// <summary>The _settings.</summary>
+        private readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
 
         #endregion
 
         #region Public Properties
 
-        public int Count { get { return _settings.Count; } }
+        public int Count => _settings.Count;
 
         /// <summary>Gets the application.</summary>
         /// <value>The application.</value>
         [NotNull]
-        public string Application
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<string>() != null);
-
-                return _application;
-            }
-
-            private set
-            {
-                Contract.Requires<ArgumentNullException>(value != null, "value");
-
-                _application = value;
-            }
-        }
+        public string Application { get; private set; }
 
         /// <summary>Gets the name.</summary>
         /// <value>The name.</value>
@@ -106,28 +113,6 @@ namespace Tauron.Application
 
         #endregion
 
-        #region Indexers
-
-        public virtual string this[[NotNull]string key]
-        {
-            get
-            {
-                Contract.Requires<ArgumentNullException>(key != null, "key");
-
-                return _settings[key];
-            }
-
-            set
-            {
-                Contract.Requires<ArgumentNullException>(key != null, "key");
-                IlligalCharCheck(key);
-
-                _settings[key] = value;
-            }
-        }
-
-        #endregion
-
         #region Public Methods and Operators
 
         /// <summary>The delete.</summary>
@@ -135,9 +120,7 @@ namespace Tauron.Application
         {
             _settings.Clear();
 
-            Contract.Assume(Dictionary != null);
-
-            Log.Write("Delete Profile infos... " + Dictionary.PathShorten(20), TraceEventType.Information);
+            Log.Write("Delete Profile infos... " + Dictionary.PathShorten(20), LogLevel.Info);
 
             Dictionary.DeleteDirectory();
         }
@@ -148,10 +131,9 @@ namespace Tauron.Application
         /// <param name="name">
         ///     The name.
         /// </param>
-        [ContractVerification(false)]
         public virtual void Load([NotNull] string name)
         {
-            Contract.Requires<ArgumentNullException>(name != null, "name");
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
             IlligalCharCheck(name);
 
             Name = name;
@@ -159,15 +141,15 @@ namespace Tauron.Application
             Dictionary.CreateDirectoryIfNotExis();
             FilePath = Dictionary.CombinePath("Settings.db");
 
-            Log.Write("Begin Load Profile infos... " + FilePath.PathShorten(20), TraceEventType.Information);
+            Log.Write("Begin Load Profile infos... " + FilePath.PathShorten(20), LogLevel.Info);
 
             _settings.Clear();
             foreach (var vals in
                 FilePath.EnumerateTextLinesIfExis()
-                        .Select(line => line.Split(ContentSplitter, 2))
-                        .Where(vals => vals.Length == 2))
+                    .Select(line => line.Split(ContentSplitter, 2))
+                    .Where(vals => vals.Length == 2))
             {
-                Log.Write(string.Format("key: {0} | Value {1}", vals[0], vals[1]), TraceEventType.Information);
+                Log.Write(LogLevel.Info, "key: {0} | Value {1}", vals[0], vals[1]);
 
                 _settings[vals[0]] = vals[1];
             }
@@ -176,15 +158,15 @@ namespace Tauron.Application
         /// <summary>The save.</summary>
         public virtual void Save()
         {
-            Log.Write("Begin Save Profile infos...", TraceEventType.Information);
+            Log.Write("Begin Save Profile infos...", LogLevel.Info);
 
-            using (StreamWriter writer = FilePath.OpenTextWrite())
+            using (var writer = FilePath.OpenTextWrite())
             {
                 foreach (var pair in _settings)
                 {
                     writer.WriteLine("{0}={1}", pair.Key, pair.Value);
 
-                    Log.Write(string.Format("key: {0} | Value {1}", pair.Key, pair.Value), TraceEventType.Information);
+                    Log.Write(LogLevel.Info, "key: {0} | Value {1}", pair.Key, pair.Value);
                 }
             }
         }
@@ -208,8 +190,8 @@ namespace Tauron.Application
         [NotNull]
         public virtual string GetValue([NotNull] string key, [NotNull] string defaultValue)
         {
-            Contract.Requires<ArgumentNullException>(key != null, "key");
-
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(key));
+            if (string.IsNullOrWhiteSpace(defaultValue)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(defaultValue));
             IlligalCharCheck(key);
 
             return !_settings.ContainsKey(key) ? defaultValue : _settings[key];
@@ -226,30 +208,19 @@ namespace Tauron.Application
         /// </param>
         public virtual void SetVaue([NotNull] string key, [NotNull] object value)
         {
-            Contract.Requires<ArgumentNullException>(key != null, "key");
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(key));
             IlligalCharCheck(key);
-            Contract.Requires<ArgumentNullException>(value != null, "value");
 
             _settings[key] = value.ToString();
             OnPropertyChangedExplicit(key);
         }
 
-        [ContractAbbreviator]
         private void IlligalCharCheck([NotNull] string key)
         {
-            Contract.Requires<InvalidOperationException>(!key.Contains("="), "The Contains an Illigal Char: =");
+            if (key.Contains("=")) throw new ArgumentException("The Contains an Illigal Char: =");
         }
 
         #endregion
-
-        public IEnumerator<string> GetEnumerator()
-        {
-            return _settings.Select(k => k.Key).GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
     }
 }

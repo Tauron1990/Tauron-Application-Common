@@ -25,15 +25,15 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application.Ioc
 {
     /// <summary>The shared attribute.</summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class)]
     [PublicAPI]
     public sealed class SharedAttribute : LifetimeContextAttribute
     {
@@ -45,7 +45,7 @@ namespace Tauron.Application.Ioc
         ///     Initializes a new instance of the <see cref="SharedAttribute" /> class.
         /// </summary>
         public SharedAttribute()
-            : base(typeof (SharedLifetime))
+            : base(typeof(SharedLifetime))
         {
         }
 

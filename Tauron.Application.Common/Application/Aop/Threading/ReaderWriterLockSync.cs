@@ -4,8 +4,8 @@ using System;
 using System.Reflection;
 using System.Threading;
 using Castle.DynamicProxy;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -43,7 +43,7 @@ namespace Tauron.Application.Aop.Threading
     }
 
     /// <summary>The reader writer lock source attribute.</summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     [PublicAPI]
     public sealed class ReaderWriterLockSourceAttribute : ContextPropertyAttributeBase
     {
@@ -61,7 +61,7 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="target">
         ///     The target.
         /// </param>
-        protected internal override void Register( ObjectContext context,  MemberInfo info,  object target)
+        protected internal override void Register(ObjectContext context, MemberInfo info, object target)
         {
             context.Register<ReaderWriterLockHolder, ReaderWriterLockHolder>(
                 new ReaderWriterLockHolder(
@@ -69,7 +69,7 @@ namespace Tauron.Application.Aop.Threading
                         .GetInvokeMember
                         <ReaderWriterLockSlim>(target))
                 {
-                    Name = HolderName,
+                    Name = HolderName
                 });
         }
 
@@ -81,18 +81,26 @@ namespace Tauron.Application.Aop.Threading
     public enum ReaderWriterLockBehavior
     {
         Invalid,
+
         /// <summary>The read.</summary>
         Read,
 
         /// <summary>The write.</summary>
-        Write,
+        Write
     }
 
     /// <summary>The reader writer lock attribute.</summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Property, AllowMultiple = false,
-        Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Property)]
     public sealed class ReaderWriterLockAttribute : ThreadingBaseAspect
     {
+        #region Public Properties
+
+        /// <summary>Gets or sets the lock behavior.</summary>
+        /// <value>The lock behavior.</value>
+        public ReaderWriterLockBehavior LockBehavior { get; set; }
+
+        #endregion
+
         #region Fields
 
         /// <summary>The _enter.</summary>
@@ -106,14 +114,6 @@ namespace Tauron.Application.Aop.Threading
 
         /// <summary>The _skip.</summary>
         private Func<bool> _skip;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets or sets the lock behavior.</summary>
-        /// <value>The lock behavior.</value>
-        public ReaderWriterLockBehavior LockBehavior { get; set; }
 
         #endregion
 
@@ -133,12 +133,12 @@ namespace Tauron.Application.Aop.Threading
         /// </param>
         /// <exception cref="ArgumentOutOfRangeException">
         /// </exception>
-        protected internal override void Initialize( object target,  ObjectContext context,  string contextName)
+        protected internal override void Initialize(object target, ObjectContext context, string contextName)
         {
             _holder = BaseHolder.GetOrAdd<ReaderWriterLockHolder, ReaderWriterLockHolder>(
                 context,
                 () =>
-                new ReaderWriterLockHolder(),
+                    new ReaderWriterLockHolder(),
                 HolderName);
             switch (LockBehavior)
             {
@@ -169,12 +169,12 @@ namespace Tauron.Application.Aop.Threading
         /// <param name="context">
         ///     The context.
         /// </param>
-        protected override void Intercept( IInvocation invocation,  ObjectContext context)
+        protected override void Intercept(IInvocation invocation, ObjectContext context)
         {
-            if(_skip == null) return;
+            if (_skip == null) return;
 
-            bool skipping = _skip();
-            bool taken = false;
+            var skipping = _skip();
+            var taken = false;
 
             try
             {

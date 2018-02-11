@@ -29,17 +29,17 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows;
+using JetBrains.Annotations;
 using Ookii.Dialogs.Wpf;
 using Tauron.Application.Controls;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
 namespace Tauron.Application
 {
     /// <summary>The dialog factory.</summary>
-    [Export(typeof (IDialogFactory))]
+    [Export(typeof(IDialogFactory))]
     public class DialogFactory : IDialogFactory
     {
         #region Public Methods and Operators
@@ -126,7 +126,7 @@ namespace Tauron.Application
             return ObservableObject.CurrentDispatcher.Invoke(
                 () =>
                 {
-                    Window realWindow = owner == null ? null : (Window) owner.TranslateForTechnology();
+                    var realWindow = owner == null ? null : (Window) owner.TranslateForTechnology();
                     var diag = new InputDialog
                     {
                         Owner = realWindow,
@@ -150,24 +150,22 @@ namespace Tauron.Application
             MsgBoxImage icon,
             Icon custumIcon)
         {
-            Window realWindow = owner == null ? null : (Window)owner.TranslateForTechnology();
+            var realWindow = owner == null ? null : (Window) owner.TranslateForTechnology();
 
             return
                 ObservableObject.CurrentDispatcher.Invoke(
                     () =>
-                    !TaskDialog.OSSupportsTaskDialogs
-                        ? (MsgBoxResult)
-                          MessageBox.Show(
-                              realWindow,
-                              text,
-                              caption,
-                              (MessageBoxButton) button,
-                              (MessageBoxImage) icon)
-                        : ShowTaskDialog(owner, text, caption, button, icon,
-                                         custumIcon));
+                        !TaskDialog.OSSupportsTaskDialogs
+                            ? (MsgBoxResult)
+                            MessageBox.Show(
+                                realWindow,
+                                text,
+                                caption,
+                                (MessageBoxButton) button,
+                                (MessageBoxImage) icon)
+                            : ShowTaskDialog(owner, text, caption, button, icon,
+                                custumIcon));
         }
-
-
 
 
         public IEnumerable<string> ShowOpenFileDialog(
@@ -205,16 +203,16 @@ namespace Tauron.Application
                         TranslateDefaultExt(dialog);
 
                         tempresult = owner != null
-                                         ? dialog.ShowDialog(
-                                             (Window)
-                                             owner
-                                                 .TranslateForTechnology
-                                                 ())
-                                         : dialog.ShowDialog();
+                            ? dialog.ShowDialog(
+                                (Window)
+                                owner
+                                    .TranslateForTechnology
+                                    ())
+                            : dialog.ShowDialog();
 
                         return tempresult == false
-                                   ? Enumerable.Empty<string>()
-                                   : dialog.FileNames;
+                            ? Enumerable.Empty<string>()
+                            : dialog.FileNames;
                     });
             }
             finally
@@ -249,16 +247,16 @@ namespace Tauron.Application
                         };
 
                         tempresult = owner != null
-                                         ? dialog.ShowDialog(
-                                             (Window)
-                                             owner
-                                                 .TranslateForTechnology
-                                                 ())
-                                         : dialog.ShowDialog();
+                            ? dialog.ShowDialog(
+                                (Window)
+                                owner
+                                    .TranslateForTechnology
+                                    ())
+                            : dialog.ShowDialog();
 
                         return tempresult == false
-                                   ? null
-                                   : dialog.SelectedPath;
+                            ? null
+                            : dialog.SelectedPath;
                     });
             }
             finally
@@ -307,12 +305,12 @@ namespace Tauron.Application
                         TranslateDefaultExt(dialog);
 
                         tempresult = owner != null
-                                         ? dialog.ShowDialog(
-                                             (Window)
-                                             owner
-                                                 .TranslateForTechnology
-                                                 ())
-                                         : dialog.ShowDialog();
+                            ? dialog.ShowDialog(
+                                (Window)
+                                owner
+                                    .TranslateForTechnology
+                                    ())
+                            : dialog.ShowDialog();
 
                         return tempresult == false ? null : dialog.FileName;
                     });
@@ -350,13 +348,13 @@ namespace Tauron.Application
                     };
 
                     TranslateButtons(button, dialog.Buttons);
-                    TaskDialogButton clickedButton =
+                    var clickedButton =
                         dialog.ShowDialog(owner != null
-                                              ? (Window)
-                                                owner
-                                                    .TranslateForTechnology
-                                                    ()
-                                              : null);
+                            ? (Window)
+                            owner
+                                .TranslateForTechnology
+                                ()
+                            : null);
 
                     switch (clickedButton.ButtonType)
                     {
@@ -382,12 +380,12 @@ namespace Tauron.Application
 
         private void TranslateDefaultExt([NotNull] VistaFileDialog dialog)
         {
-            if(string.IsNullOrWhiteSpace(dialog.DefaultExt)) return;
+            if (string.IsNullOrWhiteSpace(dialog.DefaultExt)) return;
 
             var ext = "*." + dialog.DefaultExt;
             var filter = dialog.Filter;
             var filters = filter.Split('|');
-            for (int i = 1; i < filters.Length; i += 2) if (filters[i] == ext) dialog.FilterIndex = 1 + (i - 1)/2;
+            for (var i = 1; i < filters.Length; i += 2) if (filters[i] == ext) dialog.FilterIndex = 1 + (i - 1) / 2;
         }
 
         private void TranslateButtons(MsgBoxButton button, [NotNull] TaskDialogItemCollection<TaskDialogButton> buttons)

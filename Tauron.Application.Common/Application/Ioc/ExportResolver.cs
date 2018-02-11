@@ -26,14 +26,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.BuildUp.Exports.DefaultExports;
 using Tauron.Application.Ioc.Components;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -43,195 +42,9 @@ namespace Tauron.Application.Ioc
     [PublicAPI]
     public sealed class ExportResolver
     {
-        #region Fields
-
-        /// <summary>The _providers.</summary>
-        private readonly List<ExportProvider> _providers;
-
-        #endregion
-
-        #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="ExportResolver" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="ExportResolver" /> Klasse.
-        ///     Initializes a new instance of the <see cref="ExportResolver" /> class.
-        /// </summary>
-        public ExportResolver()
-        {
-            _providers = new List<ExportProvider>();
-        }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>
-        ///     The add assembly.
-        /// </summary>
-        /// <param name="assembly">
-        ///     The assembly.
-        /// </param>
-        public void AddAssembly(Assembly assembly)
-        {
-            Contract.Requires<ArgumentNullException>(assembly != null, "assembly");
-
-            AddProvider(new AssemblyExportProvider(assembly));
-        }
-
-        /// <summary>
-        ///     The add path.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <param name="searchpattern">
-        ///     The searchpattern.
-        /// </param>
-        /// <param name="option">
-        ///     The option.
-        /// </param>
-        /// <param name="discoverChanges">
-        ///     The discover changes.
-        /// </param>
-        public void AddPath(string path, string searchpattern, SearchOption option, bool discoverChanges)
-        {
-            Contract.Requires<ArgumentNullException>(path != null, "path");
-            Contract.Requires<ArgumentNullException>(searchpattern != null, "searchpattern");
-
-            if (path == string.Empty) path = AppDomain.CurrentDomain.BaseDirectory;
-
-            path = path.GetFullPath();
-
-            if (!path.ExisDirectory()) return;
-
-            AddProvider(new PathExportProvider(path, searchpattern, option, discoverChanges));
-        }
-
-        /// <summary>
-        ///     The add path.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        public void AddPath(string path)
-        {
-            Contract.Requires<ArgumentNullException>(path != null, "path");
-
-            AddPath(path, "*.dll");
-        }
-
-        /// <summary>
-        ///     The add path.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <param name="searchpattern">
-        ///     The searchpattern.
-        /// </param>
-        public void AddPath(string path, string searchpattern)
-        {
-            Contract.Requires<ArgumentNullException>(path != null, "path");
-            Contract.Requires<ArgumentNullException>(searchpattern != null, "searchpattern");
-
-            AddPath(path, searchpattern, SearchOption.TopDirectoryOnly);
-        }
-
-        /// <summary>
-        ///     The add path.
-        /// </summary>
-        /// <param name="path">
-        ///     The path.
-        /// </param>
-        /// <param name="searchpattern">
-        ///     The searchpattern.
-        /// </param>
-        /// <param name="searchOption">
-        ///     The search option.
-        /// </param>
-        public void AddPath(string path, string searchpattern, SearchOption searchOption)
-        {
-            Contract.Requires<ArgumentNullException>(path != null, "path");
-            Contract.Requires<ArgumentNullException>(searchpattern != null, "searchpattern");
-
-            AddPath(path, searchpattern, searchOption, false);
-        }
-
-        /// <summary>
-        ///     The add provider.
-        /// </summary>
-        /// <param name="provider">
-        ///     The provider.
-        /// </param>
-        public void AddProvider(ExportProvider provider)
-        {
-            Contract.Requires<ArgumentNullException>(provider != null, "provider");
-
-            _providers.Add(provider);
-        }
-
-        /// <summary>
-        ///     The add types.
-        /// </summary>
-        /// <param name="types">
-        ///     The types.
-        /// </param>
-        public void AddTypes(IEnumerable<Type> types)
-        {
-            Contract.Requires<ArgumentNullException>(types != null, "types");
-
-            AddProvider(new TypeExportProvider(types));
-        }
-
-        /// <summary>
-        ///     The fill.
-        /// </summary>
-        /// <param name="componentRegistry">
-        ///     The component registry.
-        /// </param>
-        /// <param name="exportRegistry">
-        ///     The export registry.
-        /// </param>
-        /// <param name="exportProviderRegistry">
-        ///     The export provider registry.
-        /// </param>
-        public void Fill(
-            ComponentRegistry componentRegistry,
-            ExportRegistry exportRegistry,
-            ExportProviderRegistry exportProviderRegistry)
-        {
-            Contract.Requires<ArgumentNullException>(componentRegistry != null, "componentRegistry");
-            Contract.Requires<ArgumentNullException>(exportRegistry != null, "exportRegistry");
-            Contract.Requires<ArgumentNullException>(exportProviderRegistry != null, "exportProviderRegistry");
-
-            var factorys = new Dictionary<string, IExportFactory>();
-            foreach (IExportFactory factory in componentRegistry.GetAll<IExportFactory>()) factorys[factory.TechnologyName] = factory;
-
-            foreach (ExportProvider exportProvider in _providers)
-            {
-                foreach (Tuple<IExport, int> export in exportProvider.CreateExports(factorys[exportProvider.Technology])) 
-                    exportRegistry.Register(export.Item1, export.Item2);
-
-                if (exportProvider.BroadcastChanges) exportProviderRegistry.Add(exportProvider);
-            }
-        }
-
-        #endregion
-
         /// <summary>The assembly export provider.</summary>
         internal sealed class AssemblyExportProvider : ExportProvider, IEquatable<AssemblyExportProvider>
         {
-            #region Fields
-
-            /// <summary>The asm.</summary>
-            internal readonly Assembly Asm;
-
-            /// <summary>The _provider.</summary>
-            private TypeExportProvider _provider;
-
-            #endregion
-
             #region Constructors and Destructors
 
             /// <summary>
@@ -242,10 +55,9 @@ namespace Tauron.Application.Ioc
             /// <param name="asm">
             ///     The asm.
             /// </param>
-            public AssemblyExportProvider(Assembly asm)
+            public AssemblyExportProvider([NotNull] Assembly asm)
             {
-                Contract.Requires<ArgumentNullException>(asm != null, "asm");
-
+                if (asm == null) throw new ArgumentNullException(nameof(asm));
                 Asm = asm;
             }
 
@@ -255,10 +67,17 @@ namespace Tauron.Application.Ioc
 
             /// <summary>Gets the technology.</summary>
             /// <value>The technology.</value>
-            public override string Technology
-            {
-                get { return AopConstants.DefaultExportFactoryName; }
-            }
+            public override string Technology => AopConstants.DefaultExportFactoryName;
+
+            #endregion
+
+            #region Fields
+
+            /// <summary>The asm.</summary>
+            internal readonly Assembly Asm;
+
+            /// <summary>The _provider.</summary>
+            private TypeExportProvider _provider;
 
             #endregion
 
@@ -298,15 +117,6 @@ namespace Tauron.Application.Ioc
                 return !Equals(left, right);
             }
 
-            /// <summary>
-            ///     The create exports.
-            /// </summary>
-            /// <param name="factory">
-            ///     The factory.
-            /// </param>
-            /// <returns>
-            ///     The <see cref="IEnumerable" />.
-            /// </returns>
             public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
             {
                 if (_provider == null) _provider = new TypeExportProvider(Asm.GetTypes());
@@ -393,13 +203,10 @@ namespace Tauron.Application.Ioc
             /// <param name="discoverChanges">
             ///     The discover changes.
             /// </param>
-            public PathExportProvider(string path, string searchpattern, SearchOption option, bool discoverChanges)
+            public PathExportProvider([NotNull] string path, [NotNull] string searchpattern, SearchOption option, bool discoverChanges)
             {
-                Contract.Requires<ArgumentNullException>(path != null, "path");
-                Contract.Requires<ArgumentNullException>(searchpattern != null, "searchpattern");
-
-                _path = path;
-                _searchpattern = searchpattern;
+                _path = path ?? throw new ArgumentNullException(nameof(path));
+                _searchpattern = searchpattern ?? throw new ArgumentNullException(nameof(searchpattern));
                 _option = option;
                 _discoverChanges = discoverChanges;
                 _files = new List<string>(Directory.EnumerateFiles(path, searchpattern, option));
@@ -420,17 +227,11 @@ namespace Tauron.Application.Ioc
 
             /// <summary>Gets a value indicating whether broadcast changes.</summary>
             /// <value>The broadcast changes.</value>
-            public override bool BroadcastChanges
-            {
-                get { return _discoverChanges; }
-            }
+            public override bool BroadcastChanges => _discoverChanges;
 
             /// <summary>Gets the technology.</summary>
             /// <value>The technology.</value>
-            public override string Technology
-            {
-                get { return AopConstants.DefaultExportFactoryName; }
-            }
+            public override string Technology => AopConstants.DefaultExportFactoryName;
 
             #endregion
 
@@ -439,20 +240,12 @@ namespace Tauron.Application.Ioc
             /// <summary>The dispose.</summary>
             public void Dispose()
             {
-                if (_watcher != null) _watcher.Dispose();
+                _watcher?.Dispose();
 
                 GC.SuppressFinalize(this);
             }
 
-            /// <summary>
-            ///     The create exports.
-            /// </summary>
-            /// <param name="factory">
-            ///     The factory.
-            /// </param>
-            /// <returns>
-            ///     The <see cref="IEnumerable" />.
-            /// </returns>
+
             public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
             {
                 _factory = factory;
@@ -460,7 +253,7 @@ namespace Tauron.Application.Ioc
                 if (_providers == null)
                 {
                     _providers = new List<AssemblyExportProvider>();
-                    foreach (string file in _files)
+                    foreach (var file in _files)
                     {
                         AssemblyExportProvider exportProvider = null;
                         try
@@ -480,19 +273,18 @@ namespace Tauron.Application.Ioc
                     }
                 }
 
-                if (_discoverChanges)
+                if (!_discoverChanges) return _providers.SelectMany(pro => pro.CreateExports(factory));
+
+                _watcher = new FileSystemWatcher(_path, _searchpattern)
                 {
-                    _watcher = new FileSystemWatcher(_path, _searchpattern)
-                    {
-                        EnableRaisingEvents = true,
-                        IncludeSubdirectories =
-                            _option
-                            == SearchOption
-                                   .AllDirectories
-                    };
-                    _watcher.Created += Created;
-                    _watcher.Deleted += Deleted;
-                }
+                    EnableRaisingEvents = true,
+                    IncludeSubdirectories =
+                        _option
+                        == SearchOption
+                            .AllDirectories
+                };
+                _watcher.Created += Created;
+                _watcher.Deleted += Deleted;
 
                 return _providers.SelectMany(pro => pro.CreateExports(factory));
             }
@@ -551,12 +343,10 @@ namespace Tauron.Application.Ioc
                 try
                 {
                     var pro = new AssemblyExportProvider(Assembly.LoadFrom(e.FullPath));
-                    int index = _providers.IndexOf(pro);
+                    var index = _providers.IndexOf(pro);
                     if (index == -1) return;
 
                     pro = _providers[index];
-
-                    Contract.Assume(pro != null);
 
                     _providers.RemoveAt(index);
                     OnExportsChanged(
@@ -578,6 +368,44 @@ namespace Tauron.Application.Ioc
         /// <summary>The type export provider.</summary>
         private sealed class TypeExportProvider : ExportProvider
         {
+            #region Public Properties
+
+            /// <summary>Gets the technology.</summary>
+            /// <value>The technology.</value>
+            public override string Technology => AopConstants.DefaultExportFactoryName;
+
+            #endregion
+
+            #region Public Methods and Operators
+
+            public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
+            {
+                var fac = (DefaultExportFactory) factory;
+
+                if (_exports != null) return _exports;
+
+                var exports = new List<Tuple<IExport, int>>(_types.Count());
+
+                foreach (var type in _types)
+                {
+                    var currentLevel = _level;
+
+                    var ex1 = fac.Create(type, ref currentLevel);
+                    if (ex1 != null) exports.Add(Tuple.Create(ex1, currentLevel));
+
+                    exports.AddRange(
+                        type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                            .Select(methodInfo => fac.CreateMethodExport(methodInfo, ref currentLevel))
+                            .Where(ex2 => ex2 != null)
+                            .Select(exp => Tuple.Create(exp, currentLevel)));
+                }
+
+                _exports = exports.ToArray();
+                return _exports;
+            }
+
+            #endregion
+
             #region Fields
 
             /// <summary>The _types.</summary>
@@ -602,71 +430,184 @@ namespace Tauron.Application.Ioc
             /// </param>
             public TypeExportProvider([NotNull] IEnumerable<Type> types)
             {
-                Contract.Requires<ArgumentNullException>(types != null, "types");
-
-                _types = types;
+                _types = types ?? throw new ArgumentNullException(nameof(types));
                 _level = 0;
             }
 
             public TypeExportProvider([NotNull] IEnumerable<Type> types, int level)
             {
-                Contract.Requires<ArgumentNullException>(types != null, "types");
-
-                _types = types;
+                _types = types ?? throw new ArgumentNullException(nameof(types));
                 _level = level;
             }
 
             #endregion
-
-            #region Public Properties
-
-            /// <summary>Gets the technology.</summary>
-            /// <value>The technology.</value>
-            public override string Technology
-            {
-                get { return AopConstants.DefaultExportFactoryName; }
-            }
-
-            #endregion
-
-            #region Public Methods and Operators
-
-            /// <summary>
-            ///     The create exports.
-            /// </summary>
-            /// <param name="factory">
-            ///     The factory.
-            /// </param>
-            /// <returns>
-            ///     The <see cref="IEnumerable" />.
-            /// </returns>
-            public override IEnumerable<Tuple<IExport, int>> CreateExports(IExportFactory factory)
-            {
-                var fac = (DefaultExportFactory) factory;
-
-                if (_exports != null) return _exports;
-
-                var exports = new List<Tuple<IExport, int>>(_types.Count());
-
-                foreach (Type type in _types)
-                {
-                    int currentLevel = _level;
-
-                    IExport ex1 = fac.Create(type, ref currentLevel);
-                    if (ex1 != null) exports.Add(Tuple.Create(ex1, currentLevel));
-
-                    exports.AddRange(
-                        type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
-                            .Select(methodInfo => fac.CreateMethodExport(methodInfo, ref currentLevel))
-                            .Where(ex2 => ex2 != null)
-                            .Select(exp => Tuple.Create(exp, currentLevel)));
-                }
-
-                this._exports = exports.ToArray();
-                return this._exports;
-            }
-
-            #endregion
         }
+
+        #region Fields
+
+        /// <summary>The _providers.</summary>
+        private readonly List<ExportProvider> _providers;
+
+        #endregion
+
+        #region Constructors and Destructors
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ExportResolver" /> class.
+        ///     Initialisiert eine neue Instanz der <see cref="ExportResolver" /> Klasse.
+        ///     Initializes a new instance of the <see cref="ExportResolver" /> class.
+        /// </summary>
+        public ExportResolver()
+        {
+            _providers = new List<ExportProvider>();
+        }
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>
+        ///     The add assembly.
+        /// </summary>
+        /// <param name="assembly">
+        ///     The assembly.
+        /// </param>
+        public void AddAssembly([NotNull] Assembly assembly)
+        {
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            AddProvider(new AssemblyExportProvider(assembly));
+        }
+
+        /// <summary>
+        ///     The add path.
+        /// </summary>
+        /// <param name="path">
+        ///     The path.
+        /// </param>
+        /// <param name="searchpattern">
+        ///     The searchpattern.
+        /// </param>
+        /// <param name="option">
+        ///     The option.
+        /// </param>
+        /// <param name="discoverChanges">
+        ///     The discover changes.
+        /// </param>
+        public void AddPath([NotNull] string path, [NotNull] string searchpattern, SearchOption option, bool discoverChanges)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (searchpattern == null) throw new ArgumentNullException(nameof(searchpattern));
+            if (path == string.Empty) path = AppDomain.CurrentDomain.BaseDirectory;
+
+            path = path.GetFullPath();
+
+            if (!path.ExisDirectory()) return;
+
+            AddProvider(new PathExportProvider(path, searchpattern, option, discoverChanges));
+        }
+
+        /// <summary>
+        ///     The add path.
+        /// </summary>
+        /// <param name="path">
+        ///     The path.
+        /// </param>
+        public void AddPath([NotNull] string path)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            AddPath(path, "*.dll");
+        }
+
+        /// <summary>
+        ///     The add path.
+        /// </summary>
+        /// <param name="path">
+        ///     The path.
+        /// </param>
+        /// <param name="searchpattern">
+        ///     The searchpattern.
+        /// </param>
+        public void AddPath([NotNull] string path, string searchpattern)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            AddPath(path, searchpattern, SearchOption.TopDirectoryOnly);
+        }
+
+        /// <summary>
+        ///     The add path.
+        /// </summary>
+        /// <param name="path">
+        ///     The path.
+        /// </param>
+        /// <param name="searchpattern">
+        ///     The searchpattern.
+        /// </param>
+        /// <param name="searchOption">
+        ///     The search option.
+        /// </param>
+        public void AddPath([NotNull] string path, [NotNull] string searchpattern, SearchOption searchOption)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (searchpattern == null) throw new ArgumentNullException(nameof(searchpattern));
+            AddPath(path, searchpattern, searchOption, false);
+        }
+
+        /// <summary>
+        ///     The add provider.
+        /// </summary>
+        /// <param name="provider">
+        ///     The provider.
+        /// </param>
+        public void AddProvider([NotNull] ExportProvider provider)
+        {
+            if (provider == null) throw new ArgumentNullException(nameof(provider));
+            _providers.Add(provider);
+        }
+
+        /// <summary>
+        ///     The add types.
+        /// </summary>
+        /// <param name="types">
+        ///     The types.
+        /// </param>
+        public void AddTypes([NotNull] IEnumerable<Type> types)
+        {
+            if (types == null) throw new ArgumentNullException(nameof(types));
+            AddProvider(new TypeExportProvider(types));
+        }
+
+        /// <summary>
+        ///     The fill.
+        /// </summary>
+        /// <param name="componentRegistry">
+        ///     The component registry.
+        /// </param>
+        /// <param name="exportRegistry">
+        ///     The export registry.
+        /// </param>
+        /// <param name="exportProviderRegistry">
+        ///     The export provider registry.
+        /// </param>
+        public void Fill(
+            [NotNull] ComponentRegistry componentRegistry,
+            [NotNull] ExportRegistry exportRegistry,
+            [NotNull] ExportProviderRegistry exportProviderRegistry)
+        {
+            if (componentRegistry == null) throw new ArgumentNullException(nameof(componentRegistry));
+            if (exportRegistry == null) throw new ArgumentNullException(nameof(exportRegistry));
+            if (exportProviderRegistry == null) throw new ArgumentNullException(nameof(exportProviderRegistry));
+            var factorys = new Dictionary<string, IExportFactory>();
+            foreach (var factory in componentRegistry.GetAll<IExportFactory>()) factorys[factory.TechnologyName] = factory;
+
+            foreach (var exportProvider in _providers)
+            {
+                foreach (var export in exportProvider.CreateExports(factorys[exportProvider.Technology]))
+                    exportRegistry.Register(export.Item1, export.Item2);
+
+                if (exportProvider.BroadcastChanges) exportProviderRegistry.Add(exportProvider);
+            }
+        }
+
+        #endregion
     }
 }

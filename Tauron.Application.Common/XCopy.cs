@@ -2,10 +2,9 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 using Tauron.Interop;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -18,22 +17,6 @@ namespace Tauron
     [PublicAPI]
     public class XCopy
     {
-        #region Fields
-
-        /// <summary>The _destination.</summary>
-        private string _destination;
-
-        /// <summary>The _file percent completed.</summary>
-        private int _filePercentCompleted;
-
-        /// <summary>The _is cancelled.</summary>
-        private int _isCancelled;
-
-        /// <summary>The _source.</summary>
-        private string _source;
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
@@ -52,6 +35,22 @@ namespace Tauron
 
         /// <summary>The progress changed.</summary>
         private event EventHandler<ProgressChangedEventArgs> ProgressChanged;
+
+        #endregion
+
+        #region Fields
+
+        /// <summary>The _destination.</summary>
+        private string _destination;
+
+        /// <summary>The _file percent completed.</summary>
+        private int _filePercentCompleted;
+
+        /// <summary>The _is cancelled.</summary>
+        private int _isCancelled;
+
+        /// <summary>The _source.</summary>
+        private string _source;
 
         #endregion
 
@@ -74,9 +73,8 @@ namespace Tauron
         /// </param>
         public static void Copy([NotNull] string source, [NotNull] string destination, bool overwrite, bool nobuffering)
         {
-            Contract.Requires<ArgumentNullException>(source != null, "source");
-            Contract.Requires<ArgumentNullException>(destination != null, "destination");
-
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
             new XCopy().CopyInternal(source, destination, overwrite, nobuffering, null);
         }
 
@@ -102,8 +100,8 @@ namespace Tauron
             bool overwrite,
             bool nobuffering, [CanBeNull] EventHandler<ProgressChangedEventArgs> handler)
         {
-            Contract.Requires<ArgumentNullException>(source != null, "source");
-            Contract.Requires<ArgumentNullException>(destination != null, "destination");
+            if (string.IsNullOrEmpty(source)) throw new ArgumentException("Value cannot be null or empty.", nameof(source));
+            if (string.IsNullOrEmpty(destination)) throw new ArgumentException("Value cannot be null or empty.", nameof(destination));
 
             new XCopy().CopyInternal(source, destination, overwrite, nobuffering, handler);
         }
@@ -136,9 +134,8 @@ namespace Tauron
             bool overwrite,
             bool nobuffering, [CanBeNull] EventHandler<ProgressChangedEventArgs> handler)
         {
-            Contract.Requires<ArgumentNullException>(source != null, "source");
-            Contract.Requires<ArgumentNullException>(destination != null, "destination");
-
+            if (string.IsNullOrEmpty(source)) throw new ArgumentException("Value cannot be null or empty.", nameof(source));
+            if (string.IsNullOrEmpty(destination)) throw new ArgumentException("Value cannot be null or empty.", nameof(destination));
             try
             {
                 var copyFileFlags = NativeMethods.CopyFileFlags.COPY_FILE_RESTARTABLE;
@@ -153,7 +150,7 @@ namespace Tauron
 
                 NativeMethods.CopyProgressRoutine callback = CopyProgressHandler;
 
-                bool result = NativeMethods.CopyFileEx(
+                var result = NativeMethods.CopyFileEx(
                     _source,
                     _destination,
                     callback,
@@ -214,7 +211,7 @@ namespace Tauron
             IntPtr hDestinationFile,
             IntPtr lpData)
         {
-            if (reason == NativeMethods.CopyProgressCallbackReason.CALLBACK_CHUNK_FINISHED) OnProgressChanged((transferred/(double) total)*100.0);
+            if (reason == NativeMethods.CopyProgressCallbackReason.CALLBACK_CHUNK_FINISHED) OnProgressChanged(transferred / (double) total * 100.0);
 
             return NativeMethods.CopyProgressResult.PROGRESS_CONTINUE;
         }
@@ -232,7 +229,7 @@ namespace Tauron
 
             _filePercentCompleted = (int) percent;
 
-            EventHandler<ProgressChangedEventArgs> handler = ProgressChanged;
+            var handler = ProgressChanged;
             if (handler != null) handler(this, new ProgressChangedEventArgs(_filePercentCompleted, null));
         }
 

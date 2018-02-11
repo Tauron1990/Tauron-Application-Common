@@ -22,6 +22,6 @@ namespace Tauron.Application.Ioc.BuildUp
         Resolve,
 
         /// <summary>The build up object.</summary>
-        BuildUpObject,
+        BuildUpObject
     }
 }

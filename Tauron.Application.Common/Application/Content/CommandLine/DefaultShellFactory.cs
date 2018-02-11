@@ -1,8 +1,7 @@
 ﻿#region
 
 using System;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -23,8 +22,7 @@ namespace Tauron.Application
 
         public DefaultShellFactory([NotNull] Type shellType)
         {
-            Contract.Requires<ArgumentNullException>(shellType != null, "shellType");
-
+            if (shellType == null) throw new ArgumentNullException(nameof(shellType));
             _shellType = shellType;
         }
 

@@ -26,10 +26,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using Castle.DynamicProxy;
 using Tauron.Application.Ioc.Components;
 using Tauron.Application.Ioc.LifeTime;
@@ -75,12 +72,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             var contextPolicy = context.Policys.Get<ObjectContextPolicy>();
 
-            Contract.Assume(contextPolicy != null);
-
             ObjectContext objectContext;
 
-            string name = contextPolicy.ContextName;
-            if (name != null) objectContext = ContextManager.GetContext(name, context.Target);
+            var name = contextPolicy.ContextName;
+            if (name != null)
+            {
+                objectContext = ContextManager.GetContext(name, context.Target);
+            }
             else
             {
                 var holder = context.Target as IContextHolder;
@@ -94,8 +92,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 }
                 else
                 {
-                    object obj = context.Target;
-                    Contract.Assume(obj != null);
+                    var obj = context.Target;
 
                     objectContext = ContextManager.GetContext(name, obj);
                 }
@@ -122,14 +119,14 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                         context.Target,
                         options,
                         policy.MemberInterceptor.Select(
-                            mem =>
-                            mem.Value)
-                              .ToArray());
+                                mem =>
+                                    mem.Value)
+                            .ToArray());
                 }
             }
             finally
             {
-                foreach (MemberInterceptionAttribute result in
+                foreach (var result in
                     policy.MemberInterceptor.Select(mem => mem.Key).Where(attr => attr != null)) result.Initialize(context.Target, objectContext, name);
             }
         }
@@ -153,13 +150,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                         AopConstants.ContextMetadataName)
             };
 
-            foreach (MemberInfo memberInfo in context.ExportType.GetMembers(AopConstants.DefaultBindingFlags))
+            foreach (var memberInfo in context.ExportType.GetMembers(AopConstants.DefaultBindingFlags))
             {
-                Contract.Assume(memberInfo != null);
-
-                ObjectContextPropertyAttribute[] attrs =
+                var attrs =
                     memberInfo.GetAllCustomAttributes<ObjectContextPropertyAttribute>();
-                foreach (ObjectContextPropertyAttribute objectContextPropertyAttribute in attrs) contextPolicy.ContextPropertys.Add(Tuple.Create(objectContextPropertyAttribute, memberInfo));
+                foreach (var objectContextPropertyAttribute in attrs) contextPolicy.ContextPropertys.Add(Tuple.Create(objectContextPropertyAttribute, memberInfo));
             }
 
             context.Policys.Add(contextPolicy);
@@ -168,42 +163,34 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             object meta;
             if (context.Metadata.Metadata.TryGetValue("IgnoreIntercepion", out meta))
-            {
                 try
                 {
-                    if((bool)meta)
+                    if ((bool) meta)
                         return;
                 }
                 catch (InvalidCastException)
                 {
                 }
-            }
 
             if (attr == null) return;
 
             var policy = new InterceptionPolicy {InterceptAttribute = attr};
-            IInterceptor temp = attr.Create();
+            var temp = attr.Create();
             if (temp != null) policy.MemberInterceptor.Add(new KeyValuePair<MemberInterceptionAttribute, IInterceptor>(null, temp));
 
-            foreach (MemberInterceptionAttribute attribute in
+            foreach (var attribute in
                 context.ExportType.GetAllCustomAttributes<MemberInterceptionAttribute>())
-            {
                 policy.MemberInterceptor.Add(
                     new KeyValuePair<MemberInterceptionAttribute, IInterceptor>(
                         attribute,
                         attribute.Create(context.ExportType)));
-            }
 
-            foreach (MemberInfo member in context.ExportType.GetMembers(AopConstants.DefaultBindingFlags))
+            foreach (var member in context.ExportType.GetMembers(AopConstants.DefaultBindingFlags))
             {
-                Contract.Assume(member != null);
-
-                MemberInterceptionAttribute[] intattrs = member.GetAllCustomAttributes<MemberInterceptionAttribute>();
-                foreach (MemberInterceptionAttribute interceptionAttribute in intattrs)
+                var intattrs = member.GetAllCustomAttributes<MemberInterceptionAttribute>();
+                foreach (var interceptionAttribute in intattrs)
                 {
-                    Contract.Assert(interceptionAttribute != null);
-
-                    IInterceptor temp2 = interceptionAttribute.Create(member);
+                    var temp2 = interceptionAttribute.Create(member);
                     policy.MemberInterceptor.Add(
                         new KeyValuePair<MemberInterceptionAttribute, IInterceptor>(
                             interceptionAttribute, temp2));

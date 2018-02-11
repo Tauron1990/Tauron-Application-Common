@@ -26,8 +26,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -65,37 +64,6 @@ namespace Tauron.Application.Ioc.Components
 
         #endregion
 
-        #region Public Methods and Operators
-
-        /// <summary>The dispose.</summary>
-        public void Dispose()
-        {
-            foreach (ExportProvider exportProvider in _providers)
-            {
-                var dipo = exportProvider as IDisposable;
-                if (dipo != null) dipo.Dispose();
-            }
-        }
-
-        /// <summary>
-        ///     The add.
-        /// </summary>
-        /// <param name="provider">
-        ///     The provider.
-        /// </param>
-        public void Add(ExportProvider provider)
-        {
-            Contract.Requires<ArgumentNullException>(provider != null, "provider");
-
-            lock (_providers)
-            {
-                _providers.Add(provider);
-                provider.ExportsChanged += OnExportsChanged;
-            }
-        }
-
-        #endregion
-
         #region Methods
 
         /// <summary>
@@ -107,12 +75,40 @@ namespace Tauron.Application.Ioc.Components
         /// <param name="e">
         ///     The e.
         /// </param>
-        private void OnExportsChanged(object sender, ExportChangedEventArgs e)
+        private void OnExportsChanged([NotNull] object sender, ExportChangedEventArgs e)
         {
-            Contract.Requires<ArgumentNullException>(sender != null, "sender");
+            if (sender == null) throw new ArgumentNullException(nameof(sender));
+            var handler = ExportsChanged;
+            handler?.Invoke(sender, e);
+        }
 
-            EventHandler<ExportChangedEventArgs> handler = ExportsChanged;
-            if (handler != null) handler(sender, e);
+        #endregion
+
+        #region Public Methods and Operators
+
+        /// <summary>The dispose.</summary>
+        public void Dispose()
+        {
+            foreach (var exportProvider in _providers)
+            {
+                if (exportProvider is IDisposable dipo) dipo.Dispose();
+            }
+        }
+
+        /// <summary>
+        ///     The add.
+        /// </summary>
+        /// <param name="provider">
+        ///     The provider.
+        /// </param>
+        public void Add([NotNull] ExportProvider provider)
+        {
+            if (provider == null) throw new ArgumentNullException(nameof(provider));
+            lock (_providers)
+            {
+                _providers.Add(provider);
+                provider.ExportsChanged += OnExportsChanged;
+            }
         }
 
         #endregion

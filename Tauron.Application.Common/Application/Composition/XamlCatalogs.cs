@@ -5,12 +5,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Reflection;
 using System.Windows.Markup;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -41,11 +40,9 @@ namespace Tauron.Application.Composition
         {
             try
             {
-                Assembly asm = string.IsNullOrWhiteSpace(AssemblyName)
-                                   ? Assembly.GetEntryAssembly()
-                                   : Assembly.Load(new AssemblyName(AssemblyName));
-
-                Contract.Assume(asm != null);
+                var asm = string.IsNullOrWhiteSpace(AssemblyName)
+                    ? Assembly.GetEntryAssembly()
+                    : Assembly.Load(new AssemblyName(AssemblyName));
 
                 container.AddAssembly(asm);
             }
@@ -128,15 +125,7 @@ namespace Tauron.Application.Composition
         /// </param>
         protected internal override void FillContainer(ExportResolver container)
         {
-            foreach (XamlCatalog innerCatalog in InnerCatalogs) innerCatalog.FillContainer(container);
-        }
-
-        /// <summary>The object invarint.</summary>
-        [ContractInvariantMethod]
-        private void ObjectInvarint()
-        {
-            Contract.Invariant(InnerCatalogs != null);
-            Contract.Invariant(Contract.ForAll(InnerCatalogs, catalog => catalog != null));
+            foreach (var innerCatalog in InnerCatalogs) innerCatalog.FillContainer(container);
         }
 
         #endregion
@@ -162,6 +151,21 @@ namespace Tauron.Application.Composition
 
         #endregion
 
+        #region Methods
+
+        /// <summary>
+        ///     The fill container.
+        /// </summary>
+        /// <param name="container">
+        ///     The container.
+        /// </param>
+        protected internal override void FillContainer(ExportResolver container)
+        {
+            container.AddPath(Path, SearchPattern, SearchOption, DiscoverChanges);
+        }
+
+        #endregion
+
         #region Public Properties
 
         /// <summary>Gets or sets a value indicating whether discover changes.</summary>
@@ -181,28 +185,6 @@ namespace Tauron.Application.Composition
         /// <value>The search pattern.</value>
         [NotNull]
         public string SearchPattern { get; set; }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        ///     The fill container.
-        /// </summary>
-        /// <param name="container">
-        ///     The container.
-        /// </param>
-        protected internal override void FillContainer(ExportResolver container)
-        {
-            container.AddPath(Path, SearchPattern, SearchOption, DiscoverChanges);
-        }
-
-        /// <summary>The object invariant.</summary>
-        [ContractInvariantMethod]
-        private void ObjectInvariant()
-        {
-            Contract.Invariant(!string.IsNullOrEmpty(SearchPattern));
-        }
 
         #endregion
     }
@@ -231,7 +213,8 @@ namespace Tauron.Application.Composition
 
         /// <summary>Gets or sets the types.</summary>
         /// <value>The types.</value>
-        [NotNull,SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        [NotNull]
+        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public Collection<string> Types { get; set; }
 
         #endregion
@@ -251,9 +234,9 @@ namespace Tauron.Application.Composition
             foreach (var type in Types)
             {
                 var tempType = Type.GetType(type);
-                if(tempType == null)
+                if (tempType == null)
                     CommonConstants.LogCommon(false, "Xaml Catalog: Type Not Found: {0}", type);
-                else 
+                else
                     types.Add(tempType);
             }
 

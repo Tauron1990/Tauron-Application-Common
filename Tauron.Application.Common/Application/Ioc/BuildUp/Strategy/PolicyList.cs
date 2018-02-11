@@ -2,9 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -31,11 +30,10 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         /// </param>
         /// <typeparam name="TPolicy">
         /// </typeparam>
-        public void Add<TPolicy>(TPolicy policy) where TPolicy : IPolicy
+        public void Add<TPolicy>([NotNull] TPolicy policy) where TPolicy : IPolicy
         {
-            Contract.Requires<ArgumentNullException>(policy != null, "policy");
-
-            _list.Add(typeof (TPolicy), policy);
+            if (policy == null) throw new ArgumentNullException(nameof(policy));
+            _list.Add(typeof(TPolicy), policy);
         }
 
         /// <summary>The get.</summary>
@@ -46,20 +44,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public TPolicy Get<TPolicy>()
         {
             ICollection<IPolicy> policies;
-            if (!_list.TryGetValue(typeof (TPolicy), out policies)) return default(TPolicy);
+            if (!_list.TryGetValue(typeof(TPolicy), out policies)) return default(TPolicy);
 
-            Contract.Assume(policies != null);
             return (TPolicy) policies.Last();
         }
 
         public IEnumerable<TPolicy> GetAll<TPolicy>()
         {
-            Contract.Ensures(Contract.Result<IEnumerable<TPolicy>>() != null);
-
             ICollection<IPolicy> policies;
-            if (!_list.TryGetValue(typeof (TPolicy), out policies)) return Enumerable.Empty<TPolicy>();
-
-            Contract.Assume(policies != null);
+            if (!_list.TryGetValue(typeof(TPolicy), out policies)) return Enumerable.Empty<TPolicy>();
 
             return policies.Cast<TPolicy>();
         }
@@ -68,7 +61,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         /// <typeparam name="TPolicy"></typeparam>
         public void Remove<TPolicy>()
         {
-            _list.Remove(typeof (TPolicy));
+            _list.Remove(typeof(TPolicy));
         }
 
         /// <summary>

@@ -26,8 +26,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -93,8 +92,6 @@ namespace Tauron.Application.Ioc
         [NotNull]
         public virtual Dictionary<string, object> CreateMetadata()
         {
-            Contract.Ensures(Contract.Result<Dictionary<string, object>>() != null);
-
             return new Dictionary<string, object>();
         }
 

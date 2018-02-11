@@ -1,9 +1,7 @@
 ﻿#region
 
-using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics.Contracts;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 
@@ -44,17 +42,10 @@ namespace Tauron.Application
         /// <value>The limit.</value>
         public int Limit
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<int>() != 0);
-
-                return _limit;
-            }
+            get => _limit;
 
             set
             {
-                Contract.Requires<ArgumentException>(value != 0, "The Limit of the Collection cannot be set to 0.");
-
                 _limit = value;
                 CleanUp();
             }
