@@ -9,21 +9,22 @@ namespace Tauron.Application.Common.BaseLayer.Core
         {
             try
             {
+                SetError(null);
                 ActionImpl();
             }
             catch (Exception e)
             {
-                if (CriticalExceptions.IsCriticalApplicationException(e)) throw;
+                if (e.IsCriticalApplicationException()) throw;
                 SetError(e);
             }
         }
-
-        public abstract void ActionImpl();
 
         public override object GenericAction(object input)
         {
             Action();
             return RuleNull.Null;
         }
+
+        public abstract void ActionImpl();
     }
 }

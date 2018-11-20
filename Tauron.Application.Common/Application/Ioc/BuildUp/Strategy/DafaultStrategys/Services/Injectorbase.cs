@@ -11,12 +11,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     {
         protected Injectorbase([NotNull] IMetadataFactory metadataFactory, [NotNull] TMember member, [NotNull] IResolverExtension[] resolverExtensions)
         {
-            if (metadataFactory == null) throw new ArgumentNullException(nameof(metadataFactory));
-            if (member == null) throw new ArgumentNullException(nameof(member));
-            if (resolverExtensions == null) throw new ArgumentNullException(nameof(resolverExtensions));
-            Member = member;
-
-            InjectorContext = new InjectorContext(metadataFactory, member, MemberType, resolverExtensions);
+            Member = Argument.NotNull(member, nameof(member));
+            // ReSharper disable once VirtualMemberCallInConstructor
+            InjectorContext = new InjectorContext(Argument.NotNull(metadataFactory, nameof(metadataFactory)), member, MemberType, Argument.NotNull(resolverExtensions, nameof(resolverExtensions)));
         }
 
         [NotNull]
@@ -29,6 +26,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         [NotNull]
         protected abstract Type MemberType { get; }
 
+        // ReSharper disable once VirtualMemberNeverOverridden.Global
         protected virtual StepId InitializeMachine([NotNull] out ResolverFactory solidMachine)
         {
             solidMachine = ResolverFactory.DefaultResolverFactory;

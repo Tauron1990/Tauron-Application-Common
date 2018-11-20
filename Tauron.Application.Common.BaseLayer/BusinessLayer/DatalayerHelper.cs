@@ -9,20 +9,13 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 {
     public static class DatalayerHelper
     {
-        private class InitInfo
-        {
-            public MethodInfo MethodInfo { get; set; }
-
-            public List<Type> Type { get; } = new List<Type>();
-        }
-
         private static readonly Dictionary<string, InitInfo> Infos = new Dictionary<string, InitInfo>();
 
         public static void InitializeRule(IRuleBase rule, RepositoryFactory factory)
         {
-            if(rule is RuleBase baseRule) baseRule.SetError(null);
+            if (rule is RuleBase baseRule) baseRule.SetError(null);
 
-            if(string.IsNullOrWhiteSpace(rule.InitializeMethod)) return;
+            if (string.IsNullOrWhiteSpace(rule.InitializeMethod)) return;
 
             var info = GetOrCreate(rule.GetType(), rule.InitializeMethod);
 
@@ -35,17 +28,24 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 
         private static InitInfo GetOrCreate(Type type, string name)
         {
-            string key = type.FullName + "+" + name;
+            var key = type.FullName + "+" + name;
 
             if (Infos.TryGetValue(key, out var cachedInfo)) return cachedInfo;
 
             var initInfo = new InitInfo {MethodInfo = type.GetMethod(name)};
-            if(initInfo.MethodInfo == null) throw new InvalidOperationException($"Initialization method in Rule:{type.FullName} not Found");
+            if (initInfo.MethodInfo == null) throw new InvalidOperationException($"Initialization method in Rule:{type.FullName} not Found");
 
             initInfo.Type.AddRange(initInfo.MethodInfo.GetParameterTypes());
             Infos[key] = initInfo;
 
             return initInfo;
+        }
+
+        private class InitInfo
+        {
+            public MethodInfo MethodInfo { get; set; }
+
+            public List<Type> Type { get; } = new List<Type>();
         }
     }
 }

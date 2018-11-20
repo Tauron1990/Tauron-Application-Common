@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.VirtualFiles
 {
@@ -8,9 +8,8 @@ namespace Tauron.Application.Files.VirtualFiles
     {
         [NotNull]
         string Extension { get; set; }
-
-        [NotNull]
-        string Name { get; set; }
+        
+        long Size { get; }
 
         [NotNull]
         Stream Open(FileAccess access);
@@ -21,6 +20,7 @@ namespace Tauron.Application.Files.VirtualFiles
         [NotNull]
         Stream CreateNew();
 
-        long Size { get; }
+        [NotNull]
+        IFile MoveTo([NotNull]string location);
     }
 }

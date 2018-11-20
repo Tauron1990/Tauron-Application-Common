@@ -6,9 +6,6 @@ namespace Tauron.Application.Common.Updater.Provider
     {
         public double Percent { get; }
 
-        public PreperationProgressEventArgs(double percent)
-        {
-            Percent = percent;
-        }
+        public PreperationProgressEventArgs(double percent) => Percent = percent;
     }
 }

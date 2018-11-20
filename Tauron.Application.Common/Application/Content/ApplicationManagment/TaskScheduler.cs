@@ -1,109 +1,57 @@
-﻿#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="TaskScheduler.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The task scheduler.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-
-#endregion
+using NLog;
 
 namespace Tauron.Application
 {
-    /// <summary>The task scheduler.</summary>
-    [PublicAPI]
-    public sealed class TaskScheduler : IDisposable
+    public interface ITaskScheduler : IDisposable
     {
-        #region Public Properties
-
-        /// <summary></summary>
-        /// <value>The disposed.</value>
+        Task QueueTask([NotNull] ITask task);
+    }
+    
+    [PublicAPI, DebuggerStepThrough]
+    public sealed class TaskScheduler : ITaskScheduler
+    {
         public bool Disposed => _disposed;
-
-        #endregion
-
-        #region Fields
-
-        /// <summary>The _collection.</summary>
+        
         private readonly BlockingCollection<ITask> _collection;
-
-        /// <summary>The _synchronization context.</summary>
+        
         private readonly IUISynchronize _synchronizationContext;
-
-        /// <summary>The _disposed.</summary>
+        
         private bool _disposed;
 
-        #endregion
+        private bool _predisposed;
 
-        #region Constructors and Destructors
+        private Task _task;
+        
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="TaskScheduler" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="TaskScheduler" /> Klasse.
-        ///     Initializes a new instance of the <see cref="TaskScheduler" /> class.
-        /// </summary>
-        /// <param name="synchronizationContext">
-        ///     The synchronization context.
-        /// </param>
         public TaskScheduler([NotNull] IUISynchronize synchronizationContext)
         {
-            if (synchronizationContext == null) throw new ArgumentNullException(nameof(synchronizationContext));
-            _synchronizationContext = synchronizationContext;
+            _synchronizationContext = Argument.NotNull(synchronizationContext, nameof(synchronizationContext));
             _collection = new BlockingCollection<ITask>();
         }
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="TaskScheduler" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="TaskScheduler" /> Klasse.
-        ///     Initializes a new instance of the <see cref="TaskScheduler" /> class.
-        /// </summary>
-        public TaskScheduler()
-        {
-        }
 
-        /// <summary>
-        ///     Finalizes an instance of the <see cref="TaskScheduler" /> class.
-        ///     Finalisiert eine Instanz der <see cref="TaskScheduler" /> Klasse.
-        ///     Finalizes an instance of the <see cref="TaskScheduler" /> class.
-        /// </summary>
-        ~TaskScheduler()
-        {
-            Dispose(false);
-        }
+        public TaskScheduler() { }
 
-        #endregion
 
-        #region Public Methods and Operators
+        ~TaskScheduler() => Dispose(false);
 
-        /// <summary>The dispose.</summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
-        /// <summary>
-        ///     The queue task.
-        /// </summary>
-        /// <param name="task">
-        ///     The task.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="Task" />.
-        /// </returns>
+        
         [NotNull]
-        public Task QueueTask([NotNull] ITask task)
+        public Task QueueTask(ITask task)
         {
-            if (task == null) throw new ArgumentNullException(nameof(task));
+            Argument.NotNull(task, nameof(task));
+
             CheckDispose();
             if (task.Synchronize && _synchronizationContext != null)
                 return _synchronizationContext.BeginInvoke(task.Execute);
@@ -117,47 +65,56 @@ namespace Tauron.Application
                 return tcs.Task;
             }
 
+            if (_collection.IsAddingCompleted) return Task.CompletedTask;
             _collection.Add(task);
             return task.Task;
         }
 
-        #endregion
-
-        #region Methods
-
         internal void EnterLoop()
         {
-            foreach (var task in _collection.GetConsumingEnumerable()) task.Execute();
+            var source = new TaskCompletionSource<object>();
+            _task = source.Task;
+            EnterLoopPrivate();
+            source.SetResult(null);
+        }
+
+        private void EnterLoopPrivate()
+        {
+            foreach (var task in _collection.GetConsumingEnumerable())
+                try
+                {
+                    task.Execute();
+                }
+                catch (Exception e)
+                {
+                    LogManager.GetCurrentClassLogger().Error(e);
+                    throw;
+                }
 
             _collection.Dispose();
+            _disposed = true;
         }
 
-        /// <summary>The check dispose.</summary>
-        /// <exception cref="ObjectDisposedException"></exception>
+        public void Start() => _task = Task.Factory.StartNew(EnterLoopPrivate, TaskCreationOptions.LongRunning);
+
         private void CheckDispose()
         {
-            if (_disposed) throw new ObjectDisposedException("TaskScheduler");
+            if (_disposed)
+                throw new ObjectDisposedException("TaskScheduler");
         }
 
-        /// <summary>
-        ///     The dispose.
-        /// </summary>
-        /// <param name="disposing">
-        ///     The disposing.
-        /// </param>
         [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_collection")]
         [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "disposing")]
         // ReSharper disable UnusedParameter.Local
         private void Dispose(bool disposing)
         {
             // ReSharper restore UnusedParameter.Local
-            if (_disposed) return;
+            if (_predisposed) return;
 
-            _disposed = true;
+            _predisposed = true;
 
             _collection?.CompleteAdding();
+            _task?.Wait();
         }
-
-        #endregion
     }
 }

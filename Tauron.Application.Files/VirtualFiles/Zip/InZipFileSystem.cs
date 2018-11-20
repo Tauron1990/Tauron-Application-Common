@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using Ionic.Zip;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.VirtualFiles.Zip
 {
@@ -11,41 +9,35 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
     {
         private ZipFile _file;
 
-        public InZipFileSystem([NotNull] ZipFile file)
-            : base(null, "", InternalZipDirectory.ReadZipDirectory(file), file)
+        public InZipFileSystem([CanBeNull] ZipFile file)
+            : base(null, "", InternalZipDirectory.ReadZipDirectory(file), file, string.Empty)
         {
-            if (file == null) throw new ArgumentNullException("file");
-
+            _file = file;
             SaveAfterDispose = true;
         }
 
+        public InZipFileSystem()
+            : this(null) { }
+
         public void Dispose()
         {
-            if(SaveAfterDispose)
-                _file.Save();
-            _file.Dispose();
+            if (SaveAfterDispose)
+                _file?.Save();
+            _file?.Dispose();
         }
 
-        public bool IsRealTime => false;
+        public bool IsRealTime       => false;
         public bool SaveAfterDispose { get; set; }
 
-        public override DateTime LastModified
-        {
-            get
-            {
-                if (_file.Name.ExisFile())
-                    return File.GetLastWriteTime(_file.Name);
-                return base.LastModified;
-            }
-        }
+        public override DateTime LastModified => _file.Name.ExisFile() ? File.GetLastWriteTime(_file.Name) : base.LastModified;
 
         public string Source => _file.Name;
 
         public void Reload(string source)
         {
-            if(SaveAfterDispose)
-                _file.Save();
-            _file.Dispose();
+            if (SaveAfterDispose)
+                _file?.Save();
+            _file?.Dispose();
 
             if (!ZipFile.IsZipFile(source)) return;
 
@@ -58,7 +50,7 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
 
         protected override void DeleteImpl()
         {
-            if(string.IsNullOrWhiteSpace(_file.Name)) return;
+            if (string.IsNullOrWhiteSpace(_file.Name)) return;
 
             _file.Dispose();
             File.Delete(_file.Name);

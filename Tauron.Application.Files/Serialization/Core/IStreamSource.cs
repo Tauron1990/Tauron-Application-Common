@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core
 {

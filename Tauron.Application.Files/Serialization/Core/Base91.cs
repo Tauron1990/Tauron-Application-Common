@@ -30,7 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core
 {
@@ -49,39 +49,29 @@ namespace Tauron.Application.Files.Serialization.Core
 
         private static readonly Dictionary<byte, int> DecodeTable = InitDecodeTable();
 
-        /// <summary>
-        /// 
-        /// </summary>
         [NotNull]
         private static Dictionary<byte, int> InitDecodeTable()
         {
             var decodeTable = new Dictionary<byte, int>();
-            for (int i = 0; i < 255; i++) decodeTable[(byte) i] = -1;
-            for (int i = 0; i < EncodeTable.Length; i++) decodeTable[(byte) EncodeTable[i]] = i;
+            for (var i = 0; i < 255; i++) decodeTable[(byte) i] = -1;
+            for (var i = 0; i < EncodeTable.Length; i++) decodeTable[(byte) EncodeTable[i]] = i;
 
             return decodeTable;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
         [NotNull]
         public static string Encode([NotNull] IEnumerable<byte> input)
         {
-            if (input == null) throw new ArgumentNullException("input");
-
-            string output = "";
-            int b = 0;
-            int n = 0;
-            foreach (byte t in input)
+            var output = "";
+            var b = 0;
+            var n = 0;
+            foreach (var t in Argument.NotNull(input, nameof(input)))
             {
                 b |= t << n;
                 n += 8;
                 if (n <= 13) continue;
 
-                int v = b & 8191;
+                var v = b & 8191;
                 if (v > 88)
                 {
                     b >>= 13;
@@ -93,40 +83,38 @@ namespace Tauron.Application.Files.Serialization.Core
                     b >>= 14;
                     n -= 14;
                 }
-                output += EncodeTable[v%91];
-                output += EncodeTable[v/91];
+
+                output += EncodeTable[v % 91];
+                output += EncodeTable[v / 91];
             }
 
             if (n == 0) return output;
 
-            output += EncodeTable[b%91];
-            if (n > 7 || b > 90) output += EncodeTable[b/91];
+            output += EncodeTable[b % 91];
+            if (n > 7 || b > 90) output += EncodeTable[b / 91];
             return output;
         }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
+        
         [NotNull]
         public static byte[] Decode([NotNull] string input)
         {
-            if (input == null) throw new ArgumentNullException("input");
+            Argument.NotNull(input, nameof(input));
 
             var output = new byte[input.Length];
-            int v = -1;
-            int b = 0;
-            int n = 0;
-            int d = 0;
+            var v = -1;
+            var b = 0;
+            var n = 0;
+            var d = 0;
 
-            foreach (int c in input.Select(t => DecodeTable[(byte) t]).Where(c => c != -1))
+            foreach (var c in input.Select(t => DecodeTable[(byte) t]).Where(c => c != -1))
             {
-                if (v < 0) v = c;
+                if (v < 0)
+                {
+                    v = c;
+                }
                 else
                 {
-                    v += c*91;
+                    v += c * 91;
                     b |= v << n;
                     n += (v & 8191) > 88 ? 13 : 14;
                     do
@@ -135,11 +123,12 @@ namespace Tauron.Application.Files.Serialization.Core
                         b >>= 8;
                         n -= 8;
                     } while (n > 7);
+
                     v = -1;
                 }
             }
 
-            if (v + 1 != 0) output[d++] = (byte) ((b | v << n) & 255);
+            if (v + 1 != 0) output[d++] = (byte) ((b | (v << n)) & 255);
 
             var retout = new byte[d];
             Buffer.BlockCopy(output, 0, retout, 0, d);

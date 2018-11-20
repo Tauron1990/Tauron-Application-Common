@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Fluent;
 using Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl
 {
@@ -12,23 +12,21 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
     {
         private readonly IXmlSerializerConfiguration _config;
         private readonly SimpleMapper<XmlElementContext> _mapper;
-        private readonly XmlElementTarget _target;
         private readonly XmlElementTarget _root;
+        private readonly XmlElementTarget _target;
         private readonly Type _targetType;
-
-        private string _member;
         private SimpleConverter<string> _converter;
 
-        public XmlElementConfiguration([NotNull] IXmlSerializerConfiguration config,
-                                       [NotNull] SimpleMapper<XmlElementContext> mapper,
-                                       [NotNull] XmlElementTarget target, [NotNull] XmlElementTarget root,
-                                       [NotNull] Type targetType)
+        private string _member;
+
+        public XmlElementConfiguration([NotNull] IXmlSerializerConfiguration config, [NotNull] SimpleMapper<XmlElementContext> mapper, [NotNull] XmlElementTarget target, 
+            [NotNull] XmlElementTarget root, [NotNull] Type targetType)
         {
-            _config = config;
-            _mapper = mapper;
-            _target = target;
-            _root = root;
-            _targetType = targetType;
+            _config = Argument.NotNull(config, nameof(config));
+            _mapper = Argument.NotNull(mapper, nameof(mapper));
+            _target = Argument.NotNull(target, nameof(target));
+            _root = Argument.NotNull(root, nameof(root));
+            _targetType = Argument.NotNull(targetType, nameof(targetType));
         }
 
         public IXmlSerializerConfiguration Apply()
@@ -63,8 +61,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
 
         public IXmlSerializerConfiguration WithSubSerializer<TTarget>(ISerializer serializer)
         {
-            var map = new XmlSubSerializerMapper(_member, typeof (TTarget), serializer as ISubSerializer,
-                _root);
+            var map = new XmlSubSerializerMapper(_member, typeof(TTarget), serializer as ISubSerializer, _root);
             _mapper.Entries.Add(map);
 
             return _config;
@@ -72,7 +69,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
 
         public IXmlElementConfiguration Element(string name)
         {
-            var target = new XmlElementTarget {TargetType = XmlElementTargetType.Element, Name = name};
+            var target = new XmlElementTarget {TargetType = XmlElementTargetType.Element, Name = Argument.NotNull(name, nameof(name))};
             _target.SubElement = target;
 
             return new XmlElementConfiguration(_config, _mapper, target, _root, _targetType);
@@ -87,14 +84,14 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
 
         public IXmlAttributConfiguration Attribute(string name)
         {
-            var target = new XmlElementTarget {TargetType = XmlElementTargetType.Attribute, Name = name};
+            var target = new XmlElementTarget {TargetType = XmlElementTargetType.Attribute, Name = Argument.NotNull(name, nameof(name)) };
             _target.SubElement = target;
             return new XmlAttributeConfiguration(_config, _root, target, _mapper, _targetType);
         }
 
         public IXmlListElementConfiguration WithElements(string name)
         {
-            var target = new XmlElementTarget { TargetType = XmlElementTargetType.Element, Name = name };
+            var target = new XmlElementTarget {TargetType = XmlElementTargetType.Element, Name = Argument.NotNull(name, nameof(name)) };
 
             return new XmlListElementConfiguration(_config, _mapper, _target, _root, target, _targetType);
         }

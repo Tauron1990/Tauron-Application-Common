@@ -1,4 +1,4 @@
-﻿using Tauron.JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core
 {
@@ -6,6 +6,6 @@ namespace Tauron.Application.Files.Serialization.Core
     public enum ContextMode
     {
         Text,
-        Binary,
+        Binary
     }
 }

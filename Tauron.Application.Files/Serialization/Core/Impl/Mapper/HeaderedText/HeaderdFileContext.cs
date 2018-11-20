@@ -1,15 +1,18 @@
-﻿using Tauron.Application.Files.HeaderedText;
-using Tauron.JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using Tauron.Application.Files.HeaderedText;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.HeaderedText
 {
     internal class HeaderdFileContext : ContextImplBase
     {
         private readonly FileDescription _description;
-        private readonly HeaderedFile _file;
+        private readonly HeaderedFile    _file;
 
         public HeaderdFileContext([NotNull] SerializationContext original, [NotNull] FileDescription description) : base(original)
         {
+            Argument.NotNull(original, nameof(original));
+            Argument.NotNull(description, nameof(description));
+
             _description = description;
 
             _file = new HeaderedFile(_description);
@@ -21,10 +24,10 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.HeaderedText
         }
 
         [NotNull]
-        public string Content => _file.Content;
+        public string Content => _file.Content ?? string.Empty;
 
         [NotNull]
-        public HeaderedFileWriter CurrentWriter => _file.CurrentWriter;
+        public HeaderedFileWriter CurrentWriter => Argument.CheckResult(_file.CurrentWriter, "No Writer Found");
 
         [NotNull]
         public FileContext Context => _file.Context;

@@ -11,97 +11,22 @@ namespace Tauron.Application.SimpleWorkflow
     public abstract class Producer<TState, TContext>
         where TState : IStep<TContext>
     {
-        [PublicAPI]
-        public class StepConfiguration
-        {
-            private readonly StepRev _context;
-
-            internal StepConfiguration([NotNull] StepRev context)
-            {
-                _context = context;
-            }
-
-            [NotNull]
-            public StepConfiguration AddCondition([NotNull] ICondition<TContext> condition)
-            {
-                _context.Conditions.Add(condition);
-                return this;
-            }
-
-            [NotNull]
-            public ConditionConfiguration AddCondition([CanBeNull] Func<TContext, IStep<TContext>, bool> guard = null)
-            {
-                var con = new SimpleCondition<TContext> {Guard = guard};
-                if (guard != null) return new ConditionConfiguration(AddCondition(con), con);
-
-                _context.GenericCondition = con;
-                return new ConditionConfiguration(this, con);
-            }
-        }
-
-        public class ConditionConfiguration
-        {
-            private readonly SimpleCondition<TContext> _condition;
-            private readonly StepConfiguration _config;
-
-            public ConditionConfiguration([NotNull] StepConfiguration config, [NotNull] SimpleCondition<TContext> condition)
-            {
-                _config = config;
-                _condition = condition;
-            }
-
-            [NotNull]
-            public StepConfiguration GoesTo(StepId id)
-            {
-                _condition.Target = id;
-
-                return _config;
-            }
-        }
-
-        internal class StepRev
-        {
-            public StepRev()
-            {
-                Conditions = new List<ICondition<TContext>>();
-            }
-
-            public TState State { get; set; }
-
-            [NotNull]
-            public List<ICondition<TContext>> Conditions { get; }
-
-            [CanBeNull]
-            public ICondition<TContext> GenericCondition { get; set; }
-
-            public override string ToString()
-            {
-                var b = new StringBuilder();
-                b.Append(State);
-
-                foreach (var condition in Conditions)
-                    b.AppendLine("->" + condition + ";");
-
-                if (GenericCondition != null) b.Append("Generic->" + GenericCondition + ";");
-
-                return b.ToString();
-            }
-        }
-
         private readonly Dictionary<StepId, StepRev> _states;
+
+        private string _errorMessage = string.Empty;
 
         private StepId _lastId;
 
-        protected Producer()
-        {
-            _states = new Dictionary<StepId, StepRev>();
-        }
+        protected Producer() => _states = new Dictionary<StepId, StepRev>();
 
-        public void Begin(StepId id, TContext context)
+        public void Begin(StepId id, [NotNull]TContext context)
         {
+            Argument.NotNull(context, nameof(context));
+
             Process(id, context);
 
-            if (_lastId.Name == StepId.Invalid.Name) throw new InvalidOperationException();
+            if (_lastId.Name == StepId.Invalid.Name)
+                throw new InvalidOperationException(_errorMessage);
         }
 
         [DebuggerStepThrough]
@@ -111,12 +36,13 @@ namespace Tauron.Application.SimpleWorkflow
             return _lastId.Name == StepId.Finish.Name || _lastId.Name == StepId.Invalid.Name;
         }
 
-        protected virtual bool Process(StepId id, TContext context)
+        protected virtual bool Process(StepId id, [NotNull]TContext context)
         {
+            Argument.NotNull(context, nameof(context));
+
             if (SetLastId(id)) return true;
 
-            StepRev rev;
-            if (!_states.TryGetValue(id, out rev))
+            if (!_states.TryGetValue(id, out var rev))
                 return SetLastId(StepId.Invalid);
 
             var sId = rev.State.OnExecute(context);
@@ -125,6 +51,7 @@ namespace Tauron.Application.SimpleWorkflow
             switch (sId.Name)
             {
                 case "Invalid":
+                    _errorMessage = rev.State.ErrorMessage;
                     return SetLastId(sId);
                 case "None":
                     result = ProgressConditions(rev, context);
@@ -140,10 +67,13 @@ namespace Tauron.Application.SimpleWorkflow
                             ok = false;
                             continue;
                         }
-                        if (loopId.Name == StepId.Invalid.Name) return SetLastId(StepId.Invalid);
+
+                        if (loopId.Name == StepId.Invalid.Name)
+                            return SetLastId(StepId.Invalid);
 
                         ProgressConditions(rev, context);
                     } while (ok);
+
                     break;
                 case "Finish":
                 case "Skip":
@@ -176,6 +106,8 @@ namespace Tauron.Application.SimpleWorkflow
         [NotNull]
         public StepConfiguration SetStep(TState stade)
         {
+            Argument.NotNull(stade, nameof(stade));
+
             var rev = new StepRev {State = stade};
             _states[stade.Id] = rev;
 
@@ -183,9 +115,81 @@ namespace Tauron.Application.SimpleWorkflow
         }
 
         [NotNull]
-        public StepConfiguration GetStateConfiguration(StepId id)
+        public StepConfiguration GetStateConfiguration(StepId id) => new StepConfiguration(_states[id]);
+
+        [PublicAPI]
+        public class StepConfiguration
         {
-            return new StepConfiguration(_states[id]);
+            private readonly StepRev _context;
+
+            internal StepConfiguration([NotNull] StepRev context) => _context = context;
+
+            [NotNull]
+            public StepConfiguration AddCondition([NotNull] ICondition<TContext> condition)
+            {
+                Argument.NotNull(condition, nameof(condition));
+
+                _context.Conditions.Add(condition);
+                return this;
+            }
+
+            [NotNull]
+            public ConditionConfiguration AddCondition([CanBeNull] Func<TContext, IStep<TContext>, bool> guard = null)
+            {
+                var con = new SimpleCondition<TContext> {Guard = guard};
+                if (guard != null) return new ConditionConfiguration(AddCondition(con), con);
+
+                _context.GenericCondition = con;
+                return new ConditionConfiguration(this, con);
+            }
+        }
+
+        public class ConditionConfiguration
+        {
+            private readonly SimpleCondition<TContext> _condition;
+            private readonly StepConfiguration _config;
+
+            public ConditionConfiguration([NotNull] StepConfiguration config, [NotNull] SimpleCondition<TContext> condition)
+            {
+                Argument.NotNull(config, nameof(config));
+                Argument.NotNull(condition, nameof(condition));
+
+                _config = config;
+                _condition = condition;
+            }
+
+            [NotNull]
+            public StepConfiguration GoesTo(StepId id)
+            {
+                _condition.Target = id;
+
+                return _config;
+            }
+        }
+
+        internal class StepRev
+        {
+            public StepRev() => Conditions = new List<ICondition<TContext>>();
+
+            public TState State { get; set; }
+
+            [NotNull]
+            public List<ICondition<TContext>> Conditions { get; }
+
+            [CanBeNull]
+            public ICondition<TContext> GenericCondition { get; set; }
+
+            public override string ToString()
+            {
+                var b = new StringBuilder();
+                b.Append(State);
+
+                foreach (var condition in Conditions) b.AppendLine("->" + condition + ";");
+
+                if (GenericCondition != null) b.Append("Generic->" + GenericCondition + ";");
+
+                return b.ToString();
+            }
         }
     }
 }

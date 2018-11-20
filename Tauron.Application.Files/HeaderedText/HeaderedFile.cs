@@ -1,12 +1,14 @@
 ﻿using System.IO;
 using System.Text;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.HeaderedText
 {
     [PublicAPI]
     public sealed class HeaderedFile
     {
+        public HeaderedFile([NotNull] FileDescription description) => Context = new FileContext(description);
+
         [CanBeNull]
         internal HeaderedFileWriter CurrentWriter { get; set; }
 
@@ -16,18 +18,13 @@ namespace Tauron.Application.Files.HeaderedText
         [CanBeNull]
         public string Content { get; internal set; }
 
-        public HeaderedFile([NotNull] FileDescription description)
-        {
-            Context = new FileContext(description);
-        }
-
         public void Read([NotNull] TextReader reader)
         {
             var builder = new StringBuilder();
 
             Context.Reset();
 
-            bool compled = false;
+            var compled = false;
 
             foreach (var textLine in reader.EnumerateTextLines())
             {
@@ -36,12 +33,13 @@ namespace Tauron.Application.Files.HeaderedText
                     builder.AppendLine(textLine);
                     continue;
                 }
-                string textLineTemp = textLine.Trim();
-                string[] temp = textLineTemp.Split(new[] {' '}, 2);
+
+                var textLineTemp = textLine.Trim();
+                var temp         = textLineTemp.Split(new[] {' '}, 2);
                 if (Context.IsKeyword(temp[0]))
                 {
-                    string key = temp[0];
-                    string content = string.Empty;
+                    var key     = temp[0];
+                    var content = string.Empty;
 
                     if (temp.Length < 1) content = temp[1];
 
@@ -56,9 +54,6 @@ namespace Tauron.Application.Files.HeaderedText
         }
 
         [NotNull]
-        public HeaderedFileWriter CreateWriter()
-        {
-            return CurrentWriter ?? new HeaderedFileWriter(this);
-        }
+        public HeaderedFileWriter CreateWriter() => CurrentWriter ?? new HeaderedFileWriter(this);
     }
 }

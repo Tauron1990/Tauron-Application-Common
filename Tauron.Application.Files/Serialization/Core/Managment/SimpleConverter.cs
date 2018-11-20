@@ -1,5 +1,5 @@
 ﻿using System;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Managment
 {
@@ -7,12 +7,10 @@ namespace Tauron.Application.Files.Serialization.Core.Managment
     {
         [CanBeNull]
         public abstract object ConvertBack(TTarget target);
+
         public abstract TTarget Convert([CanBeNull] object source);
 
         [CanBeNull]
-        public virtual Exception VerifyError()
-        {
-            return null;
-        }
+        public virtual Exception VerifyError() => null;
     }
 }

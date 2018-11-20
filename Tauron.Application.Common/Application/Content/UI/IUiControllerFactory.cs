@@ -1,26 +1,14 @@
-﻿#region
+﻿using JetBrains.Annotations;
 
-using JetBrains.Annotations;
-
-#endregion
 
 namespace Tauron.Application
 {
-    /// <summary>The UIControllerFactory interface.</summary>
+    [PublicAPI]
     public interface IUIControllerFactory
     {
-        #region Public Methods and Operators
-
-        /// <summary>The create controller.</summary>
-        /// <returns>
-        ///     The <see cref="IUIController" />.
-        /// </returns>
         [NotNull]
         IUIController CreateController();
 
-        /// <summary>The set synchronization context.</summary>
         void SetSynchronizationContext();
-
-        #endregion
     }
 }

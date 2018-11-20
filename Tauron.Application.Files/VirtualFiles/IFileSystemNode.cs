@@ -1,5 +1,5 @@
 ﻿using System;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.VirtualFiles
 {
@@ -14,10 +14,14 @@ namespace Tauron.Application.Files.VirtualFiles
         [CanBeNull]
         IDirectory ParentDirectory { get; }
 
-        void Delete();
-
         bool IsDirectory { get; }
 
         bool Exist { get; }
+
+        void Delete();
+
+        [NotNull]
+        string Name { get; }
+        
     }
 }

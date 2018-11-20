@@ -1,279 +1,241 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xaml;
 using JetBrains.Annotations;
 using NLog;
 using NLog.Config;
-using Tauron.Application.Composition;
+using NLog.Targets;
 using Tauron.Application.Implement;
 using Tauron.Application.Ioc;
 using Tauron.Application.Modules;
 
 namespace Tauron.Application
 {
-    /// <summary>The common application.</summary>
     [PublicAPI]
     public abstract class CommonApplication
     {
-        /// <summary>The null splash.</summary>
-        private class NullSplash : ISplashService
+        private static ITaskScheduler _scheduler;
+        private static string _sourceAssembly;
+
+        protected CommonApplication(bool doStartup, [CanBeNull] ISplashService service, [NotNull] IUIControllerFactory factory, [CanBeNull] ITaskScheduler taskScheduler = null)
         {
-            #region Constructors and Destructors
-
-            /// <summary>
-            ///     Initializes a new instance of the <see cref="NullSplash" /> class.
-            ///     Initialisiert eine neue Instanz der <see cref="NullSplash" /> Klasse.
-            ///     Initializes a new instance of the <see cref="NullSplash" /> class.
-            /// </summary>
-            public NullSplash()
-            {
-                Listner = new SplashMessageListener();
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            /// <summary>Gets the listner.</summary>
-            /// <value>The listner.</value>
-            public SplashMessageListener Listner { get; private set; }
-
-            #endregion
-
-            #region Public Methods and Operators
-
-            /// <summary>The close splash.</summary>
-            public void CloseSplash()
-            {
-            }
-
-            /// <summary>The show splash.</summary>
-            public void ShowSplash()
-            {
-            }
-
-            #endregion
-        }
-
-        #region Static Fields
-
-        /// <summary>The _scheduler.</summary>
-        private static TaskScheduler _scheduler;
-
-        #endregion
-
-        #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initialisiert eine neue Instanz der <see cref="CommonApplication" /> Klasse.
-        /// </summary>
-        /// <param name="doStartup">
-        ///     The do startup.
-        /// </param>
-        /// <param name="service">
-        ///     The service.
-        /// </param>
-        /// <param name="factory">
-        ///     The factory.
-        /// </param>
-        protected CommonApplication(bool doStartup, [CanBeNull] ISplashService service, [NotNull] IUIControllerFactory factory)
-        {
-            Factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            Factory = Argument.NotNull(factory, nameof(factory));
             Current = this;
-            _scheduler = new TaskScheduler(UiSynchronize.Synchronize);
+            _scheduler = taskScheduler ?? new TaskScheduler(UiSynchronize.Synchronize);
             _splash = service ?? new NullSplash();
             _doStartup = doStartup;
             SourceAssembly = new AssemblyName(Assembly.GetAssembly(GetType()).FullName).Name;
         }
 
-        #endregion
-
-        #region Properties
-
-        /// <summary>Gets or sets the source assembly.</summary>
-        /// <value>The source assembly.</value>
         [NotNull]
-        protected static string SourceAssembly { get; set; }
+        protected static string SourceAssembly
+        {
+            get => _sourceAssembly;
+            set => _sourceAssembly = Argument.NotNull(value, nameof(value));
+        }
 
-        #endregion
+        public static IContainer SetupTest(Action<IContainer> setup)
+        {
+            if (Current != null && !(Current is TestApplication))
+                throw new InvalidOperationException("An Applications is Existing");
 
-        #region Fields
+            var testApp = new TestApplication(setup);
+            testApp.OnStartup(new string[0]);
 
-        /// <summary>The _do startup.</summary>
+            return Current.Container;
+        }
+
+        public static void FreeTest()
+        {
+            if (!(Current is TestApplication)) return;
+
+            Current.Shutdown();
+            // ReSharper disable once AssignNullToNotNullAttribute
+            Current = null;
+        }
+
+        public virtual string GetdefaultFileLocation() => AppDomain.CurrentDomain.BaseDirectory;
+
+        private class TestApplication : CommonApplication
+        {
+            private readonly Action<IContainer> _configContainer;
+
+            public TestApplication(Action<IContainer> configContainer) : base(true, null, new UiControllerFactoryFake(), new SyncTask()) => _configContainer = configContainer;
+
+            public override IContainer Container { get; set; }
+
+            protected override IContainer CreateContainer()
+            {
+                var con = base.CreateContainer();
+
+                _configContainer(con);
+
+                return con;
+            }
+
+            protected override void Fill(IContainer container){}
+
+            protected override void ConfigurateLagging(LoggingConfiguration config) => config.AddRuleForAllLevels(new VsDebuggerTarget());
+
+            internal sealed class SyncTask : ITaskScheduler
+            {
+                public void Dispose() { }
+                
+                public Task QueueTask(ITask task)
+                {
+                    task.Execute();
+                    return task.Task;
+                }
+            }
+
+            internal sealed class UiSyncFake : IUISynchronize
+            {
+                public Task BeginInvoke(Action action) => QueueWorkitemAsync(action, false);
+
+                public Task<TResult> BeginInvoke<TResult>(Func<TResult> action) => (Task<TResult>) QueueWorkitemAsync(action, false);
+
+                public void Invoke(Action action) => action();
+
+                public TReturn Invoke<TReturn>(Func<TReturn> action) => action();
+
+                public bool CheckAccess { get; } = true;
+            }
+
+            internal sealed class UiControllerFactoryFake : IUIControllerFactory
+            {
+                public UiControllerFactoryFake() => SetSynchronizationContext();
+
+                public IUIController CreateController() => new UiControllerFake();
+
+                public void SetSynchronizationContext() => UiSynchronize.Synchronize = new UiSyncFake();
+            }
+
+            internal sealed class UiControllerFake : IUIController
+            {
+                public IWindow MainWindow { get; set; }
+                public ShutdownMode ShutdownMode { get; set; }
+
+                public void Run(IWindow window) { }
+
+                public void Shutdown() { }
+            }
+        }
+
+        public sealed class VsDebuggerTarget : TargetWithLayoutHeaderAndFooter
+        {
+            public VsDebuggerTarget() => Layout = "${logger}|${message}";
+            
+            protected override void InitializeTarget()
+            {
+                base.InitializeTarget();
+                if (Header == null)
+                    return;
+                Debug.WriteLine(RenderLogEvent(Header, LogEventInfo.CreateNullEvent()));
+            }
+
+            protected override void CloseTarget()
+            {
+                if (Footer != null)
+                    Debug.WriteLine(RenderLogEvent(Footer, LogEventInfo.CreateNullEvent()));
+                base.CloseTarget();
+            }
+            
+            protected override void Write(LogEventInfo logEvent) => Debug.WriteLine($"{RenderLogEvent(Layout, logEvent)}");
+        }
+        
+        private class NullSplash : ISplashService
+        {
+
+            public NullSplash() => Listner = new SplashMessageListener();
+
+            public SplashMessageListener Listner { get; private set; }
+            
+            public void CloseSplash() { }
+            
+            public void ShowSplash() { }
+            
+        }
+        
         private readonly bool _doStartup;
-
-        /// <summary>The _splash.</summary>
+        
         private readonly ISplashService _splash;
-
-        /// <summary>The _args.</summary>
+        
         private string[] _args;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets the current.</summary>
-        /// <value>The current.</value>
-        [NotNull]
-        public static CommonApplication Current { get; private set; }
-
-        /// <summary>Gets the scheduler.</summary>
-        /// <value>The scheduler.</value>
-        [NotNull]
-        public static TaskScheduler Scheduler => _scheduler ?? (_scheduler = new TaskScheduler());
-
-        /// <summary>Gets or sets the catalog list.</summary>
-        /// <value>The catalog list.</value>
         [CanBeNull]
-        public string CatalogList { get; set; }
+        private IWindow _mainWindow;
+        private object _mainWindowLock = new object();
 
-        /// <summary>Gets or sets the container.</summary>
-        /// <value>The container.</value>
+        [NotNull]
+        // ReSharper disable once NotNullMemberIsNotInitialized
+        public static CommonApplication Current { get; private set; }
+        
+        [NotNull]
+        public static ITaskScheduler Scheduler => _scheduler ?? (_scheduler = new TaskScheduler());
+        
+        //[CanBeNull]
+        //public string CatalogList { get; set; }
+        
         [NotNull]
         public abstract IContainer Container { get; set; }
 
-        /// <summary>Gets or sets the factory.</summary>
         [NotNull]
         public IUIControllerFactory Factory { get; private set; }
 
         [CanBeNull]
-        public IWindow MainWindow { get; set; }
+        public IWindow MainWindow
+        {
+            get => _mainWindow;
+            set
+            {
+                lock (_mainWindowLock)
+                {
+                    if(Equals(_mainWindow, value)) return;
+                    if (_mainWindow != null)
+                        _mainWindow.Closed -= MainWindowClosed;
 
-        #endregion
+                    _mainWindow = value;
 
-        #region Public Methods and Operators
+                    if (_mainWindow != null)
+                        _mainWindow.Closed += MainWindowClosed;
 
-        /// <summary>
-        ///     The queue workitem.
-        /// </summary>
-        /// <param name="action">
-        ///     The action.
-        /// </param>
-        /// <param name="withDispatcher">
-        ///     The with dispatcher.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="Task" />.
-        /// </returns>
+                    OnMainWindowChanged(value);
+                }
+            }
+        }
+
+        protected virtual void OnMainWindowChanged(IWindow window)
+        {
+        }
+
         [NotNull]
-        public static Task QueueWorkitemAsync([NotNull] Action action, bool withDispatcher)
-        {
-            if (action == null) throw new ArgumentNullException(nameof(action));
-            return Scheduler.QueueTask(new UserTask(action, withDispatcher));
-        }
+        public static Task QueueWorkitemAsync([NotNull] Action action, bool withDispatcher) => Scheduler.QueueTask(new UserTask(Argument.NotNull(action, nameof(action)), withDispatcher));
 
-        /// <summary>The get args.</summary>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
+        public static Task QueueWorkitemAsync<TResult>([NotNull] Func<TResult> action, bool withDispatcher) => Scheduler.QueueTask(new UserResultTask<TResult>(Argument.NotNull(action, nameof(action)), withDispatcher));
+
         [NotNull]
-        public string[] GetArgs()
-        {
-            return (string[]) _args.Clone();
-        }
+        public string[] GetArgs() => (string[]) _args.Clone();
 
-        #endregion
-
-        #region Methods
-
-        protected virtual void ConfigurateLagging(LoggingConfiguration config)
-        {
-            
-        }
-
-        /// <summary>The create container.</summary>
-        /// <returns>
-        ///     The <see cref="IContainer" />.
-        /// </returns>
+        protected virtual void ConfigurateLagging(LoggingConfiguration config) { }
+        
         [NotNull]
-        protected virtual IContainer CreateContainer()
-        {
-            return new DefaultContainer();
-        }
+        protected virtual IContainer CreateContainer() => new DefaultContainer();
 
-        /// <summary>
-        ///     The do startup.
-        /// </summary>
-        /// <param name="args">
-        ///     The args.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="IWindow" />.
-        /// </returns>
         [CanBeNull]
-        protected virtual IWindow DoStartup([NotNull] CommandLineProcessor args)
-        {
-            return null;
-        }
+        protected virtual IWindow DoStartup([NotNull] CommandLineProcessor args) => null;
 
-        /// <summary>
-        ///     The fill.
-        /// </summary>
-        /// <param name="container">
-        ///     The container.
-        /// </param>
-        protected virtual void Fill([NotNull] IContainer container)
-        {
-            if (container == null) throw new ArgumentNullException(nameof(container));
-            if (string.IsNullOrWhiteSpace(CatalogList))
-                CommonConstants.LogCommon(false, "Common Application: CatalogList Empty");
+        protected abstract void Fill([NotNull] IContainer container);
+        
+        protected virtual void LoadCommands() { }
+        
+        protected virtual void LoadResources() { }
+        
+        protected virtual void MainWindowClosed([NotNull] object sender, [NotNull] EventArgs e) { }
+        
+        protected virtual void OnExit() => Container.Dispose();
 
-            if (CatalogList == null) return;
-
-            var coll = XamlServices.Load(CatalogList) as CatalogCollection;
-            try
-            {
-                if (coll == null) return;
-
-                var resolver = new ExportResolver();
-                coll.FillCatalag(resolver);
-                container.Register(resolver);
-            }
-            catch (ArgumentException e)
-            {
-                LogManager.GetLogger("CommonApplication", typeof(CommonApplication)).Error(e);
-                throw;
-            }
-        }
-
-        /// <summary>The load commands.</summary>
-        protected virtual void LoadCommands()
-        {
-        }
-
-        /// <summary>The load resources.</summary>
-        protected virtual void LoadResources()
-        {
-        }
-
-        /// <summary>
-        ///     The main window closed.
-        /// </summary>
-        /// <param name="sender">
-        ///     The sender.
-        /// </param>
-        /// <param name="e">
-        ///     The e.
-        /// </param>
-        protected virtual void MainWindowClosed([NotNull] object sender, [NotNull] EventArgs e)
-        {
-        }
-
-        /// <summary>The on exit.</summary>
-        protected virtual void OnExit()
-        {
-            Container.Dispose();
-        }
-
-        /// <summary>
-        ///     The on startup.
-        /// </summary>
-        /// <param name="args">
-        ///     The args.
-        /// </param>
         protected virtual void OnStartup([NotNull] string[] args)
         {
             if (_doStartup)
@@ -283,22 +245,24 @@ namespace Tauron.Application
                 _scheduler.QueueTask(new UserTask(PerformStartup, false));
             }
 
-            Scheduler.EnterLoop();
+            if (_scheduler is TaskScheduler impl)
+                impl.EnterLoop();
         }
-
-        /// <summary>The shutdown.</summary>
+        
         public virtual void Shutdown()
         {
+            OnExit();
             Scheduler.Dispose();
         }
 
         protected virtual void InitializeModule([NotNull] IModule module)
         {
+            Argument.NotNull(module, nameof(module));
+
             module.Initialize(this);
             ModuleHandlerRegistry.Progress(module);
         }
-
-        /// <summary>The perform startup.</summary>
+        
         private void PerformStartup()
         {
             try
@@ -307,9 +271,10 @@ namespace Tauron.Application
 
                 listner.ReceiveMessage(Resources.Resources.Init_Msg_Step1);
 
-                LoggingConfiguration config = new LoggingConfiguration();
+                var config = new LoggingConfiguration();
                 ConfigurateLagging(config);
                 LogManager.Configuration = config;
+                LogManager.ReconfigExistingLoggers();
 
                 Container = CreateContainer();
                 Fill(Container);
@@ -330,12 +295,14 @@ namespace Tauron.Application
                 MainWindow = win;
 
                 if (win != null)
+                {
                     UiSynchronize.Synchronize.Invoke(
                         () =>
                         {
                             win.Show();
                             win.Closed += MainWindowClosed;
                         });
+                }
 
                 _splash.CloseSplash();
                 _args = null;
@@ -353,15 +320,6 @@ namespace Tauron.Application
             }
         }
 
-        protected virtual void OnStartupError([NotNull] Exception e)
-        {
-        }
-
-        #endregion
-
-        public virtual string GetdefaultFileLocation()
-        {
-            return AppDomain.CurrentDomain.BaseDirectory;
-        }
+        protected virtual void OnStartupError([NotNull] Exception e) { }
     }
 }

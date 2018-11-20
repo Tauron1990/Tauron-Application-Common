@@ -1,9 +1,9 @@
-﻿using Tauron.JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Fluent
 {
     [PublicAPI]
-    public interface IXmlListElementConfiguration : IXmlRootConfiguration<IXmlListElementConfiguration> 
+    public interface IXmlListElementConfiguration : IXmlRootConfiguration<IXmlListElementConfiguration>
     {
         [NotNull]
         IXmlListElementConfiguration Element([NotNull] string name);

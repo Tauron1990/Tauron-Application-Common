@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 //  along with Tauron.Application.Files If not, see <http://www.gnu.org/licenses/>.
 
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Fluent
 {

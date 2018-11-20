@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using System.Xml.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 {
@@ -13,12 +13,13 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
         public XNamespace XNamespace { get; set; }
 
         public XmlElementTargetType TargetType { get; set; }
+
         [CanBeNull]
         public XmlElementTarget SubElement { get; set; }
 
         public override string ToString()
         {
-            var builder =new StringBuilder();
+            var builder = new StringBuilder();
 
             string postfix;
 
@@ -39,7 +40,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
             }
 
             builder.AppendFormat("{0}={1}", (Name ?? "NoName") + postfix,
-                SubElement == null ? "End" : SubElement.ToString());
+                                 SubElement == null ? "End" : SubElement.ToString());
 
             return builder.ToString();
         }

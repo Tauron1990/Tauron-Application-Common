@@ -1,12 +1,12 @@
 ﻿using System;
 using System.IO;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Fluent
 {
     [PublicAPI]
     public interface ISerializerToMemberConfiguration<out TConfigInterface>
-        where TConfigInterface : class 
+        where TConfigInterface : class
     {
         [NotNull]
         ISerializerToMemberConfiguration<TConfigInterface> WithSourceSelector([NotNull] Func<object, SerializerMode, Stream> open, [CanBeNull] Func<string, IStreamSource> openRelative);

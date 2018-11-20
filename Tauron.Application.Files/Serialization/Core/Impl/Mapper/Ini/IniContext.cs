@@ -1,21 +1,18 @@
-﻿using Tauron.Application.Files.Ini;
+﻿using JetBrains.Annotations;
+using Tauron.Application.Files.Ini;
 using Tauron.Application.Files.Ini.Parser;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Ini
 {
     internal class IniContext : ContextImplBase
     {
+        public IniContext([NotNull] SerializationContext context)
+            : base(context) => File = context.SerializerMode == SerializerMode.Deserialize
+            ? IniFile.Parse(TextReader)
+            : new IniFile();
+
         [NotNull]
         public IniFile File { get; private set; }
-
-        public IniContext([NotNull] SerializationContext context)
-            : base(context)
-        {
-            File = context.SerializerMode == SerializerMode.Deserialize
-                       ? IniFile.Parse(TextReader)
-                       : new IniFile();
-        }
 
         protected override void Dispose(bool disposing)
         {

@@ -1,7 +1,7 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Impl.Mapper.HeaderedText;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Fluent.Impl
 {
@@ -15,23 +15,23 @@ namespace Tauron.Application.Files.Serialization.Core.Fluent.Impl
     internal class HeaderedFileKeyCofiguration : IHeaderedFileKeywordConfiguration
     {
         private readonly IHeaderedFileSerializerConfiguration _config;
-        private readonly SimpleMapper<HeaderdFileContext> _mapper;
-        private readonly string _keyName;
-        private readonly MappingType _mappingType;
-        private readonly Type _type;
+        private readonly string                               _keyName;
+        private readonly SimpleMapper<HeaderdFileContext>     _mapper;
+        private readonly MappingType                          _mappingType;
+        private readonly Type                                 _type;
+        private          SimpleConverter<string>              _converter;
 
         private string _member;
-        private SimpleConverter<string> _converter;
 
         public HeaderedFileKeyCofiguration([NotNull] IHeaderedFileSerializerConfiguration config,
-                                           [NotNull] SimpleMapper<HeaderdFileContext> mapper, [NotNull] string keyName,
-                                           MappingType mappingType, [NotNull] Type type)
+                                           [NotNull] SimpleMapper<HeaderdFileContext>     mapper,      [NotNull] string keyName,
+                                           MappingType                                    mappingType, [NotNull] Type   type)
         {
-            _config = config;
-            _mapper = mapper;
-            _keyName = keyName;
+            _config      = config;
+            _mapper      = mapper;
+            _keyName     = keyName;
             _mappingType = mappingType;
-            _type = type;
+            _type        = type;
         }
 
         public IHeaderedFileSerializerConfiguration Apply()
@@ -56,7 +56,7 @@ namespace Tauron.Application.Files.Serialization.Core.Fluent.Impl
                     break;
             }
 
-            if(map == null)
+            if (map == null)
                 _mapper.Entries.Add(map);
 
             return _config;

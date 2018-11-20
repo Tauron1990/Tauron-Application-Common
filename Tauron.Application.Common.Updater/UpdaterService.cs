@@ -18,9 +18,8 @@ namespace Tauron.Application.Common.Updater
 
         public static IPostConfigurationManager PostConfigurationManager { get; } = new PostConfigurationManager();
 
-        public static void SetGithubProvider(string owner, string name, Tuple<string, string> header, Func<string, Version> versionExtractor, string updaterfilesLocation = null)
-        {
-            Configuration.Provider = new GithubProvider(owner, name, new ProductHeaderValue(header.Item1, header.Item2), versionExtractor, updaterfilesLocation ?? AppDomain.CurrentDomain.BaseDirectory.CombinePath("Updater"));
-        }
+        public static void SetGithubProvider(string owner, string name, Tuple<string, string> header, Func<string, Version> versionExtractor, string updaterfilesLocation = null) 
+            => Configuration.Provider = new GithubProvider(owner, name, new ProductHeaderValue(header.Item1, header.Item2), versionExtractor,
+                updaterfilesLocation ?? AppDomain.CurrentDomain.BaseDirectory.CombinePath("Updater"));
     }
 }

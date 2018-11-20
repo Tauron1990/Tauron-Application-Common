@@ -1,64 +1,29 @@
-﻿#region
-
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ListResolver.cs" company="Tauron Parallel Works">
-//   Tauron Application © 2013
-// </copyright>
-// <summary>
-//   The list resolver.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-#endregion
-
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
-    /// <summary>The list resolver.</summary>
     public class ListResolver : IResolver
     {
-        #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="ListResolver" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="ListResolver" /> Klasse.
-        /// </summary>
-        /// <param name="resolvers">
-        ///     The resolvers.
-        /// </param>
-        /// <param name="target">
-        ///     The target.
-        /// </param>
         public ListResolver(IEnumerable<IResolver> resolvers, Type target)
         {
-            this.resolvers = resolvers;
-            this.target = target;
+            _resolvers = Argument.NotNull(resolvers, nameof(resolvers));
+            _target = Argument.NotNull(target, nameof(target));
         }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>The create.</summary>
-        /// <returns>
-        ///     The <see cref="object" />.
-        /// </returns>
-        /// <exception cref="InvalidOperationException"></exception>
+        
         public object Create(ErrorTracer errorTracer)
         {
             try
             {
-                errorTracer.Phase = "Injecting List for " + target;
+                errorTracer.Phase = "Injecting List for " + _target;
 
-                var closed = InjectorBaseConstants.List.MakeGenericType(target.GenericTypeArguments[0]);
-                if (target.IsAssignableFrom(closed))
+                var closed = InjectorBaseConstants.List.MakeGenericType(_target.GenericTypeArguments[0]);
+                if (_target.IsAssignableFrom(closed))
                 {
-                    var info = closed.GetMethod("Add");
+                    var info = Argument.CheckResult(closed.GetMethod("Add"), "Add Method For List Required");
 
-                    var args = resolvers.Select(resolver => resolver.Create(errorTracer)).TakeWhile(vtemp => !errorTracer.Exceptional).ToList();
+                    var args = _resolvers.Select(resolver => resolver.Create(errorTracer)).TakeWhile(vtemp => !errorTracer.Exceptional).ToList();
 
                     if (errorTracer.Exceptional) return null;
 
@@ -70,7 +35,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 }
 
                 errorTracer.Exceptional = true;
-                errorTracer.Exception = new InvalidOperationException(target + " is Not Compatible");
+                errorTracer.Exception = new InvalidOperationException(_target + " is Not Compatible");
 
                 return null;
             }
@@ -82,14 +47,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             }
         }
 
-        #endregion
-
-        #region Fields
-
-        private readonly IEnumerable<IResolver> resolvers;
-
-        private readonly Type target;
-
-        #endregion
+        private readonly IEnumerable<IResolver> _resolvers;
+        private readonly Type _target;
     }
 }

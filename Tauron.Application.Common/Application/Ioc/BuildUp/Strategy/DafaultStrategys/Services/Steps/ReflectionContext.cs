@@ -10,19 +10,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
     [PublicAPI]
     public class ReflectionContext
     {
-        private class UionExportMetatdataEqualityComparer : IEqualityComparer<ExportMetadata>
-        {
-            public bool Equals([NotNull] ExportMetadata x, [NotNull] ExportMetadata y)
-            {
-                return x.Export.ImplementType == y.Export.ImplementType;
-            }
-
-            public int GetHashCode([NotNull] ExportMetadata obj)
-            {
-                return obj.Export.ImplementType?.GetHashCode() ?? obj.GetHashCode();
-            }
-        }
-
         private readonly InjectorContext _parentContext;
 
         public ReflectionContext([NotNull] IMetadataFactory metadataFactory, [NotNull] Type memberType,
@@ -119,14 +106,22 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         [NotNull]
         private static Type ExtractRealType([NotNull] Type type)
         {
-            if (!type.IsGenericType) return type.IsArray ? type.GetElementType() : type;
+            if (!type.IsGenericType)
+                return type.GetElementType() ?? type;
 
             var def = type.GetGenericTypeDefinition();
 
             if (def == typeof(InstanceResolver<,>) || def == typeof(Lazy<>) || def == typeof(Lazy<,>))
                 return type.GenericTypeArguments[0];
 
-            return type.IsArray ? type.GetElementType() : type;
+            return type.GetElementType() ?? type;
+        }
+
+        private class UionExportMetatdataEqualityComparer : IEqualityComparer<ExportMetadata>
+        {
+            public bool Equals(ExportMetadata x,  ExportMetadata y) => x?.Export.ImplementType == y?.Export.ImplementType;
+
+            public int GetHashCode(ExportMetadata obj) => obj.Export.ImplementType?.GetHashCode() ?? obj.GetHashCode();
         }
     }
 }

@@ -9,17 +9,25 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
     {
         private Type _currentType;
         private ExportEnumeratorHelper _enumeratorHelper;
+        private string _error;
         private Type _listType;
         private List<IResolver> _resolvers;
+        public override string ErrorMessage => _error;
 
         public override StepId OnExecute(InjectorContext context)
         {
+            _error = nameof(ManyResolverStep);
+
             _listType = context.ReflectionContext.CurrentType;
             _currentType = GetCurrentType(context.ReflectionContext);
             context.ReflectionContext.CurrentType = _currentType;
 
             var findAllExports = context.ReflectionContext.FindAllExports();
-            if (findAllExports == null) return StepId.Invalid;
+            if (findAllExports == null)
+            {
+                _error += " - No Exports Found for " + context.Metadata;
+                return StepId.Invalid;
+            }
 
             _resolvers = new List<IResolver>();
             _enumeratorHelper = new ExportEnumeratorHelper(findAllExports.GetEnumerator(), context.ReflectionContext);

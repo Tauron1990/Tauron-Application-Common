@@ -6,19 +6,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
 {
     public abstract class InjectorStep : IStep<InjectorContext>
     {
+        public abstract string ErrorMessage { get; }
+
         public abstract StepId Id { get; }
 
         [DebuggerStepThrough]
-        public virtual StepId OnExecute([NotNull] InjectorContext context)
-        {
-            return StepId.None;
-        }
+        public virtual StepId OnExecute([NotNull] InjectorContext context) => StepId.None;
 
         [DebuggerStepThrough]
-        public virtual StepId NextElement([NotNull] InjectorContext context)
-        {
-            return StepId.LoopEnd;
-        }
+        public virtual StepId NextElement([NotNull] InjectorContext context) => StepId.LoopEnd;
 
         [DebuggerStepThrough]
         public virtual void OnExecuteFinish([NotNull] InjectorContext context)
@@ -26,9 +22,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         }
 
         [DebuggerStepThrough]
-        public override string ToString()
-        {
-            return Id.ToString();
-        }
+        public override string ToString() => Id.ToString();
     }
 }

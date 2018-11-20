@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Xml.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Fluent;
 using Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl
 {
     internal class XmlListElementConfiguration : IXmlListElementConfiguration, IXmlListAttributeConfiguration
     {
-        #region Element
-
         private readonly IXmlSerializerConfiguration _config;
         private readonly SimpleMapper<XmlElementContext> _mapper;
         private readonly XmlElementTarget _target;
@@ -21,17 +19,15 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
         private string _member;
         private SimpleConverter<string> _converter;
 
-        public XmlListElementConfiguration([NotNull] IXmlSerializerConfiguration config,
-                                           [NotNull] SimpleMapper<XmlElementContext> mapper,
-                                           [NotNull] XmlElementTarget target, [NotNull] XmlElementTarget root,
-                                           [NotNull] XmlElementTarget parentTarget, [NotNull] Type targeType)
+        public XmlListElementConfiguration([NotNull] IXmlSerializerConfiguration config, [NotNull] SimpleMapper<XmlElementContext> mapper,[NotNull] XmlElementTarget target, 
+            [NotNull] XmlElementTarget root, [NotNull] XmlElementTarget parentTarget, [NotNull] Type targeType)
         {
-            _config = config;
-            _mapper = mapper;
-            _target = target;
-            _root = root;
-            _parentTarget = parentTarget;
-            _targeType = targeType;
+            _config = Argument.NotNull(config, nameof(config));
+            _mapper = Argument.NotNull(mapper, nameof(mapper));
+            _target = Argument.NotNull(target, nameof(target));
+            _root = Argument.NotNull(root, nameof(root));
+            _parentTarget = Argument.NotNull(parentTarget, nameof(parentTarget));
+            _targeType = Argument.NotNull(targeType, nameof(targeType));
         }
 
         public IXmlSerializerConfiguration Apply()
@@ -64,7 +60,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
 
         IXmlListAttributeConfiguration IWithMember<IXmlListAttributeConfiguration>.WithMember(string name)
         {
-            WithMember(name);
+            WithMember(Argument.NotNull(name, nameof(name)));
             return this;
         }
 
@@ -76,7 +72,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
 
         public IXmlListElementConfiguration Element(string name)
         {
-            var target = new XmlElementTarget {TargetType = XmlElementTargetType.Element, Name = name};
+            var target = new XmlElementTarget {TargetType = XmlElementTargetType.Element, Name = Argument.NotNull(name, nameof(name)) };
             _target.SubElement = target;
 
             return new XmlListElementConfiguration(_config, _mapper, target, _root, _parentTarget, _targeType);
@@ -92,8 +88,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
         {
             if (_member == null) _member = _target.Name;
 
-            var mapper = new XmlListSubSerializerMapper(_member, typeof (TSerisalize), _parentTarget, _root,
-                serializer as ISubSerializer);
+            var mapper = new XmlListSubSerializerMapper(_member, typeof(TSerisalize), _parentTarget, _root, serializer as ISubSerializer);
             _mapper.Entries.Add(mapper);
 
             return _config;
@@ -101,13 +96,11 @@ namespace Tauron.Application.Files.Serialization.Core.Impl
 
         public IXmlListAttributeConfiguration Attribute(string name)
         {
-            var target = new XmlElementTarget {TargetType = XmlElementTargetType.Attribute, Name = name};
+            var target = new XmlElementTarget {TargetType = XmlElementTargetType.Attribute, Name = Argument.NotNull(name, nameof(name))};
             _target.SubElement = target;
 
             return new XmlListElementConfiguration(_config, _mapper, target, _root, _parentTarget, _targeType);
         }
-
-        #endregion
 
     }
 }

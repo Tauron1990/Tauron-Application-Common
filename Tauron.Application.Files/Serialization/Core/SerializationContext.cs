@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core
 {
@@ -16,8 +17,8 @@ namespace Tauron.Application.Files.Serialization.Core
 
             public GenericSource([NotNull] byte[] bytes, [NotNull] SerializationContext original)
             {
-                _bytes = bytes;
-                _original = original;
+                _bytes = Argument.NotNull(bytes, nameof(bytes));
+                _original = Argument.NotNull(original, nameof(original));
             }
 
             public void Dispose()
@@ -26,15 +27,9 @@ namespace Tauron.Application.Files.Serialization.Core
                 _original = null;
             }
 
-            public Stream OpenStream(FileAccess access)
-            {
-                return new MemoryStream(_bytes);
-            }
+            public Stream OpenStream(FileAccess access) => new MemoryStream(_bytes);
 
-            public IStreamSource OpenSideLocation(string relativePath)
-            {
-                return _original.StreamSource.OpenSideLocation(relativePath);
-            }
+            public IStreamSource OpenSideLocation(string relativePath) => _original.StreamSource.OpenSideLocation(relativePath);
         }
 
         private class BackgroundStream
@@ -43,42 +38,50 @@ namespace Tauron.Application.Files.Serialization.Core
             public Stream Stream { get; set; }
         }
 
-        private Dictionary<string, SerializationContext> _childContexts;
         private BackgroundStream _backgroundStream;
-        private bool _snapShot;
 
-        public bool IsSnapShot => _snapShot;
-        public ContextMode ContextMode { get; private set; }
-        [NotNull]
-        public IStreamSource StreamSource { get; private set; }
-        public SerializerMode SerializerMode { get; private set; }
+        private Dictionary<string, SerializationContext> _childContexts;
 
         public SerializationContext(ContextMode contextMode, [NotNull] IStreamSource streamSource, SerializerMode serializerMode)
         {
             ContextMode = contextMode;
-            StreamSource = streamSource;
-            SerializerMode = serializerMode;
+            StreamSource = Argument.NotNull(streamSource, nameof(streamSource));
+            SerializerMode = Argument.NotNull(serializerMode, nameof(serializerMode));
             _backgroundStream = new BackgroundStream();
         }
 
-        private SerializationContext(ContextMode contextMode, [NotNull] IStreamSource streamSource,
-                                     SerializerMode serializerMode, [NotNull] BackgroundStream parentStream)
+        private SerializationContext(ContextMode contextMode, [NotNull] IStreamSource streamSource, SerializerMode serializerMode, [NotNull] BackgroundStream parentStream)
         {
             ContextMode = contextMode;
-            StreamSource = streamSource;
-            SerializerMode = serializerMode;
-            _backgroundStream = parentStream;
+            StreamSource = Argument.NotNull(streamSource, nameof(streamSource));
+            SerializerMode = Argument.NotNull(serializerMode, nameof(serializerMode));
+            _backgroundStream = Argument.NotNull(parentStream, nameof(parentStream));
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Objekte verwerfen, bevor Bereich verloren geht", Justification = "No Disposing Needed"), CanBeNull]
+        public bool IsSnapShot { get; private set; }
+
+        public ContextMode ContextMode { get; private set; }
+
+        [NotNull]
+        public IStreamSource StreamSource { get; private set; }
+
+        public SerializerMode SerializerMode { get; private set; }
+
+        public void Dispose()
+        {
+            DisposeImpl(true);
+            GC.SuppressFinalize(this);
+        }
+
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Objekte verwerfen, bevor Bereich verloren geht", Justification = "No Disposing Needed")]
+        [CanBeNull]
         public SerializationContext GetSubContext([CanBeNull] string relativeFile, ContextMode contextMode)
         {
             if (relativeFile == null) return this;
 
-            SerializationContext context;
-            if (_childContexts.TryGetValue(relativeFile, out context)) return context;
+            if (_childContexts.TryGetValue(relativeFile, out var context)) return context;
 
-            IStreamSource streamSource = StreamSource.OpenSideLocation(relativeFile);
+            var streamSource = StreamSource.OpenSideLocation(relativeFile);
             if (streamSource == null) return null;
 
             context = new SerializationContext(contextMode, streamSource, SerializerMode, _backgroundStream);
@@ -87,27 +90,70 @@ namespace Tauron.Application.Files.Serialization.Core
             return context;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Objekte verwerfen, bevor Bereich verloren geht", Justification = "No Disposing Needed"), NotNull]
-        public SerializationContext CreateSnapshot([NotNull] string value)
-        {
-            return new SerializationContext(ContextMode, new GenericSource(Encoding.UTF8.GetBytes(value), this), SerializerMode) { _snapShot = true };
-        }
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Objekte verwerfen, bevor Bereich verloren geht", Justification = "No Disposing Needed")]
+        [NotNull]
+        public SerializationContext CreateSnapshot([NotNull] string value) 
+            => new SerializationContext(ContextMode, new GenericSource(Encoding.UTF8.GetBytes(value), this), SerializerMode) {IsSnapShot = true};
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Objekte verwerfen, bevor Bereich verloren geht", Justification = "No disposing Needed"), NotNull]
-        public SerializationContext CreateSnapshot([NotNull] byte[] value)
-        {
-            return new SerializationContext(ContextMode, new GenericSource(value, this), SerializerMode) { _snapShot = true };
-        }
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Objekte verwerfen, bevor Bereich verloren geht", Justification = "No disposing Needed")]
+        [NotNull]
+        public SerializationContext CreateSnapshot([NotNull] byte[] value) 
+            => new SerializationContext(ContextMode, new GenericSource(Argument.NotNull(value, nameof(value)), this), SerializerMode) {IsSnapShot = true};
 
         [NotNull]
         private Stream EnsurceBackgroundStream()
         {
-            if (_snapShot) return StreamSource.OpenStream(FileAccess.ReadWrite);
+            if (IsSnapShot) return StreamSource.OpenStream(FileAccess.ReadWrite);
 
             return _backgroundStream.Stream ??
                    (_backgroundStream.Stream = StreamSource.OpenStream(SerializerMode == SerializerMode.Deserialize
-                                                                    ? FileAccess.Read
-                                                                    : FileAccess.Write));
+                       ? FileAccess.Read
+                       : FileAccess.Write));
+        }
+
+        [NotNull]
+        public static string ConvertByteToString([NotNull] byte[] value) => Base91.Encode(Argument.NotNull(value, nameof(value)));
+
+        [NotNull]
+        public static byte[] ConvertStringToBytes([NotNull] string value) => Base91.Decode(Argument.NotNull(value, nameof(value)));
+
+        ~SerializationContext() => DisposeImpl(false);
+
+        private void DisposeImpl(bool disposing)
+        {
+            if (disposing && _childContexts != null)
+            {
+                StreamSource.Dispose();
+
+                foreach (var serializationContext in _childContexts)
+                    serializationContext.Value.Dispose();
+            }
+
+            _backgroundStream?.Stream?.Dispose();
+
+            _backgroundStream = null;
+
+            if (_binaryWriter != null)
+            {
+                _binaryWriter.Dispose();
+                _binaryWriter = null;
+            }
+
+            if (_binaryReader != null)
+            {
+                _binaryReader.Dispose();
+                _binaryReader = null;
+            }
+
+            if (_textReader != null)
+            {
+                _textReader.Dispose();
+                _textReader = null;
+            }
+
+            if (_textWriter == null) return;
+            _textWriter.Dispose();
+            _textWriter = null;
         }
 
         #region Binary
@@ -119,7 +165,7 @@ namespace Tauron.Application.Files.Serialization.Core
         {
             get
             {
-                if (ContextMode != ContextMode.Binary && SerializerMode != SerializerMode.Deserialize && !_snapShot) throw new InvalidOperationException("No Binary Deserialisation");
+                if (ContextMode != ContextMode.Binary && SerializerMode != SerializerMode.Deserialize && !IsSnapShot) throw new InvalidOperationException("No Binary Deserialisation");
 
                 return _binaryReader ?? (_binaryReader = new BinaryReader(EnsurceBackgroundStream()));
             }
@@ -132,25 +178,22 @@ namespace Tauron.Application.Files.Serialization.Core
         {
             get
             {
-                if (ContextMode != ContextMode.Binary && SerializerMode != SerializerMode.Serialize && !_snapShot) throw new InvalidOperationException("No Binary Serialisation");
+                if (ContextMode != ContextMode.Binary && SerializerMode != SerializerMode.Serialize && !IsSnapShot) throw new InvalidOperationException("No Binary Serialisation");
 
                 return _binaryWriter ?? (_binaryWriter = new BinaryWriter(EnsurceBackgroundStream()));
             }
         }
 
-        public void WriteBytes([NotNull] byte[] value)
+        public void WriteBytes([CanBeNull] byte[] value)
         {
-            if(value == null) return;
+            if (value == null) return;
 
             BinaryWriter.Write(value.Length);
             BinaryWriter.Write(value);
         }
 
         [NotNull]
-        public byte[] Readbytes()
-        {
-            return BinaryReader.ReadBytes(BinaryReader.ReadInt32());
-        }
+        public byte[] Readbytes() => BinaryReader.ReadBytes(BinaryReader.ReadInt32());
 
         #endregion
 
@@ -183,68 +226,5 @@ namespace Tauron.Application.Files.Serialization.Core
         }
 
         #endregion
-
-        [NotNull]
-        public static string ConvertByteToString([NotNull] byte[] value)
-        {
-            return Base91.Encode(value);
-        }
-
-        [NotNull]
-        public static byte[] ConvertStringToBytes([NotNull] string value)
-        {
-            return Base91.Decode(value);
-        }
-
-        public void Dispose()
-        {
-            DisposeImpl(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~SerializationContext()
-        {
-            DisposeImpl(false);
-        }
-
-        private void DisposeImpl(bool disposing)
-        {
-            if (disposing && _childContexts != null)
-            {
-                StreamSource.Dispose();
-
-                foreach (var serializationContext in _childContexts)
-                {
-                    serializationContext.Value.Dispose();
-                }
-            }
-
-            if (_backgroundStream != null && _backgroundStream.Stream != null)
-            {
-                _backgroundStream.Stream.Dispose();
-            }
-
-            _backgroundStream = null;
-
-            if (_binaryWriter != null)
-            {
-                _binaryWriter.Dispose();
-                _binaryWriter = null;
-            }
-            if (_binaryReader != null)
-            {
-                _binaryReader.Dispose();
-                _binaryReader = null;
-            }
-            if (_textReader != null)
-            {
-                _textReader.Dispose();
-                _textReader = null;
-            }
-
-            if (_textWriter == null) return;
-            _textWriter.Dispose();
-            _textWriter = null;
-        }
     }
 }

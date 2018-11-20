@@ -1,8 +1,8 @@
 ﻿using System.Xml.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Fluent;
 using Tauron.Application.Files.Serialization.Core.Fluent.Impl;
 using Tauron.Application.Files.Serialization.Core.Impl;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files
 {
@@ -10,45 +10,24 @@ namespace Tauron.Application.Files
     public static class SerializerFactory
     {
         [NotNull]
-        public static IBinaryConfiguration CreateBinary()
-        {
-            return new BinarySerializerConfiguration();
-        }
+        public static IBinaryConfiguration CreateBinary() => new BinarySerializerConfiguration();
 
         [NotNull]
-        public static IIniSerializerConfiguration CreateIni<TType>()
-        {
-            return new IniConfiguration(typeof(TType));
-        }
+        public static IIniSerializerConfiguration CreateIni<TType>() => new IniConfiguration(typeof(TType));
 
         [NotNull]
-        public static IXmlSerializerConfiguration CreateXml<TType>([NotNull] string rootName, [CanBeNull] XDeclaration xDeclaration, [NotNull] XNamespace rootNamespace)
-        {
-            return new XmlSerializerConfiguration(rootName, xDeclaration, rootNamespace, typeof(TType));
-        }
+        public static IXmlSerializerConfiguration CreateXml<TType>([NotNull] string rootName, [CanBeNull] XDeclaration xDeclaration, [NotNull] XNamespace rootNamespace) => new XmlSerializerConfiguration(rootName, xDeclaration, rootNamespace, typeof(TType));
 
         [NotNull]
-        public static IXmlSerializerConfiguration CreateXml<TType>([NotNull] string rootName, [CanBeNull] XDeclaration xDeclaration)
-        {
-            return CreateXml<TType>(rootName, xDeclaration, XNamespace.None);
-        }
+        public static IXmlSerializerConfiguration CreateXml<TType>([NotNull] string rootName, [CanBeNull] XDeclaration xDeclaration) => CreateXml<TType>(rootName, xDeclaration, XNamespace.None);
 
         [NotNull]
-        public static IXmlSerializerConfiguration CreateXml<TType>([NotNull] string rootName)
-        {
-            return CreateXml<TType>(rootName, null);
-        }
+        public static IXmlSerializerConfiguration CreateXml<TType>([NotNull] string rootName) => CreateXml<TType>(rootName, null);
 
         [NotNull]
-        public static IXmlSerializerConfiguration CreateXml<TType>()
-        {
-            return CreateXml<TType>("Root");
-        }
+        public static IXmlSerializerConfiguration CreateXml<TType>() => CreateXml<TType>("Root");
 
         [NotNull]
-        public static IHeaderedFileSerializerConfiguration CreateHeaderedFile<TType>()
-        {
-            return new HeaderedFileSerializerConfiguration(typeof(TType));
-        }
+        public static IHeaderedFileSerializerConfiguration CreateHeaderedFile<TType>() => new HeaderedFileSerializerConfiguration(typeof(TType));
     }
 }

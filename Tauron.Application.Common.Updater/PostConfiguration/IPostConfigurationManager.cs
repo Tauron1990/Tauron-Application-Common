@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Common.Updater.PostConfiguration
 {
+    [PublicAPI]
     public interface IPostConfigurationManager
     {
         IPostConfigurationApplicator Applicator { get; }

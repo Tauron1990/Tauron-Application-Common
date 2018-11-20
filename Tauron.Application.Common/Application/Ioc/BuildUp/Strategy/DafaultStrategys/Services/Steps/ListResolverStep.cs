@@ -8,14 +8,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
     {
         public override StepId Id => StepIds.ListResolver;
 
-        protected override Type GetCurrentType(ReflectionContext context)
-        {
-            return context.CurrentType.GenericTypeArguments[0];
-        }
+        protected override Type GetCurrentType(ReflectionContext context) => context.CurrentType.GenericTypeArguments[0];
 
-        protected override IResolver CreateResolver(IEnumerable<IResolver> resolvers, Type listType)
-        {
-            return new ListResolver(resolvers, listType);
-        }
+        protected override IResolver CreateResolver(IEnumerable<IResolver> resolvers, Type listType) => new ListResolver(resolvers, listType);
     }
 }

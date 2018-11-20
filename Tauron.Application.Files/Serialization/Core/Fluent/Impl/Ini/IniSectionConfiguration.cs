@@ -1,29 +1,29 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Impl.Mapper.Ini;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Fluent.Impl
 {
     internal class IniSectionConfiguration : IIniSectionSerializerConfiguration
     {
-        private readonly string _section;
-        private readonly SimpleMapper<IniContext> _mapper;
         private readonly IIniSerializerConfiguration _configuration;
-        private readonly Type _targeType;
+        private readonly SimpleMapper<IniContext>    _mapper;
+        private readonly string                      _section;
+        private readonly Type                        _targeType;
 
-        public IniSectionConfiguration([NotNull] string section, [NotNull] SimpleMapper<IniContext> mapper,
-                                       [NotNull] IIniSerializerConfiguration configuration, [NotNull] Type targeType)
+        public IniSectionConfiguration([NotNull] string                      section,       [NotNull] SimpleMapper<IniContext> mapper,
+                                       [NotNull] IIniSerializerConfiguration configuration, [NotNull] Type                     targeType)
         {
-            _section = section;
-            _mapper = mapper;
+            _section       = section;
+            _mapper        = mapper;
             _configuration = configuration;
-            _targeType = targeType;
+            _targeType     = targeType;
         }
 
         public IIniKeySerializerConfiguration WithSingleKey()
         {
-            return new IniKeyConfiguration(_section,_configuration, _mapper, true, _targeType);
+            return new IniKeyConfiguration(_section, _configuration, _mapper, true, _targeType);
         }
 
         public IIniKeySerializerConfiguration WithListKey()

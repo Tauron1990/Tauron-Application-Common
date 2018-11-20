@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc
 {
-    public sealed class ErrorTracer
+    public sealed class ErrorTracer : MarshalByRefObject
     {
         private readonly StringBuilder _internalPhase = new StringBuilder();
         private int _ident;
@@ -18,8 +18,8 @@ namespace Tauron.Application.Ioc
             get => _internalPhase.ToString();
             set
             {
-                for (var i = 0; i < _ident; i++)
-                    _internalPhase.Append('\t');
+                for (var i = 0; i < _ident; i++) _internalPhase.Append('\t');
+
                 _internalPhase.AppendLine(value);
             }
         }

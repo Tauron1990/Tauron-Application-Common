@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Ionic.Zip;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.VirtualFiles.Zip
 {
@@ -10,33 +10,30 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
     {
         public static readonly char[] PathSplit = {'/'};
 
-        private readonly List<ZipEntry> _files;
-        private readonly List<InternalZipDirectory> _directories;
+        private InternalZipDirectory([NotNull] string name)
+        {
+            Name = name;
+            Files = new List<ZipEntry>();
+            Directorys = new List<InternalZipDirectory>();
+        }
 
         [NotNull]
-        public string Name { get; private set; }
+        public string Name { get; }
 
         [CanBeNull]
         public ZipEntry ZipEntry { get; private set; }
 
         [NotNull]
-        public List<ZipEntry> Files => _files;
+        public List<ZipEntry> Files { get; }
 
         [NotNull]
-        public List<InternalZipDirectory> Directorys => _directories;
-
-        private InternalZipDirectory([NotNull] string name)
-        {
-            Name = name;
-            _files = new List<ZipEntry>();
-            _directories = new List<InternalZipDirectory>();
-        }
+        public List<InternalZipDirectory> Directorys { get; }
 
         [NotNull]
-        public static InternalZipDirectory ReadZipDirectory([NotNull] ZipFile file)
+        public static InternalZipDirectory ReadZipDirectory([CanBeNull] ZipFile file)
         {
-            if (file == null) throw new ArgumentNullException("file");
             var directory = new InternalZipDirectory(string.Empty);
+            if (file == null) return directory;
 
             foreach (var entry in file)
             {
@@ -48,11 +45,11 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
 
         private static void Add([NotNull] InternalZipDirectory directory, [NotNull] ZipEntry entry)
         {
-            string[] parts = entry.FileName.Split(PathSplit, StringSplitOptions.RemoveEmptyEntries);
+            var parts = entry.FileName.Split(PathSplit, StringSplitOptions.RemoveEmptyEntries);
 
-            InternalZipDirectory mainDic = directory;
+            var mainDic = directory;
 
-            for (int i = 0; i < parts.Length; i++)
+            for (var i = 0; i < parts.Length; i++)
             {
                 if (i == parts.Length - 1)
                 {
@@ -62,33 +59,30 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
                         mainDic.ZipEntry = entry;
                     }
                     else
+                    {
                         mainDic.AddFile(entry);
+                    }
                 }
                 else
+                {
                     mainDic = mainDic.GetOrAdd(parts[i]);
+                }
             }
         }
 
         [NotNull]
-        public static string GetFileName([NotNull] ZipEntry entry)
-        {
-            if (entry == null) throw new ArgumentNullException("entry");
-            return entry.FileName.Split(PathSplit, StringSplitOptions.RemoveEmptyEntries).Last();
-        }
+        public static string GetFileName([NotNull] ZipEntry entry) => Argument.NotNull(entry, nameof(entry)).FileName.Split(PathSplit, StringSplitOptions.RemoveEmptyEntries).Last();
 
         [NotNull]
         internal InternalZipDirectory GetOrAdd([NotNull] string name)
         {
-            var dic = _directories.FirstOrDefault(d => d.Name == name);
+            var dic = Directorys.FirstOrDefault(d => d.Name == name);
             if (dic != null) return dic;
             dic = new InternalZipDirectory(name);
-            _directories.Add(dic);
+            Directorys.Add(dic);
             return dic;
         }
 
-        private void AddFile([NotNull] ZipEntry entry)
-        {
-            _files.Add(entry);
-        }
+        private void AddFile([NotNull] ZipEntry entry) => Files.Add(entry);
     }
 }

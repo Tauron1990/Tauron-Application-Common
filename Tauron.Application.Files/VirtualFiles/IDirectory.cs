@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.VirtualFiles
 {
@@ -13,5 +13,8 @@ namespace Tauron.Application.Files.VirtualFiles
 
         [NotNull]
         IFile GetFile([NotNull] string name);
+
+        [NotNull]
+        IDirectory MoveTo([NotNull]string location);
     }
 }

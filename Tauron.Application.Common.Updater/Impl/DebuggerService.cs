@@ -33,7 +33,7 @@ namespace Tauron.Application.Common.Updater.Impl
 
             foreach (var c in line)
             {
-                if (!block && Char.IsWhiteSpace(c) && builder.Length != 0)
+                if (!block && char.IsWhiteSpace(c) && builder.Length != 0)
                 {
                     args.Add(builder.ToString());
                     builder.Clear();

@@ -1,67 +1,52 @@
 ﻿using System;
 using System.IO;
+using JetBrains.Annotations;
 using Tauron.Application.Files.VirtualFiles.Core;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.VirtualFiles.LocalFileSystem
 {
     public class LocalFile : FileBase<FileInfo>
     {
         public LocalFile([NotNull] string fullPath, [NotNull] IDirectory path)
-            : base(path, fullPath)
+            : base(() => path, fullPath, fullPath.GetFileName())
         {
         }
 
-
+        private LocalFile(string fullPath)
+            : base(() => new LocalDirectory(fullPath.GetDirectoryName()), fullPath, fullPath.GetFileName()) { }
+        
         public override DateTime LastModified => InfoObject.LastWriteTime;
 
         public override bool Exist => InfoObject.Exists;
 
-        protected override void DeleteImpl()
-        {
-            InfoObject.Delete();
-        }
-
-        protected override FileInfo GetInfo(string path)
-        {
-            return new FileInfo(path);
-        }
-
         public override string Extension
         {
-            get { return InfoObject.Extension; }
+            get => InfoObject.Extension;
             set
             {
-                if(InfoObject.Extension == value) return;
+                if (InfoObject.Extension == value) return;
 
                 MoveFile(InfoObject, Path.ChangeExtension(OriginalPath, value));
             }
         }
 
-        public override string Name
+        public override IFile MoveTo(string location)
         {
-            get
-            {
-                return InfoObject.Name;
-            }
-            set
-            {
-                if(InfoObject.Name == value) return;
+            if (InfoObject.FullName == location) return this;
 
-                MoveFile(InfoObject, ParentDirectory.OriginalPath.CombinePath(Name + Extension));
-            }
+            MoveFile(InfoObject, location);
+
+            return new LocalFile(location);
         }
 
         public override long Size => InfoObject.Length;
 
-        protected override Stream CreateStream(FileAccess access, InternalFileMode mode)
-        {
-            return new FileStream(OriginalPath, (FileMode)mode, access, access == FileAccess.Read ? FileShare.Read : FileShare.None);
-        }
+        protected override void DeleteImpl() => InfoObject.Delete();
 
-        private void MoveFile([NotNull] FileInfo old, [NotNull] string newLoc)
-        {
-            old.MoveTo(newLoc);
-        }
+        protected override FileInfo GetInfo(string path) => new FileInfo(path);
+
+        protected override Stream CreateStream(FileAccess access, InternalFileMode mode) => new FileStream(OriginalPath, (FileMode) mode, access, access == FileAccess.Read ? FileShare.Read : FileShare.None);
+
+        private void MoveFile([NotNull] FileInfo old, [NotNull] string newLoc) => old.MoveTo(newLoc);
     }
 }

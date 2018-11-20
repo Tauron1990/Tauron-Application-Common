@@ -1,59 +1,31 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.HeaderedText
 {
     [PublicAPI]
     public sealed class FileContext : IEnumerable<ContextEnry>
     {
-        private readonly FileDescription _description;
-
-        private List<ContextEnry> _contextEnries = new List<ContextEnry>();
+        internal FileContext([NotNull] FileDescription description) => Description = (FileDescription) description.Clone();
 
         [NotNull]
-        internal FileDescription Description => _description;
+        internal FileDescription Description { get; }
 
         [NotNull]
-        internal List<ContextEnry> ContextEnries => _contextEnries;
+        internal List<ContextEnry> ContextEnries { get; } = new List<ContextEnry>();
 
-        internal FileContext([NotNull] FileDescription description)
-        {
-            _description = (FileDescription) description.Clone();
-        }
+        public IEnumerable<ContextEnry> this[string key] => ContextEnries.Where(contextEnry => contextEnry.Key == key);
 
-        public IEnumerable<ContextEnry> this[string key]
-        {
-            get 
-            {
-                return _contextEnries.Where(contextEnry => contextEnry.Key == key);
-            }
-        }
+        public IEnumerator<ContextEnry> GetEnumerator() => ContextEnries.GetEnumerator();
 
-        internal void Reset()
-        {
-            _contextEnries.Clear();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        internal bool IsKeyword([NotNull] string key)
-        {
-            return _description.Contains(key);
-        }
+        internal void Reset() => ContextEnries.Clear();
 
-        internal void Add([NotNull] ContextEnry entry)
-        {
-            _contextEnries.Add(entry);
-        }
+        internal bool IsKeyword([NotNull] string key) => Description.Contains(key);
 
-        public IEnumerator<ContextEnry> GetEnumerator()
-        {
-            return _contextEnries.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        internal void Add([NotNull] ContextEnry entry) => ContextEnries.Add(entry);
     }
 }

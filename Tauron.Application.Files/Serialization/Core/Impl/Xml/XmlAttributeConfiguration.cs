@@ -1,32 +1,31 @@
 ﻿using System;
 using System.Xml.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Fluent;
 using Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl
 {
     internal class XmlAttributeConfiguration : IXmlAttributConfiguration
     {
         private readonly IXmlSerializerConfiguration _config;
+        private readonly SimpleMapper<XmlElementContext> _mapper;
         private readonly XmlElementTarget _rootTarget;
         private readonly XmlElementTarget _target;
-        private readonly SimpleMapper<XmlElementContext> _mapper;
         private readonly Type _targetType;
-
-        private string _member;
         private SimpleConverter<string> _converter;
 
-        public XmlAttributeConfiguration([NotNull] IXmlSerializerConfiguration config,
-                                         [NotNull] XmlElementTarget rootTarget, [NotNull] XmlElementTarget target,
-                                         [NotNull] SimpleMapper<XmlElementContext> mapper, [NotNull] Type targetType)
+        private string _member;
+
+        public XmlAttributeConfiguration([NotNull] IXmlSerializerConfiguration config, [NotNull] XmlElementTarget rootTarget, [NotNull] XmlElementTarget target,
+            [NotNull] SimpleMapper<XmlElementContext> mapper, [NotNull] Type targetType)
         {
-            _config = config;
-            _rootTarget = rootTarget;
-            _target = target;
-            _mapper = mapper;
-            _targetType = targetType;
+            _config = Argument.NotNull(config, nameof(config));
+            _rootTarget = Argument.NotNull(rootTarget, nameof(rootTarget));
+            _target = Argument.NotNull(target, nameof(target));
+            _mapper = Argument.NotNull(mapper, nameof(mapper));
+            _targetType = Argument.NotNull(targetType, nameof(targetType));
         }
 
         public IXmlSerializerConfiguration Apply()

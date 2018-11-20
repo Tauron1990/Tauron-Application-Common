@@ -13,16 +13,10 @@ namespace Tauron.Application.Ioc
     {
         public const string LevelMetadata = "UsedLevel";
 
-        public LevelSpecificInject(int level)
-        {
-            Level = level;
-        }
+        public LevelSpecificInject(int level) => Level = level;
 
         public int Level { get; private set; }
 
-        public override Dictionary<string, object> CreateMetadata()
-        {
-            return new Dictionary<string, object> {{LevelMetadata, Level}};
-        }
+        public override Dictionary<string, object> CreateMetadata() => new Dictionary<string, object> {{LevelMetadata, Level}};
     }
 }

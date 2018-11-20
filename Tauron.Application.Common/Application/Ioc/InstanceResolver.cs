@@ -15,9 +15,13 @@ namespace Tauron.Application.Ioc
         public InstanceResolver([NotNull] Func<BuildParameter[], object> resolver, [NotNull] Func<object> metadataFactory,
             [NotNull] Type realType)
         {
-            RealType = realType ?? throw new ArgumentNullException(nameof(realType));
-            _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
-            _metadataFactory = metadataFactory ?? throw new ArgumentNullException(nameof(metadataFactory));
+            Argument.NotNull(resolver, nameof(resolver));
+            Argument.NotNull(metadataFactory, nameof(metadataFactory));
+            Argument.NotNull(realType, nameof(realType));
+
+            RealType = realType;
+            _resolver = resolver;
+            _metadataFactory = metadataFactory;
         }
 
 
@@ -36,13 +40,13 @@ namespace Tauron.Application.Ioc
 
                 return _metadata;
             }
-        }    
+        }
 
         public TExport Resolve([CanBeNull] BuildParameter[] buildParameters = null)
         {
             var obj = _resolver(buildParameters);
 
-            if (obj == null) return default(TExport);
+            if (obj == null) return default;
 
             return (TExport) obj;
         }

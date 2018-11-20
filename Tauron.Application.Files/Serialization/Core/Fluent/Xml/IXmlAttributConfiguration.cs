@@ -2,5 +2,5 @@
 {
     public interface IXmlAttributConfiguration : IXmlRootConfiguration<IXmlAttributConfiguration>
     {
-        }
+    }
 }

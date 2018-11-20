@@ -1,17 +1,17 @@
-﻿using Tauron.JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.HeaderedText
 {
     [PublicAPI]
     public sealed class ContextEnry
     {
-        public string Key { get; private set; }
-        public string Content { get; private set; }
-
         internal ContextEnry(string key, string content)
         {
-            Key = key;
+            Key     = Argument.NotNull(key, nameof(key));
             Content = content;
         }
+
+        public string Key     { get; }
+        public string Content { get; }
     }
 }

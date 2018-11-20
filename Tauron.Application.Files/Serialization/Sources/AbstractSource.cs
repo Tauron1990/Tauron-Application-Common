@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Sources
 {
@@ -14,18 +14,14 @@ namespace Tauron.Application.Files.Serialization.Sources
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            
-        }
-
-        ~AbstractSource()
-        {
-            Dispose(false);
-        }
-
         public abstract Stream OpenStream(FileAccess access);
 
         public abstract IStreamSource OpenSideLocation(string relativePath);
+
+        protected virtual void Dispose(bool disposing)
+        {
+        }
+
+        ~AbstractSource() => Dispose(false);
     }
 }

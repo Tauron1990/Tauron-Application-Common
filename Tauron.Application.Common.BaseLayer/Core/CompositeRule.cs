@@ -15,31 +15,21 @@ namespace Tauron.Application.Common.BaseLayer.Core
 
         public override string InitializeMethod { get; } = nameof(Initialize);
 
+        public override object GenericAction(object input) => input == null ? Run(default) : Run((TInput) input);
+
+        void IBusinessRule.Action() => Run(default);
+
+        void IIBusinessRule<TInput>.Action(TInput input) => Run(input);
+
+        public TOutput Action(TInput input) => Run(input);
+
         public void Initialize(RepositoryFactory factory)
         {
             SetError(null);
 
             RepositoryFactory = factory;
 
-            foreach (var rule in _rules)
-                DatalayerHelper.InitializeRule(rule, factory);
-        }
-
-        public TOutput Action(TInput input)
-        {
-            return Run(input);
-        }
-        public override object GenericAction(object input)
-        {
-            return input == null ? Run(default(TInput)) : Run((TInput)input);
-        }
-        void IIBusinessRule<TInput>.Action(TInput input)
-        {
-            Run(input);
-        }
-        void IBusinessRule.Action()
-        {
-            Run(default(TInput));
+            foreach (var rule in _rules) DatalayerHelper.InitializeRule(rule, factory);
         }
 
         private TOutput Run(TInput input)
@@ -47,15 +37,15 @@ namespace Tauron.Application.Common.BaseLayer.Core
             using (var db = RepositoryFactory.EnterCompositeMode())
             {
                 object output = input;
-                bool   change = false;
+                var change = false;
 
                 foreach (var ruleBase in _rules)
                 {
-                    object tempObj = ruleBase.GenericAction(output);
+                    var tempObj = ruleBase.GenericAction(output);
                     if (ruleBase.Error)
                     {
                         SetError(ruleBase.Errors);
-                        return default(TOutput);
+                        return default;
                     }
 
                     if (tempObj == RuleNull.Null) continue;
@@ -66,7 +56,7 @@ namespace Tauron.Application.Common.BaseLayer.Core
 
                 db.SaveChanges();
 
-                if (!change || output == null) return default(TOutput);
+                if (!change || output == null) return default;
 
                 return (TOutput) output;
             }

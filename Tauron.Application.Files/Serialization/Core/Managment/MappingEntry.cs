@@ -1,5 +1,5 @@
 ﻿using System;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Managment
 {

@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4DBEE1B0-5036-4C62-AF18-1F12C2512E3D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Tauron.Application</RootNamespace>
+    <AssemblyName>Tauron.Application.Common.MVVM.Wpf</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AlternativeTemplateSelectorExtension.cs" />
+    <Compile Include="AlternativTemplateSelector.cs" />
+    <Compile Include="AssemblyNameScpaces.cs" />
+    <Compile Include="BindingDecoratorBase.Latest.cs" />
+    <Compile Include="CommandBinder.cs" />
+    <Compile Include="Composition\CompositionService.cs" />
+    <Compile Include="Composition\IViewAggregatorAdapter.cs" />
+    <Compile Include="ControlHelper.cs" />
+    <Compile Include="Controls\EditableTextBlock.cs" />
+    <Compile Include="Controls\EditableTextBlockAdorner.cs" />
+    <Compile Include="Controls\ExpanderList.cs" />
+    <Compile Include="Controls\IHeaderProvider.cs" />
+    <Compile Include="Controls\InputDialog.xaml.cs">
+      <DependentUpon>InputDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\IToggle.cs" />
+    <Compile Include="Controls\LabeledTextbox.cs" />
+    <Compile Include="Controls\PrgressDialog.cs" />
+    <Compile Include="Controls\TabControlEx.cs" />
+    <Compile Include="Controls\ToggleBase.cs" />
+    <Compile Include="Controls\TogglrButtonList.cs" />
+    <Compile Include="Converter\BoolToVisibilityConverter.cs" />
+    <Compile Include="Converter\BrushValueConverter.cs" />
+    <Compile Include="Converter\ImageProviderExtension.cs" />
+    <Compile Include="Converter\ImageSourceHelper.cs" />
+    <Compile Include="Converter\ImageSourceProviderExtension.cs" />
+    <Compile Include="Converter\NullableToBoolConverter.cs" />
+    <Compile Include="Converter\TextInputToVisibilityConverter.cs" />
+    <Compile Include="Converter\ValueConverterFactoryBase.cs" />
+    <Compile Include="DataContextServices.cs" />
+    <Compile Include="DependencyObjectExtensions.cs" />
+    <Compile Include="DialogFactory.cs" />
+    <Compile Include="EventBinder.cs" />
+    <Compile Include="FrameworkObject.cs" />
+    <Compile Include="Help\HelpViewFactory.cs" />
+    <Compile Include="Help\ViewModels\HelpViewModel.cs" />
+    <Compile Include="Help\View\HelpView.xaml.cs">
+      <DependentUpon>HelpView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="IImageHelper.cs" />
+    <Compile Include="UIConnector\ApplicationInstanceImpl.cs" />
+    <Compile Include="UIConnector\ApplicationConnectorImpl.cs" />
+    <Compile Include="UIConnector\AttributeBasedLocator.cs" />
+    <Compile Include="Implementation\Controls\SplashScreen.xaml.cs">
+      <DependentUpon>SplashScreen.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UIConnector\CommandConnector.cs" />
+    <Compile Include="UIConnector\DispatcherInterfaceImpl.cs" />
+    <Compile Include="Implementation\ImageHelper.cs" />
+    <Compile Include="Implementation\PackUriHelper.cs" />
+    <Compile Include="Implementation\SplashServices.cs" />
+    <Compile Include="Implementation\WpfApplicationController.cs" />
+    <Compile Include="Implementation\WpfIuiControllerFactory.cs" />
+    <Compile Include="Implementation\WPFSynchronize.cs" />
+    <Compile Include="PipelineBase.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleLocalize.cs" />
+    <Compile Include="SimpleLocalizeWithArg.cs" />
+    <Compile Include="UIConnector\UIConnector.cs" />
+    <Compile Include="UIConnector\ViewManagerConnector.cs" />
+    <Compile Include="ViewModelBinding.cs" />
+    <Compile Include="ViewModelConverter.cs" />
+    <Compile Include="Views\ExportViewAttribute.cs" />
+    <Compile Include="Views\ExportWindowAttribute.cs" />
+    <Compile Include="Views\ViewManagerHelper.cs" />
+    <Compile Include="WpfApplication.cs" />
+    <Compile Include="WpfWindow.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tauron.Application.Common.MVVM\Tauron.Application.Common.MVVM.csproj">
+      <Project>{8423cdbc-5304-4cbf-9e02-4f74a85fa6d7}</Project>
+      <Name>Tauron.Application.Common.MVVM</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tauron.Application.Common\Tauron.Application.Common.csproj">
+      <Project>{3dc40c66-d21a-4948-9564-e7054be52934}</Project>
+      <Name>Tauron.Application.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations">
+      <Version>2018.2.1</Version>
+    </PackageReference>
+    <PackageReference Include="Ookii.Dialogs">
+      <Version>1.0.0</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Controls\InputDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Help\View\HelpView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Implementation\Controls\SplashScreen.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\erroricon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\HelpLage.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

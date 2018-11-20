@@ -5,5 +5,6 @@ namespace Tauron.Application.Common.BaseLayer.Data
     public interface IDatabaseIdentifer : IDisposable
     {
         string Id { get; }
+        object Context { get; }
     }
 }

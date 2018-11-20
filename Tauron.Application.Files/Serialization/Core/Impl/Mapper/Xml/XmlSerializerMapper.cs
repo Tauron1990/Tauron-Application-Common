@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 {
@@ -12,7 +12,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
         private readonly XmlElementTarget _xmlElementTarget;
 
         public XmlSerializerMapper([CanBeNull] string membername, [NotNull] Type targetType,
-                                   [CanBeNull] XmlSerializer serializer, [CanBeNull] XmlElementTarget xmlElementTarget)
+            [CanBeNull] XmlSerializer serializer, [CanBeNull] XmlElementTarget xmlElementTarget)
             : base(membername, targetType)
         {
             _serializer = serializer;
@@ -21,32 +21,30 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 
         protected override void Deserialize(object target, XmlElementContext context)
         {
-            XObject obj = XmlElementSerializer.GetElement(context.XElement, false, _xmlElementTarget);
-            var ele = obj as XElement;
-            if(ele == null)
+            var obj = XmlElementSerializer.GetElement(context.XElement, false, _xmlElementTarget);
+            if (!(obj is XElement ele))
                 return;
             SetValue(target, _serializer.Deserialize(ele.CreateReader(ReaderOptions.OmitDuplicateNamespaces)));
         }
 
         protected override void Serialize(object target, XmlElementContext context)
         {
-            XObject obj = XmlElementSerializer.GetElement(context.XElement, true, _xmlElementTarget);
-            var ele = obj as XElement;
-            if(ele == null)
+            var obj = XmlElementSerializer.GetElement(context.XElement, true, _xmlElementTarget);
+            if (!(obj is XElement))
                 throw new InvalidOperationException("Attributes not Supported");
             _serializer.Serialize(context.XElement.CreateWriter(), GetValue(target));
         }
 
         public override Exception VerifyError()
         {
-            Exception e = base.VerifyError();
+            var e = base.VerifyError();
 
-            if(_serializer == null)
-                e = new ArgumentNullException("Serializer");
-            if(_xmlElementTarget == null)
-                e = new ArgumentNullException("Xml Tree");
+            if (_serializer == null)
+                e = new ArgumentNullException(nameof(_serializer), @"Serializer");
+            if (_xmlElementTarget == null)
+                e = new ArgumentNullException(nameof(_xmlElementTarget), @"Xml Tree");
 
-            XmlElementTarget target = _xmlElementTarget;
+            var target = _xmlElementTarget;
 
             while (target != null)
             {

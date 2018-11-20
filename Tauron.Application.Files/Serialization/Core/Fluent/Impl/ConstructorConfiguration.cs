@@ -17,8 +17,8 @@
 
 using System;
 using System.Reflection;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 #endregion
 
@@ -27,12 +27,12 @@ namespace Tauron.Application.Files.Serialization.Core.Fluent.Impl
     internal class ConstructorConfiguration<TReturn> : IConstructorConfiguration<TReturn>
     {
         private readonly ObjectBuilder _context;
-        private readonly TReturn _ret;
+        private readonly TReturn       _ret;
 
         public ConstructorConfiguration([NotNull] ObjectBuilder builder, TReturn ret)
         {
             _context = builder;
-            _ret = ret;
+            _ret     = ret;
         }
 
         public TReturn Apply()

@@ -6,7 +6,7 @@ namespace Tauron.Application
 {
     public static class CommonConstants
     {
-        public const string CommonCategory = "Tauron.Application.Common";
+        private const string CommonCategory = "Tauron.Application.Common";
 
         [PublicAPI]
         [StringFormatMethod("format")]

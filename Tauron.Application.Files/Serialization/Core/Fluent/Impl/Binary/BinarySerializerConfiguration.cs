@@ -9,15 +9,6 @@ namespace Tauron.Application.Files.Serialization.Core.Fluent.Impl
     {
         private readonly BinaryFormatter _binaryFormatter = new BinaryFormatter();
 
-        public override ISerializer ApplyInternal()
-        {
-            var serializer = new BinarySerializer(_binaryFormatter);
-
-            VerifyErrors(serializer);
-
-            return serializer;
-        }
-
         public IBinaryConfiguration WithFormat(FormatterAssemblyStyle format)
         {
             _binaryFormatter.AssemblyFormat = format;
@@ -52,6 +43,15 @@ namespace Tauron.Application.Files.Serialization.Core.Fluent.Impl
         {
             _binaryFormatter.TypeFormat = format;
             return this;
+        }
+
+        public override ISerializer ApplyInternal()
+        {
+            var serializer = new BinarySerializer(_binaryFormatter);
+
+            VerifyErrors(serializer);
+
+            return serializer;
         }
     }
 }

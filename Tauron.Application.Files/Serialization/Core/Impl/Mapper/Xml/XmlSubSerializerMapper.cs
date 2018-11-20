@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Xml.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 {
     internal sealed class XmlSubSerializerMapper : GenericSubSerializerMapper<XmlElementContext>
     {
         private readonly XmlElementTarget _target;
-        private bool _useSnapShot;
+        private          bool             _useSnapShot;
 
-        public XmlSubSerializerMapper([CanBeNull] string membername, [NotNull] Type targetType,
+        public XmlSubSerializerMapper([CanBeNull] string         membername, [NotNull]   Type             targetType,
                                       [CanBeNull] ISubSerializer serializer, [CanBeNull] XmlElementTarget target)
-            : base(membername, targetType, serializer)
-        {
-            _target = target;
-        }
+            : base(membername, targetType, serializer) => _target = target;
 
         protected override SerializationContext GetRealContext(XmlElementContext origial, SerializerMode mode)
         {
@@ -31,15 +28,15 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 
         protected override void PostProgressing(SerializationContext context)
         {
-            if(_useSnapShot)
+            if (_useSnapShot)
                 context.Dispose();
         }
 
         public override Exception VerifyError()
         {
-            Exception e = base.VerifyError();
-            
-            if(_target.TargetType == XmlElementTargetType.Attribute)
+            var e = base.VerifyError();
+
+            if (_target.TargetType == XmlElementTargetType.Attribute)
                 e = new SerializerElementException("The Subserializer does not Support Attributes");
 
             return e;

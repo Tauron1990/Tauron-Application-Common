@@ -1,6 +1,5 @@
-﻿
-using System.Xml.Linq;
-using Tauron.JetBrains.Annotations;
+﻿using System.Xml.Linq;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Fluent
 {

@@ -2,39 +2,40 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 {
     internal class XmlElementSerializer
     {
-        private readonly XmlElementTarget _target;
         private readonly SimpleConverter<string> _converter;
+        private readonly XmlElementTarget        _target;
 
-        public XmlElementSerializer([NotNull] XmlElementTarget target, [NotNull] SimpleConverter<string> converter)
+        public XmlElementSerializer([CanBeNull] XmlElementTarget target, [CanBeNull] SimpleConverter<string> converter)
         {
-            _target = target;
+            _target    = target;
             _converter = converter;
         }
 
         [CanBeNull]
         public static IEnumerable<XElement> GetElements([NotNull] XElement ele, bool toWrite, [CanBeNull] XmlElementTarget target, int count)
         {
-            XElement currentElement = ele;
+            var currentElement = Argument.NotNull(ele, nameof(ele));
             if (target == null) return new[] {currentElement};
 
             while (true)
             {
                 if (target.XNamespace == null) target.XNamespace = XNamespace.None;
 
-                if (target.TargetType == XmlElementTargetType.Attribute) throw new InvalidOperationException("Attributes Not Supported");
+                if (target.TargetType == XmlElementTargetType.Attribute)
+                    throw new InvalidOperationException("Attributes Not Supported");
 
-                XName currentName = target.XNamespace + target.Name;
+                var currentName = target.XNamespace + target.Name;
 
                 if (target.SubElement != null)
                 {
-                    XElement temp = currentElement.Element(currentName);
+                    var temp = currentElement.Element(currentName);
 
                     if (temp == null)
                     {
@@ -44,7 +45,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
                     }
 
                     currentElement = temp;
-                    target = target.SubElement;
+                    target         = target.SubElement;
                     continue;
                 }
 
@@ -52,13 +53,13 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 
                 if (!toWrite) return els;
 
-                int realCount = els.Count();
+                var realCount = els.Count();
 
                 if (realCount == count) return els;
 
                 var elements = new List<XElement>(els);
 
-                for (int i = realCount; i < count; i++)
+                for (var i = realCount; i < count; i++)
                 {
                     var temp = new XElement(currentName);
                     currentElement.Add(temp);
@@ -72,28 +73,28 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
         [CanBeNull]
         public static XObject GetElement([NotNull] XElement ele, bool toWrite, [CanBeNull] XmlElementTarget target)
         {
-            XElement currentElement = ele;
+            var currentElement = ele;
 
-            if (target == null || (target.TargetType == XmlElementTargetType.Root && target.SubElement == null)) return currentElement;
+            if (target == null || target.TargetType == XmlElementTargetType.Root && target.SubElement == null) return currentElement;
 
             while (true)
             {
                 if (target.XNamespace == null) target.XNamespace = XNamespace.None;
 
-                XName currentName = target.XNamespace + target.Name;
+                var currentName = target.XNamespace + target.Name;
                 switch (target.TargetType)
                 {
                     case XmlElementTargetType.Attribute:
-                        XAttribute attr = currentElement.Attribute(currentName);
-                        if (attr == null)
-                        {
-                            if (!toWrite) return null;
-                            attr = new XAttribute(currentName, string.Empty);
-                            currentElement.Add(attr);
-                        }
+                        var attr = currentElement.Attribute(currentName);
+                        if (attr != null) return attr;
+                        if (!toWrite) return null;
+
+                        attr = new XAttribute(currentName, string.Empty);
+                        currentElement.Add(attr);
+
                         return attr;
                     case XmlElementTargetType.Element:
-                        XElement temp = currentElement.Element(currentName);
+                        var temp = currentElement.Element(currentName);
                         if (temp == null)
                         {
                             if (!toWrite) return null;
@@ -103,12 +104,10 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 
                         currentElement = temp;
 
-                        if (target.SubElement != null)
-                        {
-                            target = target.SubElement;
-                            continue;
-                        }
-                        return currentElement;
+                        if (target.SubElement == null) return currentElement;
+
+                        target = target.SubElement;
+                        continue;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -118,17 +117,20 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
         [NotNull]
         public object Deserialize([NotNull] XElement file)
         {
+            Argument.NotNull(file, nameof(file));
+
             object obj = null;
-            ProgressElement(SerializerMode.Deserialize,
-                            GetElement(file, false, _target), ref obj);
+            ProgressElement(SerializerMode.Deserialize, GetElement(file, false, _target), ref obj);
             return obj;
         }
 
         public void Serialize([NotNull] object target, [NotNull] XElement file)
         {
-            object obj = target;
-            ProgressElement(SerializerMode.Serialize,
-                            GetElement(file, true, _target), ref obj);
+            Argument.NotNull(target, nameof(target));
+            Argument.NotNull(file, nameof(file));
+
+            var obj = target;
+            ProgressElement(SerializerMode.Serialize, GetElement(file, true, _target), ref obj);
         }
 
         private void ProgressString(SerializerMode mode, [NotNull] ref string str, [CanBeNull] ref object obj)
@@ -142,7 +144,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
                     str = _converter.Convert(obj);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("mode");
+                    throw new ArgumentOutOfRangeException(nameof(mode));
             }
         }
 
@@ -152,7 +154,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 
             var attr = xobj as XAttribute;
 
-            string str = attr != null ? attr.Value : ((XElement) xobj).Value;
+            var str = attr != null ? attr.Value : ((XElement) xobj).Value;
 
             switch (mode)
             {
@@ -163,7 +165,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
                     ProgressString(mode, ref str, ref obj);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("mode");
+                    throw new ArgumentOutOfRangeException(nameof(mode));
             }
 
             if (mode != SerializerMode.Serialize) return;
@@ -175,12 +177,12 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
         [CanBeNull]
         public Exception VerifException()
         {
-            if (_converter == null) return new ArgumentNullException("Converter");
+            if (_converter == null) return new ArgumentNullException(nameof(_converter), @"Converter");
 
             var e = _converter.VerifyError();
             if (e != null) return e;
 
-            return _target == null ? new ArgumentNullException("Xml Tree") : null;
+            return _target == null ? new ArgumentNullException(nameof(_target), @"Xml Tree") : null;
         }
     }
 }

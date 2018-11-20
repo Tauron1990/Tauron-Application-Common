@@ -1,6 +1,6 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization
 {
@@ -14,6 +14,7 @@ namespace Tauron.Application.Files.Serialization
 
         [NotNull]
         object Deserialize([NotNull] IStreamSource target);
+
         void Deserialize([NotNull] IStreamSource targetStream, [NotNull] object target);
     }
 }

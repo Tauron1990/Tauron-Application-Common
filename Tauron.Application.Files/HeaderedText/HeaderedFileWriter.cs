@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.HeaderedText
 {
     [PublicAPI]
     public sealed class HeaderedFileWriter
     {
-        private readonly HeaderedFile _file;
         private readonly FileContext _context;
         private readonly FileDescription _description;
+        private readonly HeaderedFile _file;
 
         private bool _isWriten;
 
@@ -26,16 +26,8 @@ namespace Tauron.Application.Files.HeaderedText
         [CanBeNull]
         public string Content
         {
-            get { return _file.Content; } 
-            set { _file.Content = value; }
-        }
-
-        public void Add(string key, string value)
-        {
-            if(!_description.Contains(key))
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "The key {0} is Invalid", key));
-
-            _context.Add(new ContextEnry(key, value));
+            get => _file.Content;
+            set => _file.Content = value;
         }
 
         [NotNull]
@@ -43,23 +35,24 @@ namespace Tauron.Application.Files.HeaderedText
 
         public IEnumerable<ContextEnry> this[string key] => _context[key];
 
-        public bool Remove([NotNull] ContextEnry entry)
+        public void Add(string key, string value)
         {
-            return _context.ContextEnries.Remove(entry);
+            if (!_description.Contains(key))
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "The key {0} is Invalid", key));
+
+            _context.Add(new ContextEnry(key, value));
         }
 
-        public int RemoveAll([NotNull] string key)
-        {
-            return _context.ContextEnries.RemoveAll(ent => ent.Key == key);
-        }
+        public bool Remove([NotNull] ContextEnry entry) => _context.ContextEnries.Remove(Argument.NotNull(entry, nameof(entry)));
+
+        public int RemoveAll([NotNull] string key) => _context.ContextEnries.RemoveAll(ent => ent.Key == key);
 
         public void Save([NotNull] TextWriter writer)
         {
-            if (writer == null) throw new ArgumentNullException("writer");
+            Argument.NotNull(writer, nameof(writer));
             if (_isWriten) throw new InvalidOperationException("The Content is Writen");
 
-            _context.ContextEnries
-                    .Sort((one, two) => String.Compare(one.Key, two.Key, StringComparison.Ordinal));
+            _context.ContextEnries.Sort((one, two) => string.Compare(one.Key, two.Key, StringComparison.Ordinal));
 
             foreach (var contextEnry in Enries) writer.WriteLine("{0} {1}", contextEnry.Key, contextEnry.Content);
 

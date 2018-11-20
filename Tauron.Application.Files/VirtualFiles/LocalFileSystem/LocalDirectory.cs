@@ -2,52 +2,46 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Files.VirtualFiles.Core;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.VirtualFiles.LocalFileSystem
 {
     public class LocalDirectory : DirectoryBase<DirectoryInfo>
     {
+        public LocalDirectory([NotNull] string fullPath, [CanBeNull] Func<IDirectory> parentDirectory)
+            : base(parentDirectory, fullPath,  fullPath.GetFileName()) { }
 
-        public LocalDirectory([NotNull] string fullPath, [CanBeNull] IDirectory parentDirectory)
-            : base(parentDirectory, fullPath)
+        public LocalDirectory(string fullPath) 
+            : base(() => GetParentDirectory(fullPath), fullPath, fullPath.GetFileName()) { }
+
+        private static IDirectory GetParentDirectory(string fullpath)
         {
+            string name = Path.GetDirectoryName(fullpath);
+            return string.IsNullOrEmpty(name) ? null : new LocalDirectory(fullpath);
         }
 
         public override DateTime LastModified => InfoObject.LastWriteTime;
 
         public override bool Exist => InfoObject.Exists;
 
-        protected override void DeleteImpl()
-        {
-            InfoObject.Delete(true);
-        }
+        public override IEnumerable<IDirectory> Directories => Directory.EnumerateDirectories(OriginalPath).Select(str => new LocalDirectory(str, () => this));
 
-        protected override DirectoryInfo GetInfo(string path)
-        {
-            return new DirectoryInfo(path);
-        }
+        public override IEnumerable<IFile> Files => Directory.EnumerateFiles(OriginalPath).Select(str => new LocalFile(str, this));
 
-        public override IEnumerable<IDirectory> Directories
-        {
-            get
-            {
-                return Directory.EnumerateDirectories(OriginalPath).Select(str => new LocalDirectory(str, this));
-            }
-        }
+        protected override void DeleteImpl() => InfoObject.Delete(true);
 
-        public override IEnumerable<IFile> Files
-        {
-            get
-            {
-                return Directory.EnumerateFiles(OriginalPath).Select(str => new LocalFile(str, this));
-            }
-        }
+        protected override DirectoryInfo GetInfo(string path) => new DirectoryInfo(path);
 
-        public override IFile GetFile(string name)
+        public override IFile GetFile(string name) => new LocalFile(OriginalPath.CombinePath(name), this);
+
+        public override IDirectory MoveTo(string location)
         {
-            return new LocalFile(OriginalPath.CombinePath(name), this);
+            if (location == OriginalPath) return this;
+
+            OriginalPath.MoveTo(location);
+
+            return new LocalDirectory(location);
         }
     }
 }

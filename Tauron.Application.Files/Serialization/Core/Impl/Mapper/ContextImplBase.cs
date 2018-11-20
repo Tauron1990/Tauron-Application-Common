@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
 {
@@ -13,14 +13,14 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
     {
         private class ConsistentTextWriter : TextWriter
         {
-            private readonly BinaryWriter _writer;
             private readonly List<string> _lines;
             private readonly StringBuilder _stringBuilder;
+            private readonly BinaryWriter _writer;
 
             public ConsistentTextWriter([NotNull] BinaryWriter writer)
                 : base(CultureInfo.InvariantCulture)
             {
-                _writer = writer;
+                _writer = Argument.NotNull(writer, nameof(writer));
                 _lines = new List<string>();
                 _stringBuilder = new StringBuilder();
             }
@@ -42,25 +42,24 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
             {
                 _writer.Write(_lines.Count);
                 foreach (var line in _lines)
-                {
                     _writer.Write(line);
-                }
 
                 base.Dispose(disposing);
             }
         }
+
         private class ConsistentTextReader : TextReader
         {
-            private readonly BinaryReader _reader;
             private readonly int _lines;
+            private readonly BinaryReader _reader;
 
             private int _currentLine;
-            private string _currentLineString;
             private int _currentLinePosition;
+            private string _currentLineString;
 
             public ConsistentTextReader([NotNull] BinaryReader reader)
             {
-                _reader = reader;
+                _reader = Argument.NotNull(reader, nameof(reader));
                 _lines = reader.ReadInt32();
                 if (_lines == 0) return;
 
@@ -79,20 +78,17 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
                 return true;
             }
 
-            private bool CheckPosition()
-            {
-                return _currentLinePosition < _currentLineString.Length || MoveToNextLine();
-            }
+            private bool CheckPosition() => _currentLinePosition < _currentLineString.Length || MoveToNextLine();
 
             public override string ReadLine()
             {
-                if (_currentLinePosition == 0 || (_currentLinePosition >= _currentLineString.Length && MoveToNextLine()))
+                if (_currentLinePosition == 0 || _currentLinePosition >= _currentLineString.Length && MoveToNextLine())
                 {
                     _currentLinePosition = _currentLineString.Length;
                     return _currentLineString;
                 }
 
-                string temp = _currentLineString.Substring(_currentLinePosition);
+                var temp = _currentLineString.Substring(_currentLinePosition);
                 _currentLinePosition = _currentLineString.Length;
                 return temp;
             }
@@ -104,10 +100,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
                 if (_currentLinePosition == 0) builder.AppendLine(_currentLineString);
                 else if (_currentLinePosition < _currentLineString.Length) builder.AppendLine(_currentLineString.Substring(_currentLinePosition));
 
-                while (MoveToNextLine())
-                {
-                    builder.AppendLine(_currentLineString);
-                }
+                while (MoveToNextLine()) builder.AppendLine(_currentLineString);
 
                 return builder.ToString();
             }
@@ -129,30 +122,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
             }
         }
 
-        public SerializationContext Original { get; private set; }
-
-        protected ContextImplBase([NotNull] SerializationContext original)
-        {
-            if (original == null) throw new ArgumentNullException("original");
-            Original = original;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if(disposing)
-                Original.Dispose();
-        }
-
-        ~ContextImplBase()
-        {
-            Dispose(false);
-        }
+        protected ContextImplBase([NotNull] SerializationContext original) => Original = Argument.NotNull(original, nameof(original));
 
         [NotNull]
         protected TextWriter TextWriter => Original.ContextMode == ContextMode.Binary
@@ -163,5 +133,21 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
         protected TextReader TextReader => Original.ContextMode == ContextMode.Text
             ? Original.TextReader
             : new ConsistentTextReader(Original.BinaryReader);
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public SerializationContext Original { get; private set; }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+                Original.Dispose();
+        }
+
+        ~ContextImplBase() => Dispose(false);
     }
 }

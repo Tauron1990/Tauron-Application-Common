@@ -1,11 +1,7 @@
-﻿#region
-
-using System;
+﻿using System;
 using System.Linq;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
-
-#endregion
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
@@ -14,6 +10,59 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     [PublicAPI]
     public class SimpleResolver : IResolver
     {
+        public SimpleResolver([NotNull] ExportMetadata metadata, [NotNull] IContainer container,
+            bool isExportFactory, [CanBeNull] Type factoryType, [CanBeNull] object metadataObject,
+            [CanBeNull] Type metadataType, [CanBeNull] InterceptorCallback interceptor, bool isDescriptor,
+            [NotNull] IResolverExtension[] extensions)
+        {
+            Metadata = Argument.NotNull(metadata, nameof(metadata));
+            Container = Argument.NotNull(container, nameof(container));
+            _isExportFactory = isExportFactory;
+            _factoryType = factoryType;
+            _metadataObject = metadataObject;
+            _metadataType = metadataType;
+            _interceptor = interceptor;
+            _isDescriptor = isDescriptor;
+            _extensions = Argument.NotNull(extensions, nameof(extensions));
+        }
+
+        public object Create([NotNull] ErrorTracer errorTracer)
+        {
+            errorTracer.Phase = "Injecting Import For " + Metadata;
+
+            var helper = new ExportFactoryHelper(Container, Metadata, _metadataObject, _interceptor, _extensions);
+
+            try
+            {
+                if (_isDescriptor) return new ExportDescriptor(Metadata);
+
+                if (_isExportFactory)
+                {
+                    return
+                        Activator.CreateInstance(
+                            typeof(InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
+                            new Func<BuildParameter[], object>(helper.BuildUp),
+                            new Func<object>(helper.Metadata), Metadata.Export.ImplementType);
+                }
+
+                try
+                {
+                    errorTracer.IncrementIdent();
+                    return helper.BuildUp(null, errorTracer);
+                }
+                finally
+                {
+                    errorTracer.DecrementIdent();
+                }
+            }
+            catch (Exception e)
+            {
+                errorTracer.Exceptional = true;
+                errorTracer.Exception = e;
+                return null;
+            }
+        }
+
         private class ExportFactoryHelper
         {
             private readonly ExportMetadata _buildMetadata;
@@ -34,10 +83,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             }
 
             [CanBeNull]
-            public object BuildUp([CanBeNull] BuildParameter[] parameters)
-            {
-                return BuildUp(parameters, null);
-            }
+            public object BuildUp([CanBeNull] BuildParameter[] parameters) => BuildUp(parameters, null);
 
             [CanBeNull]
             public object BuildUp([CanBeNull] BuildParameter[] parameters, [CanBeNull] ErrorTracer error)
@@ -59,74 +105,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             }
 
             [NotNull]
-            public object Metadata()
-            {
-                return _metadataObject;
-            }
+            public object Metadata() => _metadataObject;
         }
-
-        #region Constructors and Destructors
-
-        public SimpleResolver([NotNull] ExportMetadata metadata, [NotNull] IContainer container,
-            bool isExportFactory, [CanBeNull] Type factoryType, [CanBeNull] object metadataObject,
-            [CanBeNull] Type metadataType, [CanBeNull] InterceptorCallback interceptor, bool isDescriptor,
-            [NotNull] IResolverExtension[] extensions)
-        {
-            if (metadata == null) throw new ArgumentNullException(nameof(metadata));
-            if (container == null) throw new ArgumentNullException(nameof(container));
-            if (extensions == null) throw new ArgumentNullException(nameof(extensions));
-            Metadata = metadata;
-            Container = container;
-            _isExportFactory = isExportFactory;
-            _factoryType = factoryType;
-            _metadataObject = metadataObject;
-            _metadataType = metadataType;
-            _interceptor = interceptor;
-            _isDescriptor = isDescriptor;
-            _extensions = extensions;
-        }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        public object Create([NotNull] ErrorTracer errorTracer)
-        {
-            errorTracer.Phase = "Injecting Import For " + Metadata;
-
-            var helper = new ExportFactoryHelper(Container, Metadata, _metadataObject, _interceptor, _extensions);
-
-            try
-            {
-                if (_isDescriptor) return new ExportDescriptor(Metadata);
-
-                if (_isExportFactory)
-                    return
-                        Activator.CreateInstance(
-                            typeof(InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
-                            new Func<BuildParameter[], object>(helper.BuildUp),
-                            new Func<object>(helper.Metadata), Metadata.Export.ImplementType);
-                try
-                {
-                    errorTracer.IncrementIdent();
-                    return helper.BuildUp(null, errorTracer);
-                }
-                finally
-                {
-                    errorTracer.DecrementIdent();
-                }
-            }
-            catch (Exception e)
-            {
-                errorTracer.Exceptional = true;
-                errorTracer.Exception = e;
-                return null;
-            }
-        }
-
-        #endregion
-
-        #region Fields
 
         private readonly Type _factoryType;
         private readonly bool _isExportFactory;
@@ -135,19 +115,10 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         private readonly InterceptorCallback _interceptor;
         private readonly bool _isDescriptor;
         private readonly IResolverExtension[] _extensions;
-
-        #endregion
-
-        #region Public Properties
-
-        /// <summary>Gets the container.</summary>
-        [NotNull]
+        
         public IContainer Container { get; }
-
-        /// <summary>Gets the metadata.</summary>
+        
         [NotNull]
         public ExportMetadata Metadata { get; }
-
-        #endregion
     }
 }

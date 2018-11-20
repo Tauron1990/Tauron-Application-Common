@@ -2,21 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
 {
     internal class XmlListSubSerializerMapper : MappingEntryBase<XmlElementContext>
     {
-        private readonly XmlElementTarget _target;
+        private readonly ListBuilder _listBuilder;
         private readonly XmlElementTarget _rootTarget;
         private readonly ISubSerializer _serializer;
-        private readonly ListBuilder _listBuilder;
+        private readonly XmlElementTarget _target;
 
-        public XmlListSubSerializerMapper([CanBeNull] string membername, [NotNull] Type targetType,
-                                          [CanBeNull] XmlElementTarget target, [CanBeNull] XmlElementTarget rootTarget,
-                                          [CanBeNull] ISubSerializer serializer)
+        public XmlListSubSerializerMapper([CanBeNull] string membername, [NotNull] Type targetType, [CanBeNull] XmlElementTarget target, [CanBeNull] XmlElementTarget rootTarget, 
+            [CanBeNull] ISubSerializer serializer)
             : base(membername, targetType)
         {
             _target = target;
@@ -30,9 +29,7 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
             _listBuilder.Begin(null, false);
 
             foreach (var xElement in GetElements(false, context.XElement, -1) ?? Enumerable.Empty<XElement>())
-            {
                 _listBuilder.Add(_serializer.Deserialize(context.Original.CreateSnapshot(xElement.ToString())));
-            }
 
             SetValue(target, _listBuilder.End());
         }
@@ -41,21 +38,20 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
         {
             _listBuilder.Begin(GetValue(target), true);
 
-            object[] obj = _listBuilder.Objects;
-            XElement[] eles = GetElements(true, context.XElement, obj.Length).ToArray();
+            var obj = _listBuilder.Objects;
+            var eles = GetElements(true, context.XElement, obj.Length)?.ToArray();
 
-            for (int i = 0; i < obj.Length; i++)
+            for (var i = 0; i < obj.Length; i++)
             {
                 var snapshot = context.Original.CreateSnapshot(new byte[0]);
 
                 _serializer.Serialize(snapshot, obj[i]);
 
-                var targetEle = eles[i];
+                var targetEle = eles?[i];
                 var stringVal = snapshot.TextReader.ReadToEnd();
 
-                if (stringVal.StartsWith("<") && stringVal.EndsWith(">")) targetEle.Add(XElement.Parse(stringVal));
-                else targetEle.Value = stringVal;
-
+                if (stringVal.StartsWith("<") && stringVal.EndsWith(">")) targetEle?.Add(XElement.Parse(stringVal));
+                else if (targetEle != null) targetEle.Value = stringVal;
             }
 
             _listBuilder.End();
@@ -69,19 +65,19 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper.Xml
             if (realRoot == null && forWrite) throw new InvalidOperationException("Attributes not Supported");
 
             return realRoot == null
-                       ? Enumerable.Empty<XElement>()
-                       : XmlElementSerializer.GetElements(realRoot, forWrite, _target, count);
+                ? Enumerable.Empty<XElement>()
+                : XmlElementSerializer.GetElements(realRoot, forWrite, _target, count);
         }
 
         public override Exception VerifyError()
         {
-            Exception e = base.VerifyError() ?? _listBuilder.VerifyError();
+            var e = base.VerifyError() ?? _listBuilder.VerifyError();
 
             if (_rootTarget == null)
-                e = new ArgumentNullException("Path to Elements: null");
+                e = new ArgumentNullException(nameof(_rootTarget), @"Path to Elements: null");
 
-            if(_serializer == null)
-                e = new ArgumentNullException("SubSerializer is Null");
+            if (_serializer == null)
+                e = new ArgumentNullException(nameof(_serializer), @"SubSerializer is Null");
 
             return e;
         }

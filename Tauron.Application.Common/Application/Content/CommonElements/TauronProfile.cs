@@ -1,54 +1,24 @@
-﻿#region
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 using NLog;
 
-#endregion
-
 namespace Tauron.Application
 {
-    /// <summary>The tauron profile.</summary>
     [PublicAPI]
     public abstract class TauronProfile : ObservableObject, IEnumerable<string>
     {
-        #region Static Fields
-
-        /// <summary>The content splitter.</summary>
         private static readonly char[] ContentSplitter = {'='};
-
-        #endregion
-
-        #region Constructors and Destructors
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="TauronProfile" /> class.
-        ///     Initialisiert eine neue Instanz der <see cref="TauronProfile" /> Klasse.
-        ///     Initializes a new instance of the <see cref="TauronProfile" /> class.
-        /// </summary>
-        /// <param name="application">
-        ///     The application.
-        /// </param>
-        /// <param name="dafaultPath">
-        ///     The dafault path.
-        /// </param>
-        protected TauronProfile([NotNull] string application, [NotNull] string dafaultPath)
+        
+        protected TauronProfile([NotNull] string application, [NotNull] string defaultPath)
         {
-            if (string.IsNullOrWhiteSpace(application)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(application));
-            if (string.IsNullOrWhiteSpace(dafaultPath)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(dafaultPath));
-            Application = application;
-            _defaultPath = dafaultPath;
+            Application = Argument.NotNull(application, nameof(application));
+            _defaultPath = Argument.NotNull(defaultPath, nameof(defaultPath));
             LogCategory = "Tauron Profile";
         }
-
-        #endregion
-
-        #region Indexers
-
+        
         public virtual string this[[NotNull] string key]
         {
             get => _settings[key];
@@ -56,84 +26,44 @@ namespace Tauron.Application
             set
             {
                 IlligalCharCheck(key);
-
                 _settings[key] = value;
             }
         }
 
-        #endregion
+        public IEnumerator<string> GetEnumerator() => _settings.Select(k => k.Key).GetEnumerator();
 
-        public IEnumerator<string> GetEnumerator()
-        {
-            return _settings.Select(k => k.Key).GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        #region Fields
-
-        /// <summary>The _default path.</summary>
         private readonly string _defaultPath;
-
-        /// <summary>The _settings.</summary>
+        
         private readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
-
-        #endregion
-
-        #region Public Properties
-
+        
         public int Count => _settings.Count;
-
-        /// <summary>Gets the application.</summary>
-        /// <value>The application.</value>
+        
         [NotNull]
         public string Application { get; private set; }
-
-        /// <summary>Gets the name.</summary>
-        /// <value>The name.</value>
-        [NotNull]
+        
+        [CanBeNull]
         public string Name { get; private set; }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>Gets the dictionary.</summary>
-        /// <value>The dictionary.</value>
-        [NotNull]
+        
+        [CanBeNull]
         protected string Dictionary { get; private set; }
-
-        /// <summary>Gets the file path.</summary>
-        /// <value>The file path.</value>
-        [NotNull]
+        
+        [CanBeNull]
         protected string FilePath { get; private set; }
-
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>The delete.</summary>
+        
         public void Delete()
         {
             _settings.Clear();
 
-            Log.Write("Delete Profile infos... " + Dictionary.PathShorten(20), LogLevel.Info);
+            Log.Write("Delete Profile infos... " + Dictionary?.PathShorten(20), LogLevel.Info);
 
-            Dictionary.DeleteDirectory();
+            Dictionary?.DeleteDirectory();
         }
-
-        /// <summary>
-        ///     The load.
-        /// </summary>
-        /// <param name="name">
-        ///     The name.
-        /// </param>
+        
         public virtual void Load([NotNull] string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
+            Argument.NotNull(name, nameof(name));
             IlligalCharCheck(name);
 
             Name = name;
@@ -154,14 +84,15 @@ namespace Tauron.Application
                 _settings[vals[0]] = vals[1];
             }
         }
-
-        /// <summary>The save.</summary>
+        
         public virtual void Save()
         {
             Log.Write("Begin Save Profile infos...", LogLevel.Info);
 
-            using (var writer = FilePath.OpenTextWrite())
+            using (var writer = FilePath?.OpenTextWrite())
             {
+                if(writer == null) return;
+
                 foreach (var pair in _settings)
                 {
                     writer.WriteLine("{0}={1}", pair.Key, pair.Value);
@@ -170,57 +101,28 @@ namespace Tauron.Application
                 }
             }
         }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        ///     The get value.
-        /// </summary>
-        /// <param name="key">
-        ///     The key.
-        /// </param>
-        /// <param name="defaultValue">
-        ///     The default value.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="string" />.
-        /// </returns>
+        
         [NotNull]
         public virtual string GetValue([NotNull] string key, [NotNull] string defaultValue)
         {
-            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(key));
-            if (string.IsNullOrWhiteSpace(defaultValue)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(defaultValue));
+            Argument.NotNull(key, nameof(key));
+            Argument.NotNull((object)defaultValue, nameof(defaultValue));
+
             IlligalCharCheck(key);
 
             return !_settings.ContainsKey(key) ? defaultValue : _settings[key];
         }
-
-        /// <summary>
-        ///     The set vaue.
-        /// </summary>
-        /// <param name="key">
-        ///     The key.
-        /// </param>
-        /// <param name="value">
-        ///     The value.
-        /// </param>
+        
         public virtual void SetVaue([NotNull] string key, [NotNull] object value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(key));
+            Argument.NotNull(key, nameof(key));
+            Argument.NotNull(value, nameof(value));
             IlligalCharCheck(key);
 
             _settings[key] = value.ToString();
             OnPropertyChangedExplicit(key);
         }
 
-        private void IlligalCharCheck([NotNull] string key)
-        {
-            if (key.Contains("=")) throw new ArgumentException("The Contains an Illigal Char: =");
-        }
-
-        #endregion
+        private void IlligalCharCheck([NotNull] string key) => Argument.Check(key.Contains('='), () => new ArgumentException($"The Key ({key}) Contains an Illigal Char: ="));
     }
 }

@@ -2,27 +2,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
 {
     internal class ListBuilder : IEnumerable
     {
-        private readonly Type _listType;
         private readonly bool _isArray;
+        private readonly Type _listType;
+        private Type _elemenType;
+        private IEnumerable _enumerable;
+
+        private IList _list;
 
         public ListBuilder([CanBeNull] Type listType)
         {
-            if(listType == null) return;
+            if (listType == null) return;
 
             _isArray = listType.IsArray;
 
-            _listType = _isArray ? typeof (ArrayList) : listType;
+            _listType = _isArray ? typeof(ArrayList) : listType;
         }
-
-        private IList _list;
-        private IEnumerable _enumerable;
-        private Type _elemenType;
 
         [NotNull]
         public object[] Objects => _enumerable.Cast<object>().ToArray();
@@ -40,19 +40,22 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
             }
         }
 
+        public IEnumerator GetEnumerator() => _list.GetEnumerator();
+
         [CanBeNull]
         private Type GetElementType()
         {
             Type elementType;
 
-            if (_isArray) elementType = _listType.GetElementType();
+            if (_isArray)
+                elementType = _listType.GetElementType();
             else
             {
                 if (!_listType.IsGenericType) return null;
 
                 elementType = _listType.GenericTypeArguments[0];
 
-                Type checkList = typeof (ICollection<>).MakeGenericType(elementType);
+                var checkList = typeof(ICollection<>).MakeGenericType(elementType);
 
                 return checkList.IsAssignableFrom(_listType) ? elementType : null;
             }
@@ -77,13 +80,11 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
 
             _list = Activator.CreateInstance(_listType) as IList;
 
-            if (_list == null) throw new InvalidOperationException("No IList Implemented");
+            if (_list == null)
+                throw new InvalidOperationException("No IList Implemented");
         }
 
-        public void Add([CanBeNull] object value)
-        {
-            _list.Add(value);
-        }
+        public void Add([CanBeNull] object value) => _list.Add(value);
 
         [CanBeNull]
         public object End()
@@ -96,11 +97,14 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
 
                 if (_isArray)
                 {
-                    Array arr = Array.CreateInstance(_listType.GetElementType(), _list.Count);
+                    var arr = Array.CreateInstance(Argument.CheckResult(_listType.GetElementType(), "Initialization Error"), _list.Count);
                     _list.CopyTo(arr, 0);
                     value = arr;
                 }
-                else value = _list;
+                else
+                {
+                    value = _list;
+                }
 
                 return value;
             }
@@ -111,19 +115,14 @@ namespace Tauron.Application.Files.Serialization.Core.Impl.Mapper
             }
         }
 
-        public IEnumerator GetEnumerator()
-        {
-            return _list.GetEnumerator();
-        }
-
         [CanBeNull]
         public Exception VerifyError()
         {
             if (_listType == null) return new SerializerElementNullException("Unkowen List Type");
 
-            return _listType.IsAssignableFrom(typeof (IList))
-                       ? new SerializerElementException("In Compatible MemerType! Must implement IList")
-                       : null;
+            return _listType.IsAssignableFrom(typeof(IList))
+                ? new SerializerElementException("In Compatible MemerType! Must implement IList")
+                : null;
         }
     }
 }

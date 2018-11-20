@@ -17,7 +17,7 @@
 
 using System;
 using System.Reflection;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 #endregion
 

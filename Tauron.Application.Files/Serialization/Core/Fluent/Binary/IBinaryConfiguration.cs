@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
-using Tauron.JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Fluent
 {

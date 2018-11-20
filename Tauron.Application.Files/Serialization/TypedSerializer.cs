@@ -1,64 +1,34 @@
-﻿using System;
+﻿using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core;
 using Tauron.Application.Files.Serialization.Sources;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization
 {
     [PublicAPI]
     public sealed class TypedSerializer<TType>
-        where TType : class 
+        where TType : class
     {
-        private readonly ISerializer _serializer;
+        public TypedSerializer([NotNull] ISerializer serializer) => Serializer = Argument.NotNull(serializer, nameof(serializer));
 
         [NotNull]
-        public ISerializer Serializer => _serializer;
+        public ISerializer Serializer { get; }
+        
+        public void Serialize([NotNull] IStreamSource source, [NotNull] TType graph) 
+            => Serializer.Serialize(Argument.NotNull(source, nameof(source)), Argument.NotNull(graph, nameof(graph)));
 
-        public TypedSerializer([NotNull] ISerializer serializer)
-        {
-            if (serializer == null) throw new ArgumentNullException("serializer");
-            _serializer = serializer;
-        }
-
-        #region IStreamSource
-
-        public void Serialize([NotNull] IStreamSource source, [NotNull] TType graph)
-        {
-            _serializer.Serialize(source, graph);
-        }
-
-        public void Deserialize([NotNull] IStreamSource source, [NotNull] TType target)
-        {
-            _serializer.Deserialize(source, target);
-        }
+        public void Deserialize([NotNull] IStreamSource source, [NotNull] TType target) 
+            => Serializer.Deserialize(Argument.NotNull(source, nameof(source)), Argument.NotNull(target, nameof(target)));
 
         [NotNull]
-        public TType Deserialize([NotNull] IStreamSource source)
-        {
-            return (TType) _serializer.Deserialize(source);
-        }
-
-        #endregion
-
-        #region Files
+        public TType Deserialize([NotNull] IStreamSource source) => (TType) Serializer.Deserialize(Argument.NotNull(source, nameof(source)));
 
         public void Serialize([NotNull] string file, [NotNull] TType graph)
-        {
-            _serializer.Serialize(new FileSource(file), graph);
-        }
+            => Serializer.Serialize(new FileSource(Argument.NotNull(file, nameof(file))), Argument.NotNull(graph, nameof(graph)));
 
-        public void Deserialize([NotNull] string file, [NotNull] TType target)
-        {
-            _serializer.Deserialize(new FileSource(file), target);
-        }
+        public void Deserialize([NotNull] string file, [NotNull] TType target) 
+            => Serializer.Deserialize(new FileSource(Argument.NotNull(file, nameof(file))), Argument.NotNull(target, nameof(target)));
 
         [NotNull]
-        public TType Deserialize([NotNull] string file)
-        {
-            return (TType)_serializer.Deserialize(new FileSource(file));
-        }
-
-        #endregion
-
+        public TType Deserialize([NotNull] string file) => (TType) Serializer.Deserialize(new FileSource(file));
     }
 }

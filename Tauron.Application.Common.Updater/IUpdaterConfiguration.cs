@@ -1,8 +1,10 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Tauron.Application.Common.Updater.Provider;
 
 namespace Tauron.Application.Common.Updater
 {
+    [PublicAPI]
     public interface IUpdaterConfiguration
     {
         IUpdateProvider Provider { get; set; }

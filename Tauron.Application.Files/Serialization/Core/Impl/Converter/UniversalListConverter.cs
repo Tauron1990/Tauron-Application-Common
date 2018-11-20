@@ -1,20 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Tauron.Application.Files.Serialization.Core.Impl.Mapper;
 using Tauron.Application.Files.Serialization.Core.Managment;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.Serialization.Core.Impl
 {
     internal class UniversalListConverter : SimpleConverter<IEnumerable<string>>
     {
         private readonly SimpleConverter<string> _baseConverter;
-        private readonly ListBuilder _listBuilder;
+        private readonly ListBuilder             _listBuilder;
 
         public UniversalListConverter([NotNull] SimpleConverter<string> baseConverter, [NotNull] ListBuilder listBuilder)
         {
-            _baseConverter = baseConverter;
-            _listBuilder = listBuilder;
+            _baseConverter = Argument.NotNull(baseConverter, nameof(baseConverter));
+            _listBuilder   = Argument.NotNull(listBuilder, nameof(listBuilder));
         }
 
         public override object ConvertBack([NotNull] IEnumerable<string> target)

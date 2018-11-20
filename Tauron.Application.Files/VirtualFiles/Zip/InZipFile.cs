@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using Ionic.Zip;
+using JetBrains.Annotations;
 using Tauron.Application.Files.VirtualFiles.Core;
-using Tauron.JetBrains.Annotations;
 
 namespace Tauron.Application.Files.VirtualFiles.Zip
 {
@@ -14,8 +14,7 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
             private readonly ZipFile _file;
             private readonly Action<ZipEntry> _updateAction;
 
-            public ZipWriteHelper([NotNull] string entry, [NotNull] ZipFile file, [NotNull] byte[] buffer,
-                [NotNull]Action<ZipEntry> updateAction)
+            public ZipWriteHelper([NotNull] string entry, [NotNull] ZipFile file, [NotNull] byte[] buffer, [NotNull] Action<ZipEntry> updateAction)
                 : base(buffer)
             {
                 _entry = entry;
@@ -26,18 +25,17 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
             protected override void Dispose(bool disposing)
             {
                 _updateAction(_file.UpdateEntry(_entry, GetBuffer()));
-
                 base.Dispose(disposing);
             }
         }
 
-        private readonly ZipFile _file;
         private readonly InternalZipDirectory _directory;
         private readonly ZipEntry _entry;
 
-        public InZipFile([NotNull] IDirectory parentDirectory, [NotNull] string originalPath, 
-            [NotNull] ZipFile file, [NotNull] InternalZipDirectory directory, [CanBeNull] ZipEntry entry)
-            : base(parentDirectory, originalPath)
+        private readonly ZipFile _file;
+
+        public InZipFile([NotNull] IDirectory parentDirectory, [NotNull] string originalPath, [NotNull] ZipFile file, [NotNull] InternalZipDirectory directory, [CanBeNull] ZipEntry entry)
+            : base(() => parentDirectory, originalPath, Path.GetFileName(entry?.FileName ?? string.Empty))
         {
             _file = file;
             _directory = directory;
@@ -49,36 +47,23 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
 
         public override bool Exist => InfoObject == null;
 
+        public override string Extension
+        {
+            get => InfoObject.FileName.GetExtension();
+            set => throw new NotSupportedException();
+        }
+
+        public override IFile MoveTo(string location) => throw new NotSupportedException();
+
+        public override long Size => InfoObject.UncompressedSize;
+
         protected override void DeleteImpl()
         {
             _file.RemoveEntry(InfoObject);
             Reset(OriginalPath, ParentDirectory);
         }
 
-        protected override ZipEntry GetInfo(string path)
-        {
-            return _entry;
-        }
-
-        public override string Extension
-        {
-            get
-            {
-                return InfoObject.FileName.GetExtension();
-            }
-            set
-            {
-                Name = Path.ChangeExtension(Name, value);
-            }
-        }
-
-        public override string Name
-        {
-            get { return InfoObject.FileName; } 
-            set { InfoObject.FileName = value; }
-        }
-
-        public override long Size => InfoObject.UncompressedSize;
+        protected override ZipEntry GetInfo(string path) => _entry;
 
         protected override Stream CreateStream(FileAccess access, InternalFileMode mode)
         {
@@ -96,7 +81,7 @@ namespace Tauron.Application.Files.VirtualFiles.Zip
                         return new ZipWriteHelper(InfoObject.FileName, _file, stream.GetBuffer(), ZipEntryUpdated);
                     }
                 default:
-                    throw new ArgumentOutOfRangeException("access");
+                    throw new ArgumentOutOfRangeException(nameof(access));
             }
         }
 

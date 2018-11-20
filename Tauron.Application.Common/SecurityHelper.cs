@@ -1,11 +1,12 @@
 ﻿using System.Security;
-using System.Security.Permissions;
+using JetBrains.Annotations;
 
 namespace Tauron
 {
+    [PublicAPI]
     public static class SecurityHelper
     {
-        public static bool IsPermissinGrantedCommon(IPermission permission)
+        public static bool IsGranted(this IPermission permission)
         {
             try
             {
@@ -16,11 +17,6 @@ namespace Tauron
             {
                 return false;
             }
-        }
-
-        public static bool IsEnvironmentPermissionGranted()
-        {
-            return IsPermissinGrantedCommon(new EnvironmentPermission(PermissionState.Unrestricted));
         }
     }
 }
