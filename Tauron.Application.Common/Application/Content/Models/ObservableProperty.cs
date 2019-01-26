@@ -13,6 +13,8 @@ namespace Tauron.Application.Models
     [PublicAPI]
     public sealed class ObservablePropertyMetadata
     {
+        [CanBeNull] private string _displayName;
+
         public ObservablePropertyMetadata([CanBeNull] object defaultValue, bool isReadOnly,
             [CanBeNull] ObservableValidateValueCallback validateValueCallback,
             [CanBeNull] ObservableCoerceValueCallback coerceValueCallback,
@@ -65,11 +67,26 @@ namespace Tauron.Application.Models
 
         public bool ForceAllValidation { get; set; }
 
-        internal bool Prepare([NotNull] Type targetType)
+        private string _propertyName;
+        [CanBeNull]
+        public string DisplayName
         {
-            if (targetType == null) throw new ArgumentNullException(nameof(targetType));
-            if (DefaultValue != null && targetType != DefaultValue.GetType()) return false;
+            get => _displayName ?? _propertyName;
+            set => _displayName = value;
+        }
 
+        internal bool Prepare([NotNull] Type targetType, [NotNull]Type ownerType, [NotNull]string propertyName)
+        {
+            Argument.NotNull(targetType, nameof(targetType));
+            Argument.NotNull(ownerType, nameof(ownerType));
+            Argument.NotNull(propertyName, nameof(propertyName));
+
+            _propertyName = propertyName;
+            if (string.IsNullOrWhiteSpace(DisplayName))
+                DisplayName = DisplayNameHelper.GetDisplayName(ownerType.Name, propertyName, () => ownerType.GetProperty(propertyName));
+
+            if (DefaultValue != null && targetType != DefaultValue.GetType()) return false;
+            
             try
             {
                 if (DefaultValue != null && targetType.BaseType == typeof(ValueType))
@@ -100,12 +117,12 @@ namespace Tauron.Application.Models
     public sealed class ObservableProperty : IEquatable<ObservableProperty>
     {
         public ObservableProperty([NotNull] string name, [NotNull] Type type,
-            [CanBeNull] ObservablePropertyMetadata metadata)
+            [CanBeNull] ObservablePropertyMetadata metadata, Type ownerType)
         {
             Name = Argument.NotNull(name, nameof(name));
             Type = Argument.NotNull(type, nameof(type));
             Metadata = metadata ?? new ObservablePropertyMetadata();
-            Metadata.Prepare(Type);
+            Metadata.Prepare(Type, ownerType, name);
         }
 
         [NotNull]

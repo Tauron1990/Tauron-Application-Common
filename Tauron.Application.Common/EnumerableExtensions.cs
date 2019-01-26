@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using JetBrains.Annotations;
 
 namespace Tauron
@@ -76,5 +77,25 @@ namespace Tauron
         }
         
         public static int IndexOf<T>([NotNull] this IEnumerable<T> items, T item) => items.FindIndex(i => EqualityComparer<T>.Default.Equals(item, i));
+        
+        public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size)
+        {
+            Argument.NotNull(array, nameof(array));
+
+            for (var i = 0; i < (float)array.Length / size; i++)
+            {
+                yield return array.Skip(i * size).Take(size);
+            }
+        }
+
+        public static IEnumerable<IEnumerable<T>> Split<T>(this List<T> array, int size)
+        {
+            Argument.NotNull(array, nameof(array));
+
+            for (var i = 0; i < (float)array.Count / size; i++)
+            {
+                yield return array.Skip(i * size).Take(size);
+            }
+        }
     }
 }

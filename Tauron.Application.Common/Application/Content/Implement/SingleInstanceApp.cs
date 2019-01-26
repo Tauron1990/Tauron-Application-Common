@@ -66,7 +66,7 @@ namespace Tauron.Application.Implement
 
             var channelName = GetName(applicationIdentifier);
 
-            // Create mutex based on unique application Id to check if this is the first instance of the application.
+            // CreateResult mutex based on unique application Id to check if this is the first instance of the application.
             _singleInstanceMutex = new Mutex(true, applicationIdentifier, out var firstInstance);
             if (firstInstance)
             {

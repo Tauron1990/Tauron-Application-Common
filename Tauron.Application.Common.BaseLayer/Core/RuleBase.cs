@@ -17,7 +17,7 @@ namespace Tauron.Application.Common.BaseLayer.Core
         public virtual string InitializeMethod { get; }
         public abstract object GenericAction(object input);
 
-        protected internal void SetError(params object[] errors)
+        protected internal void SetError([CanBeNull]params object[] errors)
         {
             SetError((IEnumerable<object>) errors);
         }

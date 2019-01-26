@@ -51,6 +51,7 @@ namespace Tauron.Application
         {
             try
             {
+
                 _callback();
                 _task.SetResult(null);
             }

@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using Tauron.Application.Common.CastleProxy;
 using Tauron.Application.Implementation;
 using Tauron.Application.Ioc;
 
@@ -36,8 +37,8 @@ namespace Tauron.Application
             : base(doStartup, new SplashService(), new WpfIuiControllerFactory()) { }
 
 
-        protected WpfApplication(bool doStartup, System.Windows.Application app)
-            : base(doStartup, new SplashService(), new WpfIuiControllerFactory(app)) { }
+        protected WpfApplication(bool doStartup, System.Windows.Application app, bool isInit)
+            : base(doStartup, new SplashService(), new WpfIuiControllerFactory(app, isInit)) { }
         
         [CanBeNull]
         public string ThemeDictionary { get; set; }
@@ -81,8 +82,8 @@ namespace Tauron.Application
                 Layout = "${log4jxmlevent}",
                 ArchiveAboveSize = 10485760,
                 MaxArchiveFiles = 10,
-                ArchiveFileName = GetdefaultFileLocation().CombinePath("Logs\\Tauron.Application.Common.{##}.log"),
-                FileName = GetdefaultFileLocation().CombinePath("Logs\\Tauron.Application.Common.log"),
+                ArchiveFileName = GetdefaultFileLocation().CombinePath("Logs\\Tauron.Application.Common.{##}.xml"),
+                FileName = GetdefaultFileLocation().CombinePath("Logs\\Tauron.Application.Common.xml"),
                 ArchiveNumbering = ArchiveNumberingMode.Rolling
             };
             config.AddTarget(filetarget);
@@ -95,6 +96,7 @@ namespace Tauron.Application
             var con = base.CreateContainer();
 
             con.Register(new PropertyModelExtension());
+            con.Register(new ProxyExtension());
             return con;
         }
 

@@ -10,6 +10,7 @@ namespace Tauron.Application.Implementation
     internal class WpfApplicationController : IUIController
     {
         private static ManualResetEventSlim _waiter;
+        internal static bool IsInitialized;
 
         public void Run(IWindow window)
         {
@@ -37,7 +38,7 @@ namespace Tauron.Application.Implementation
                 if (!(value is WpfWindow wpfwindow))
                     throw new InvalidOperationException();
 
-                Application.MainWindow = (Window) wpfwindow.TranslateForTechnology();
+                UiSynchronize.Synchronize.Invoke(() => Application.MainWindow = (Window) wpfwindow.TranslateForTechnology());
             }
         }
 
@@ -59,8 +60,11 @@ namespace Tauron.Application.Implementation
 
         internal static void Initialize([CanBeNull] CultureInfo info)
         {
-            if (Application != null) return;
+            if(IsInitialized)
+                RunApplication();
 
+            if (Application != null) return;
+            
             _waiter = new ManualResetEventSlim();
             var runner = new Thread(RunApplication) {IsBackground = false};
 
@@ -82,8 +86,13 @@ namespace Tauron.Application.Implementation
 
         private static void RunApplication()
         {
-            Application = new System.Windows.Application {ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown};
+            if(Application == null) return;
+                Application = new System.Windows.Application {ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown};
+
             WpfIuiControllerFactory.SetSynchronizationContext();
+
+            if(_waiter == null) return;
+
             _waiter.Set();
             lock (_waiterLock)
             {

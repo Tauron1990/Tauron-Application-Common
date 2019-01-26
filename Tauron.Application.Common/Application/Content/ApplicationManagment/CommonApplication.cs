@@ -24,7 +24,7 @@ namespace Tauron.Application
         {
             Factory = Argument.NotNull(factory, nameof(factory));
             Current = this;
-            _scheduler = taskScheduler ?? new TaskScheduler(UiSynchronize.Synchronize);
+            _scheduler = taskScheduler ?? new TaskScheduler(UiSynchronize.Synchronize, "Application thread");
             _splash = service ?? new NullSplash();
             _doStartup = doStartup;
             SourceAssembly = new AssemblyName(Assembly.GetAssembly(GetType()).FullName).Name;
@@ -93,9 +93,9 @@ namespace Tauron.Application
 
             internal sealed class UiSyncFake : IUISynchronize
             {
-                public Task BeginInvoke(Action action) => QueueWorkitemAsync(action, false);
+                public Task BeginInvoke(Action action) => QueueWorkitemAsync(action);
 
-                public Task<TResult> BeginInvoke<TResult>(Func<TResult> action) => (Task<TResult>) QueueWorkitemAsync(action, false);
+                public Task<TResult> BeginInvoke<TResult>(Func<TResult> action) => (Task<TResult>) QueueWorkitemAsync(action);
 
                 public void Invoke(Action action) => action();
 
@@ -211,9 +211,11 @@ namespace Tauron.Application
         }
 
         [NotNull]
-        public static Task QueueWorkitemAsync([NotNull] Action action, bool withDispatcher) => Scheduler.QueueTask(new UserTask(Argument.NotNull(action, nameof(action)), withDispatcher));
+        public static Task QueueWorkitemAsync([NotNull] Action action, bool withDispatcher = false)
+            => Scheduler.QueueTask(new UserTask(Argument.NotNull(action, nameof(action)), withDispatcher));
 
-        public static Task QueueWorkitemAsync<TResult>([NotNull] Func<TResult> action, bool withDispatcher) => Scheduler.QueueTask(new UserResultTask<TResult>(Argument.NotNull(action, nameof(action)), withDispatcher));
+        public static Task QueueWorkitemAsync<TResult>([NotNull] Func<TResult> action, bool withDispatcher = false)
+            => Scheduler.QueueTask(new UserResultTask<TResult>(Argument.NotNull(action, nameof(action)), withDispatcher));
 
         [NotNull]
         public string[] GetArgs() => (string[]) _args.Clone();
@@ -309,7 +311,7 @@ namespace Tauron.Application
             }
             catch (Exception e)
             {
-                LogManager.GetLogger("CommonApplication", typeof(CommonApplication)).Error(e);
+                LogManager.GetCurrentClassLogger().Error(e);
 
                 SplashMessageListener.CurrentListner.Message = e.Message;
                 OnStartupError(e);

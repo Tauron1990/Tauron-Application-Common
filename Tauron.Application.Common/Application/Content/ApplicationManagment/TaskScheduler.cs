@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NLog;
@@ -16,6 +17,8 @@ namespace Tauron.Application
     [PublicAPI, DebuggerStepThrough]
     public sealed class TaskScheduler : ITaskScheduler
     {
+        private readonly string _name;
+
         public bool Disposed => _disposed;
         
         private readonly BlockingCollection<ITask> _collection;
@@ -29,8 +32,9 @@ namespace Tauron.Application
         private Task _task;
         
 
-        public TaskScheduler([NotNull] IUISynchronize synchronizationContext)
+        public TaskScheduler([NotNull] IUISynchronize synchronizationContext, string name)
         {
+            _name = name;
             _synchronizationContext = Argument.NotNull(synchronizationContext, nameof(synchronizationContext));
             _collection = new BlockingCollection<ITask>();
         }
@@ -80,6 +84,10 @@ namespace Tauron.Application
 
         private void EnterLoopPrivate()
         {
+            var thread = Thread.CurrentThread;
+            if (string.IsNullOrWhiteSpace(thread.Name) && !string.IsNullOrWhiteSpace(_name))
+                thread.Name = _name;
+
             foreach (var task in _collection.GetConsumingEnumerable())
                 try
                 {

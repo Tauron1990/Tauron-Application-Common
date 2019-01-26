@@ -20,7 +20,15 @@ namespace Tauron.Application.Common.BaseLayer.Data
         T GetContext<T>();
 
         Task SaveChangesAsync(CancellationToken sourceToken);
+
+        //ILayerTransaction BeginTransaction();
     }
+
+    //public interface ILayerTransaction : IDisposable
+    //{
+    //    void Commit();
+    //    void Rollback();
+    //}
 
     [Export(typeof(RepositoryFactory))]
     [PublicAPI]
@@ -33,7 +41,8 @@ namespace Tauron.Application.Common.BaseLayer.Data
 
         private Dictionary<Type, (IDatabaseFactory, Type)> _databaseFactories;
 
-        [Inject] private List<IRepositoryExtender> _extenders;
+        [Inject]
+        private List<IRepositoryExtender> _extenders;
 
         private GroupDictionary<IDatabaseIdentifer, object> _repositorys;
 
@@ -85,14 +94,12 @@ namespace Tauron.Application.Common.BaseLayer.Data
         }
 
         public TRepo GetRepository<TRepo>()
-            where TRepo : class
-        {
-            return (TRepo) GetRepository(typeof(TRepo));
-        }
+            where TRepo : class => (TRepo) GetRepository(typeof(TRepo));
 
         public object GetRepository(Type repoType)
         {
-            if (!_databaseFactories.TryGetValue(repoType, out var fac)) throw new InvalidOperationException("No Repository Registrated");
+            if (!_databaseFactories.TryGetValue(repoType, out var fac))
+                throw new InvalidOperationException("No Repository Registrated");
 
             var dbEnt = _repositorys.FirstOrDefault(p => p.Key.Id == fac.Item1.Id);
 
@@ -121,33 +128,19 @@ namespace Tauron.Application.Common.BaseLayer.Data
         {
             private readonly RepositoryFactory _fac;
 
-            public NullDispose(RepositoryFactory fac)
-            {
-                _fac = fac;
-            }
+            public NullDispose(RepositoryFactory fac) => _fac = fac;
 
-            public void Dispose()
-            {
-            }
+            public void Dispose() { }
 
-            public void SaveChanges()
-            {
-            }
+            public void SaveChanges() { }
 
-            public T GetRepository<T>() where T : class
-            {
-                return _fac.GetRepository<T>();
-            }
+            public T GetRepository<T>() where T : class => _fac.GetRepository<T>();
 
-            public T GetContext<T>()
-            {
-                return default;
-            }
+            public T GetContext<T>() => default;
 
-            public Task SaveChangesAsync(CancellationToken sourceToken)
-            {
-                return Task.CompletedTask;
-            }
+            public Task SaveChangesAsync(CancellationToken sourceToken) => Task.CompletedTask;
+
+            //public ILayerTransaction BeginTransaction() => null;
         }
 
         private class DatabaseDisposer : IDatabaseAcess
@@ -177,20 +170,19 @@ namespace Tauron.Application.Common.BaseLayer.Data
                     database.SaveChanges();
             }
 
-            public T GetRepository<T>() where T : class
-            {
-                return _fac.GetRepository<T>();
-            }
+            public T GetRepository<T>() where T : class => _fac.GetRepository<T>();
 
-            public T GetContext<T>()
-            {
-                return (T) GetDbContext(typeof(T));
-            }
+            public T GetContext<T>() => (T) GetDbContext(typeof(T));
 
             public Task SaveChangesAsync(CancellationToken sourceToken)
             {
                 return Task.WhenAll(_databases.Keys.OfType<IDatabase>().Select(d => d.SaveChangesAsync(sourceToken)));
             }
+
+            //public ILayerTransaction BeginTransaction()
+            //{
+
+            //}
 
             private object GetDbContext(Type dbContext)
             {

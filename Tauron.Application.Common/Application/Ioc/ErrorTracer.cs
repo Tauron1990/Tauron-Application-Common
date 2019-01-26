@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Text;
 using JetBrains.Annotations;
+using Tauron.Application.Ioc.BuildUp.Exports;
 
 namespace Tauron.Application.Ioc
 {
@@ -42,10 +43,14 @@ namespace Tauron.Application.Ioc
 
         [NotNull]
         [DebuggerStepThrough]
-        public static string FormatExport([CanBeNull] Type type, [CanBeNull] object exportName)
-        {
-            if (type == null) type = typeof(object);
-            return "[" + type.Name + "|" + exportName + "]";
-        }
+        public static string FormatExport(ExportMetadata meta) => $"{meta.InterfaceType?.Name}|{meta.ContractName} -- {meta.Export.ImplementType?.Name}";
+
+        //([CanBeNull] Type type, [CanBeNull] object exportName)
+        //{
+        //    if (type == null) type = typeof(object);
+        //    return "[" + type.Name + "|" + exportName + "]";
+        public static string FormatExport(ImportMetadata meta) => $"{meta.InterfaceType?.Name}|{meta.ContractName} -- {meta.Export.ImplementType?.Name}";
+
+        public static string FormatExport(Type type, string contractName, string msg) => $"{type?.Name}|{contractName} -- {msg}";
     }
 }

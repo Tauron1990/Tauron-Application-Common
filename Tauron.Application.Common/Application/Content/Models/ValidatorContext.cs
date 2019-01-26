@@ -16,7 +16,7 @@ namespace Tauron.Application.Models
         [NotNull]
         public ModelBase Model { get; }
 
-        [CanBeNull]
+        [NotNull]
         public ObservableProperty Property { get; internal set; }
 
         [NotNull]

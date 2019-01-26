@@ -6,6 +6,6 @@ namespace Tauron.Application.Common.BaseLayer.Data
     public interface IRepositoryExtender
     {
         IDatabaseFactory DatabaseFactory { get; }
-        IEnumerable<(Type, Type)> GetRepositoryTypes();
+        IEnumerable<(Type Interface, Type Implementation)> GetRepositoryTypes();
     }
 }

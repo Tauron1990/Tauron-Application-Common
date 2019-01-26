@@ -1,6 +1,4 @@
-﻿//TODO Mybe Move Class
-
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace Tauron.Application.Ioc
 {

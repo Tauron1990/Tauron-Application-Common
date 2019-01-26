@@ -59,7 +59,7 @@ namespace Tauron.Application.Implementation
             }
             catch (Exception e)
             {
-                CommonWpfConstans.LogCommon(true, "ImageHelper: Faild To Create image: {0}", e);
+                CommonWpfConstans.LogCommon(true, "ImageHelper: Faild To CreateResult image: {0}", e);
 
                 return null;
             }

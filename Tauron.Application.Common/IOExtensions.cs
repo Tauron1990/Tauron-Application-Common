@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ using NLog;
 namespace Tauron
 {
     [PublicAPI]
+    [DebuggerStepThrough]
     public static class IOExtensions
     {
         [NotNull]
@@ -275,7 +277,7 @@ namespace Tauron
 
         public static bool ExisDirectory([NotNull] this string path)
         {
-            Argument.NotNull(path, nameof(path));
+            Argument.NotNull((object)path, nameof(path));
             return Directory.Exists(path);
         }
 

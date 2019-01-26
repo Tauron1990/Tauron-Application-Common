@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Resources;
 using System.Windows.Markup;
@@ -11,9 +10,6 @@ namespace Tauron.Application
     [PublicAPI]
     public class SimpleLocalize : MarkupExtension
     {
-        private static readonly Dictionary<Assembly, ResourceManager> Resources =
-            new Dictionary<Assembly, ResourceManager>();
-
         public SimpleLocalize([NotNull] string name) => Name = name;
 
         public SimpleLocalize() { }
@@ -21,9 +17,11 @@ namespace Tauron.Application
         [CanBeNull]
         public string Name { get; set; }
 
-        public static void Register([NotNull] ResourceManager manager, [NotNull] Assembly key) => Resources[Argument.NotNull(key, nameof(key))] = Argument.NotNull(manager, nameof(manager));
+        [Obsolete(nameof(ResourceManagerProvider))]
+        public static void Register([NotNull] ResourceManager manager, [NotNull] Assembly key) => ResourceManagerProvider.Register(manager, key);
 
-        public static void Remove([NotNull] Assembly key) => Resources.Remove(key);
+        [Obsolete(nameof(ResourceManagerProvider))]
+        public static void Remove([NotNull] Assembly key) => ResourceManagerProvider.Remove(key);
 
         public override object ProvideValue(IServiceProvider serviceProvider)
         {
@@ -32,9 +30,7 @@ namespace Tauron.Application
             var provider = serviceProvider.GetService(typeof(IRootObjectProvider)) as IRootObjectProvider;
             if (provider?.RootObject == null) return Name; // "IRootObjectProvider oder das RootObject existieren nicht!";
 
-            return Resources.TryGetValue(provider.RootObject.GetType().Assembly, out var manager)
-                ? manager.GetObject(Name)
-                : Name;
+            return ResourceManagerProvider.FindResource(Name, provider.RootObject.GetType().Assembly, false) ?? Name;
         }
     }
 }

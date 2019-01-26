@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Models.Rules
 {
@@ -6,23 +7,22 @@ namespace Tauron.Application.Models.Rules
     public sealed class RequiredRule : ModelRule
     {
         public RequiredRule()
-        {
-            Id = "RequiredRule";
-            Message = () => ResourceMessages.RequireRuleError.SFormat(FieldName);
-        }
+        : base(nameof(RequiredRule)) { }
 
         public string FieldName { get; set; }
 
         public bool AllowStringEmpty { get; set; }
 
-        public override bool IsValidValue(object obj, ValidatorContext context)
+        public override ValidatorResult IsValidValue(object value, ValidatorContext context)
         {
-            if (obj == null) return false;
-            var str = obj as string;
+            if (value == null) return Error(context);
 
-            if (str == null || AllowStringEmpty) return true;
+            if (!(value is string str) || AllowStringEmpty) return CreateResult();
 
-            return !string.IsNullOrWhiteSpace(str);
+            return string.IsNullOrWhiteSpace(str) ? Error(context) : CreateResult();
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ValidatorResult Error(ValidatorContext context) => CreateResult(RuleMessages.RequireRuleError.SFormat(context.Property.Name));
     }
 }

@@ -7,21 +7,23 @@ namespace Tauron.Application.Models
     [PublicAPI]
     public class ModelRule : IEquatable<ModelRule>
     {
-        public ModelRule([NotNull] Func<object, ValidatorContext, bool> validator) => Validator = Argument.NotNull(validator, nameof(validator));
-
-        protected ModelRule()
+        public ModelRule([NotNull] Func<object, ValidatorContext, ValidatorResult> validator, string id)
         {
+            Id = id;
+            Validator = Argument.NotNull(validator, nameof(validator));
         }
+
+        protected ModelRule(string id) => Id = Id;
 
         [CanBeNull]
         // ReSharper disable once MemberCanBePrivate.Global
-        protected Func<object, ValidatorContext, bool> Validator { get; set; }
+        protected Func<object, ValidatorContext, ValidatorResult> Validator { get; set; }
+
+        //[CanBeNull]
+        //public Func<string> Message { get; set; }
 
         [CanBeNull]
-        public Func<string> Message { get; set; }
-
-        [CanBeNull]
-        public string Id { get; set; }
+        public string Id { get; }
 
         public bool Equals(ModelRule other)
         {
@@ -37,7 +39,7 @@ namespace Tauron.Application.Models
 
         public static bool operator !=(ModelRule left, ModelRule right) => !Equals(left, right);
 
-        public virtual bool IsValidValue([CanBeNull] object obj, [NotNull] ValidatorContext context) => Validator == null || Validator(obj, context);
+        public virtual ValidatorResult IsValidValue([CanBeNull] object value, [NotNull] ValidatorContext context) => Validator == null ? CreateResult() : Validator(value, context);
 
         public override bool Equals(object obj)
         {
@@ -46,5 +48,11 @@ namespace Tauron.Application.Models
             if (obj.GetType() != GetType()) return false;
             return Equals((ModelRule) obj);
         }
+
+        [NotNull]
+        protected string FindResource(string name) => ResourceManagerProvider.FindResource(name, null) ?? string.Empty;
+
+        protected  static ValidatorResult CreateResult() => new ValidatorResult(string.Empty, true);
+        protected static ValidatorResult CreateResult(string message) => new ValidatorResult(message, false);
     }
 }

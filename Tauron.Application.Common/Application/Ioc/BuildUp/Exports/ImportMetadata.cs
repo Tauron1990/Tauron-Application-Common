@@ -8,13 +8,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
     [PublicAPI]
     public sealed class ImportMetadata : IEquatable<ImportMetadata>
     {
-        public ImportMetadata(
-            [CanBeNull] Type interfaceType,
-            [CanBeNull] string contractName,
-            [NotNull] IExport export,
-            [NotNull] string memberName,
-            bool optional,
-            [NotNull] IDictionary<string, object> metadata)
+        public ImportMetadata([CanBeNull] Type interfaceType, [CanBeNull] string contractName, [NotNull] IExport export, [NotNull] string memberName, bool optional, [NotNull] IDictionary<string, object> metadata)
         {
             InterfaceType = interfaceType;
             ContractName = contractName;
@@ -64,6 +58,6 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         }
 
         [DebuggerStepThrough]
-        public override string ToString() => ErrorTracer.FormatExport(InterfaceType, ContractName);
+        public override string ToString() => ErrorTracer.FormatExport(this);
     }
 }

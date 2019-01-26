@@ -17,6 +17,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
             Lifetime = Argument.NotNull(lifetime, nameof(lifetime));
             Metadata = Argument.NotNull(metadata, nameof(metadata));
             Export = Argument.NotNull(export, nameof(export));
+            InterfaceName = interfaceType?.Name;
         }
 
         [CanBeNull]
@@ -33,6 +34,8 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
 
         [CanBeNull]
         public Dictionary<string, object> Metadata { get; private set; }
+
+        public string InterfaceName { get; }
 
         public bool Equals(ExportMetadata other)
         {
@@ -71,7 +74,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
         public override string ToString()
         {
             if (Metadata == null || !Metadata.TryGetValue("DebugName", out var name)) name = ContractName;
-            return ErrorTracer.FormatExport(InterfaceType, name);
+            return ErrorTracer.FormatExport(this); //InterfaceType, name);
         }
     }
 }

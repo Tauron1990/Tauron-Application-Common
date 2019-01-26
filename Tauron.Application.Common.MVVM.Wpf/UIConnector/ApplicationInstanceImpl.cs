@@ -14,7 +14,7 @@ namespace Tauron.Application.UIConnector
         public ApplicationInstanceImpl(WpfApp app)
         {
             _app = Argument.NotNull(app, nameof(app));
-            _app.Exit += (sender, args) => Exit?.Invoke(sender, args);
+            UiSynchronize.Synchronize.Invoke(() => _app.Exit += (sender, args) => Exit?.Invoke(sender, args));
         }
 
         public object FindResource(object resourceKey) => Invoke(() => _app.FindResource(resourceKey));

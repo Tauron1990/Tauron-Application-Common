@@ -7,22 +7,10 @@ using System.Windows;
 using System.Windows.Input;
 using JetBrains.Annotations;
 using Tauron.Application.Commands;
+using Tauron.Application.Views;
 
 namespace Tauron.Application
 {
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-    [PublicAPI]
-    [MeansImplicitUse(ImplicitUseKindFlags.Access)]
-    public sealed class EventTargetAttribute : MemberInfoAttribute
-    {
-        public EventTargetAttribute([CanBeNull] string memberName)
-            : base(memberName){}
-
-        public EventTargetAttribute()
-            : base(null){}
-
-    }
-
     [PublicAPI]
     public static class EventBinder
     {
@@ -69,11 +57,12 @@ namespace Tauron.Application
 
             internal class CommandMember
             {
-                public CommandMember([NotNull] string name, [NotNull] MemberInfo memberInfo, bool synchronize)
+                public CommandMember([NotNull] string name, [NotNull] MemberInfo memberInfo, bool synchronize, [CanBeNull] Type converter)
                 {
                     Name = name;
                     MemberInfo = memberInfo;
                     Synchronize = synchronize;
+                    Converter = converter;
                 }
 
                 [NotNull]
@@ -84,6 +73,8 @@ namespace Tauron.Application
 
                 public bool Synchronize { get; }
 
+                [CanBeNull]
+                public Type Converter { get; }
             }
 
             //[DebuggerNonUserCode]
@@ -94,9 +85,7 @@ namespace Tauron.Application
                         .First(m => m.Name == "Handler");
 
                 public InternalEventLinker([CanBeNull] IEnumerable<CommandMember> member, [CanBeNull] EventInfo @event, [NotNull] WeakReference dataContext,
-                    [NotNull] string targetName,
-                    [CanBeNull] WeakReference<DependencyObject> host,
-                    [NotNull] ITaskScheduler scheduler)
+                    [NotNull] string targetName, [CanBeNull] WeakReference<DependencyObject> host, [NotNull] ITaskScheduler scheduler)
                 {
                     _isDirty = (member == null) | (@event == null);
 
@@ -129,6 +118,7 @@ namespace Tauron.Application
                 private bool _isDirty;
                 private MemberInfo _member;
                 private bool _sync;
+                private ISimpleConverter _simpleConverter;
 
                 private bool EnsureCommandStade()
                 {
@@ -189,6 +179,15 @@ namespace Tauron.Application
 
                     _member = temp.MemberInfo;
                     _sync = temp.Synchronize;
+                    try
+                    {
+                        _simpleConverter = temp.Converter != null ? Activator.CreateInstance(temp.Converter) as ISimpleConverter : null;
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.IsCriticalApplicationException())
+                            throw;
+                    }
                 }
 
                 [UsedImplicitly]
@@ -205,8 +204,12 @@ namespace Tauron.Application
                         _scheduler.QueueTask(
                             new UserTask(() =>
                                 {
-                                    var data = new EventData(sender, e);
-                                    if (_command.CanExecute(data)) _command.Execute(data);
+                                    object localSender = _simpleConverter?.Convert(sender) ?? sender;
+                                    object localEventArgs = _simpleConverter?.Convert(e) ?? e;
+
+                                    var data = new EventData(localSender, localEventArgs);
+                                    if (_command.CanExecute(data))
+                                        _command.Execute(data);
                                 },
                                 _sync));
                     }
@@ -269,7 +272,8 @@ namespace Tauron.Application
                         select new CommandMember(
                                 entry.Item2.ProvideMemberName(entry.Item1),
                                 entry.Item1,
-                                entry.Item2.Synchronize)).ToArray();
+                                entry.Item2.Synchronize,
+                                entry.Item2.Converter)).ToArray();
 
                 foreach (var pair in events)
                 {

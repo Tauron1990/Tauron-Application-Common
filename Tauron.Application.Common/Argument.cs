@@ -7,6 +7,7 @@ using NLog;
 namespace Tauron
 {
     [PublicAPI]
+    [DebuggerStepThrough]
     public static class Argument
     {
         public static bool LogErrors { get; set; }

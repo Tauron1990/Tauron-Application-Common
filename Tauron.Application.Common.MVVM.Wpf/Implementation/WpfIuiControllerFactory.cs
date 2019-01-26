@@ -12,7 +12,11 @@ namespace Tauron.Application.Implementation
 
         public WpfIuiControllerFactory() {}
 
-        public WpfIuiControllerFactory(App app) => _app = app;
+        public WpfIuiControllerFactory(App app, bool isInitialized)
+        {
+            _app = app;
+            WpfApplicationController.IsInitialized = isInitialized;
+        }
 
         void IUIControllerFactory.SetSynchronizationContext() => SetSynchronizationContext();
 

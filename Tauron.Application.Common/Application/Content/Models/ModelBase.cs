@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc;
 
@@ -102,7 +103,7 @@ namespace Tauron.Application.Models
             ObservableProperty prop;
             if ((prop = properties.FirstOrDefault(p => p.Name == name)) != null) return prop;
 
-            prop = new ObservableProperty(name, type, metadata);
+            prop = new ObservableProperty(name, type, metadata, ownerType);
             properties.Add(prop);
             return prop;
         }
@@ -142,6 +143,12 @@ namespace Tauron.Application.Models
             SetValueReal(property, value);
         }
 
+        private const string AnonymosPrefix = "Anonymos---";
+
+        protected void SetProperty(object value, [CallerMemberName] string name = null) => _values[AnonymosPrefix + name] = value;
+        
+
+
         [CanBeNull]
         protected object GetValue([NotNull] ObservableProperty property) => GetValueCommon(property);
 
@@ -163,6 +170,7 @@ namespace Tauron.Application.Models
 
         public static object GetDefaultValue(Type type) => type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
 
+        
         protected void SetValue([NotNull] string property, [NotNull] object value)
         {
             var oprop = GetProperties(GetType()).FirstOrDefault(p => p.Name == property);
@@ -248,9 +256,11 @@ namespace Tauron.Application.Models
 
             ValidatorContext.Property = property;
             SetIssues(property.Name,
-                rules.Where(r => !r.IsValidValue(value, ValidatorContext))
-                    .Select(r => new PropertyIssue(property.Name, value, string.Format(r.Message(), value)))
+                rules.Select(r => r.IsValidValue(value, ValidatorContext))
+                    .Where(e => !e.Succseeded)
+                    .Select(r => new PropertyIssue(property.Name, value, r.Message ?? value?.ToString() ?? string.Empty))
                     .ToArray());
+
             // ReSharper disable once AssignNullToNotNullAttribute
             ValidatorContext.Property = null;
 

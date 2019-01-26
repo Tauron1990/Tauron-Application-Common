@@ -19,6 +19,6 @@ namespace Tauron.Application.Common.BaseLayer.Core
 
         public IDatabaseFactory DatabaseFactory { get; }
 
-        public abstract IEnumerable<(Type, Type)> GetRepositoryTypes();
+        public abstract IEnumerable<(Type Interface, Type Implementation)> GetRepositoryTypes();
     }
 }

@@ -8,30 +8,28 @@ namespace Tauron.Application.Models.Rules
     public sealed class TimeSpanParsingRule : ModelRule
     {
         private readonly bool _mustBePositive;
-        private string _message;
 
         public TimeSpanParsingRule(bool mustBePositive = true)
+        : base(nameof(TimeSpanParsingRule))
         {
             _mustBePositive = mustBePositive;
-            Message = () => _message;
         }
 
-        public override bool IsValidValue(object obj, ValidatorContext context)
+        public override ValidatorResult IsValidValue(object value, ValidatorContext context)
         {
             try
             {
-                var span = TimeSpan.Parse((string) obj, CultureInfo.CurrentUICulture);
-                if (!_mustBePositive && span.Ticks >= 0) return true;
+                var span = TimeSpan.Parse((string) value, CultureInfo.CurrentUICulture);
+                if (!_mustBePositive && span.Ticks >= 0) return CreateResult();
 
                 //Get Message From Parse Exception
                 // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
                 TimeSpan.Parse("-100000000000000000000000000000000");
-                return true;
+                return CreateResult();
             }
             catch (Exception e) when (e is FormatException || e is OverflowException || e is ArgumentException)
             {
-                _message = e.Message;
-                return false;
+                return CreateResult(e.Message);
             }
         }
     }

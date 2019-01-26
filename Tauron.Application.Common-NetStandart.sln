@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.28306.52
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tauron.Application.Common", "Tauron.Application.Common\Tauron.Application.Common.csproj", "{3DC40C66-D21A-4948-9564-E7054BE52934}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Old", "Old", "{EB3E51EA-403F-4B25-BCC6-78DF70BE0A39}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common.Windows", "Tauron.Application.Common.Windows\Tauron.Application.Common.Windows.csproj", "{7FA6AFCB-89AC-44FC-9840-C062C7FFDAD7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tauron.Application.Common.CastleProxy", "Tauron.Application.Common.CastleProxy\Tauron.Application.Common.CastleProxy.csproj", "{522F6F7D-30E2-4CFC-8667-482397CA1CF1}"

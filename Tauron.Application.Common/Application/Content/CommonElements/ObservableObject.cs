@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
@@ -25,6 +26,7 @@ namespace Tauron.Application
 
     [Serializable]
     [PublicAPI]
+    [DebuggerStepThrough]
     public abstract class ObservableObject : BaseObject, INotifyPropertyChangedMethod
     {
         protected ObservableObject()
@@ -53,6 +55,8 @@ namespace Tauron.Application
             public void Write(LogLevel type, [NotNull] string format, [NotNull] params object[] parms) => Logger.Log(type, format, parms);
 
             public void Error(Exception e, string messege) => Logger.Error(e, messege);
+
+            public void Error(Exception e) => Logger.Error(e);
         }
         
         private LogHelper _logHelper;

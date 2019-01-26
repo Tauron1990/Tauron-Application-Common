@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -67,7 +66,7 @@ namespace Tauron.Application
                         Argument.NotNull(sender, nameof(sender));
                         Argument.NotNull(e, nameof(e));
 
-                        _method.Invoke(_firstArg, _isParameter ? e.Parameter : null);
+                        _method.Invoke(_firstArg, _isParameter ? new[] { e.Parameter } : new object[0]);
                     }
 
                 }
@@ -533,26 +532,5 @@ namespace Tauron.Application
             }
         }
         
-    }
-
-    [SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:ElementsMustBeOrderedByAccess",
-        Justification = "Reviewed. Suppression is OK here.")]
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field)]
-    [PublicAPI]
-    [MeansImplicitUse(ImplicitUseKindFlags.Access)]
-    public sealed class CommandTargetAttribute : MemberInfoAttribute
-    {
-        [CanBeNull]
-        public string CanExecuteMember { get; set; }
-        
-        public CommandTargetAttribute([NotNull] string memberName)
-            : base(memberName)
-        {
-        }
-
-        public CommandTargetAttribute()
-            : base(null)
-        {
-        }
     }
 }

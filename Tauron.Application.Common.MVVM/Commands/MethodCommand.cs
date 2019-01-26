@@ -6,14 +6,14 @@ namespace Tauron.Application.Commands
 {
     public sealed class EventData
     {
-        public EventData([NotNull] object sender, [NotNull] EventArgs eventArgs)
+        public EventData([NotNull] object sender, [NotNull] object eventArgs)
         {
             Sender = Argument.NotNull(sender, nameof(sender));
             EventArgs = Argument.NotNull(eventArgs, nameof(eventArgs));
         }
 
         [NotNull]
-        public EventArgs EventArgs { get; }
+        public object EventArgs { get; }
 
         [NotNull]
         public object Sender { get; }
@@ -53,7 +53,7 @@ namespace Tauron.Application.Commands
                     args = new[] {temp?.Sender, temp?.EventArgs};
                     break;
                 case MethodType.EventArgs:
-                    args = new object[] {temp?.EventArgs};
+                    args = new[] {temp?.EventArgs};
                     break;
                 default:
                     args = new object[0];

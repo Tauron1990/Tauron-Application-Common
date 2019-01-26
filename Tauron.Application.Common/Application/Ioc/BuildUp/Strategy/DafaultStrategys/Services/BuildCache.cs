@@ -20,9 +20,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             lock (this)
             {
                 IEnumerable<IExport> deadKeysOne =
-                    _global.Where(ent => ent.Value.IsAlive).Select(ent => ent.Key).ToArray();
+                    _global.Where(ent => !ent.Value.IsAlive).Select(ent => ent.Key).ToArray();
                 IEnumerable<ExportMetadata> deadkeysTwo =
-                    (from ent in _local where ent.Value.IsAlive select ent.Key).ToArray();
+                    (from ent in _local where !ent.Value.IsAlive select ent.Key).ToArray();
 
                 foreach (var export in deadKeysOne) _global.Remove(export);
 

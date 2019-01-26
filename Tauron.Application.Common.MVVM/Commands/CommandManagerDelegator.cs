@@ -13,6 +13,6 @@ namespace Tauron.Application.Commands
 
         internal static void Remove(EventHandler handler) => CommandConnector.Remove?.Invoke(handler);
 
-        internal static void InvalidateRequerySuggested() => CommandConnector.InvalidateRequerySuggested?.Invoke();
+        public static void InvalidateRequerySuggested() => CommandConnector.InvalidateRequerySuggested?.Invoke();
     }
 }

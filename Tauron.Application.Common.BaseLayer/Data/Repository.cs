@@ -8,6 +8,8 @@ namespace Tauron.Application.Common.BaseLayer.Data
     {
         private readonly IDatabase _database;
 
+        protected TType GetContext<TType>() => (TType) _database.Context;
+
         public Repository(IDatabase database) => _database = database;
 
         public IQueryable<TEntity> Query() => _database.Query<TEntity>();

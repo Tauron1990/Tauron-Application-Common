@@ -26,6 +26,6 @@ namespace Tauron.Application.Converter
 
 
         [NotNull]
-        public object[] ConvertBack([NotNull] object value, [NotNull] Type[] targetTypes, [NotNull] object parameter, [NotNull] CultureInfo culture) => throw new NotImplementedException();
+        public object[] ConvertBack([NotNull] object value, [NotNull] Type[] targetTypes, [NotNull] object parameter, [NotNull] CultureInfo culture) => throw new NotSupportedException();
     }
 }

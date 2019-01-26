@@ -1,4 +1,5 @@
-﻿using System.Windows.Data;
+﻿using System;
+using System.Windows.Data;
 using System.Windows.Media;
 using JetBrains.Annotations;
 
@@ -13,7 +14,17 @@ namespace Tauron.Application.Converter
             private static readonly BrushConverter ConverterImpl = new BrushConverter();
 
             [CanBeNull]
-            protected override Brush Convert([NotNull] string value) => ConverterImpl.ConvertFrom(value) as Brush;
+            protected override Brush Convert([NotNull] string value)
+            {
+                try
+                {
+                    return ConverterImpl.ConvertFrom(value) as Brush;
+                }
+                catch (FormatException)
+                {
+                    return Brushes.Black;
+                }
+            }
         }
     }
 }

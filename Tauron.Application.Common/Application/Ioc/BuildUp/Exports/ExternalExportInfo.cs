@@ -9,20 +9,15 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
     {
         private readonly Func<IBuildContext, object> _createInstance;
 
-        public ExternalExportInfo(
-            bool external,
-            bool handlesLiftime,
-            bool canUseBuildup,
-            bool handlesDispose,
-            Func<IBuildContext, object> createInstance,
+        public ExternalExportInfo(bool external, bool handlesLiftime, bool canUseBuildup, bool handlesDispose, Func<IBuildContext, object> createInstance,
             string extenalComponentName)
         {
             External = external;
             HandlesLiftime = handlesLiftime;
             CanUseBuildup = canUseBuildup;
             HandlesDispose = handlesDispose;
-            ExtenalComponentName = Argument.NotNull(extenalComponentName, nameof(extenalComponentName));
-            _createInstance = Argument.NotNull(createInstance, nameof(createInstance));
+            ExtenalComponentName = extenalComponentName;
+            _createInstance = createInstance;
         }
 
         public object Create(IBuildContext context)//, ProxyGenerator service)

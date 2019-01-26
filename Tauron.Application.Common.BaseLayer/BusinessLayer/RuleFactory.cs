@@ -14,9 +14,11 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
     {
         private readonly IDictionary<string, IRuleBase> _cache = new Dictionary<string, IRuleBase>();
 
-        [InjectRepositoryFactory] private RepositoryFactory _repositoryFactory;
+        [InjectRepositoryFactory]
+        private RepositoryFactory _repositoryFactory;
 
-        [Inject(typeof(IRuleBase))] private InstanceResolver<IRuleBase, IRuleMetadata>[] _rules;
+        [Inject(typeof(IRuleBase))]
+        private InstanceResolver<IRuleBase, IRuleMetadata>[] _rules;
 
         private IRuleBase GetOrCreate(string name)
         {
@@ -38,27 +40,17 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
             return rule;
         }
 
-        public IBusinessRule CreateBusinessRule(string name)
-        {
-            return (IBusinessRule) Create(name);
-        }
+        public IBusinessRule CreateBusinessRule(string name) => (IBusinessRule) Create(name);
 
-        public IIBusinessRule<TType> CreateIiBusinessRule<TType>(string name)
-        {
-            return (IIBusinessRule<TType>) Create(name);
-        }
+        public IIBusinessRule<TType> CreateIiBusinessRule<TType>(string name) => (IIBusinessRule<TType>) Create(name);
 
         public IIOBusinessRule<TInput, TOutput> CreateIioBusinessRule<TInput, TOutput>(string name)
             //where TOutput : class where TInput : class
-        {
-            return (IIOBusinessRule<TInput, TOutput>) Create(name);
-        }
+            => (IIOBusinessRule<TInput, TOutput>) Create(name);
 
         public IOBussinesRule<TOutput> CreateOBussinesRule<TOutput>(string name)
             //where TOutput : class
-        {
-            return (IOBussinesRule<TOutput>) Create(name);
-        }
+            => (IOBussinesRule<TOutput>) Create(name);
 
         public CompositeRule<TInput, TOutput> CreateComposite<TInput, TOutput>(params string[] names)
         {
@@ -70,9 +62,7 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
             CompositeRule<TInput, TOutput> compositeule;
 
             if (_cache.TryGetValue(key, out var cache))
-            {
                 compositeule = (CompositeRule<TInput, TOutput>) cache;
-            }
             else
             {
                 compositeule = new CompositeRule<TInput, TOutput>(names.Select(GetOrCreate));

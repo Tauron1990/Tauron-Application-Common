@@ -92,7 +92,7 @@ namespace Tauron.Application.Ioc.Components
             {
                 errorTracer.Exception = e;
                 errorTracer.Exceptional = true;
-                errorTracer.Export = ErrorTracer.FormatExport(type, contractName);
+                errorTracer.Export = ErrorTracer.FormatExport(type, contractName, e.Message);
 
                 return Enumerable.Empty<ExportMetadata>();
             }
@@ -115,8 +115,7 @@ namespace Tauron.Application.Ioc.Components
                 if (arr.Length <= 1) return arr.Length == 0 ? null : arr[0];
 
                 errorTracer.Exceptional = true;
-                errorTracer.Exception = new InvalidOperationException("More then One Export Found");
-                errorTracer.Export = ErrorTracer.FormatExport(type, contractName);
+                errorTracer.Export = ErrorTracer.FormatExport(type, contractName, "More then One Export Found");
 
                 return arr.Length == 0 ? null : arr[0];
             }
@@ -134,8 +133,7 @@ namespace Tauron.Application.Ioc.Components
             if (temp != null) return temp;
 
             errorTracer.Exceptional = true;
-            errorTracer.Exception = new InvalidOperationException("No Export Found");
-            errorTracer.Export = ErrorTracer.FormatExport(type, contractName);
+            errorTracer.Export = ErrorTracer.FormatExport(type, contractName, "No Export Found");
 
             return null;
         }

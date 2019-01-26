@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc;
@@ -9,6 +10,7 @@ namespace Tauron.Application
 {
     [Serializable]
     [PublicAPI]
+    [DebuggerStepThrough]
     public abstract class BaseObject : IContextHolder
     {
         private static Dictionary<string, object> _singletons;

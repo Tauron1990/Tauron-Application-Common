@@ -7,5 +7,8 @@ namespace Tauron.Application
     {
         [NotNull]
         IClipboardViewer CreateViewer([NotNull] IWindow target, bool registerForClose, bool performInitialization);
+
+        bool ContainsText();
+        string GetText();
     }
 }
