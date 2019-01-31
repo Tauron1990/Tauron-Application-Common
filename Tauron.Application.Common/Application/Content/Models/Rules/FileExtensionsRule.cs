@@ -30,8 +30,6 @@ namespace Tauron.Application.Models.Rules
         private IEnumerable<string> ExtensionsParsed => from e in ExtensionsNormalized.Split(',')
                                                         select "." + e;
         
-        public string FormatErrorMessage(string name) => string.Format(RuleMessages.FileExtensionsInvalid, name,ExtensionsFormatted);
-
         public override ValidatorResult IsValidValue(object value, ValidatorContext context)
         {
             switch (value)
@@ -40,7 +38,7 @@ namespace Tauron.Application.Models.Rules
                 case string text when ValidateExtension(text):
                     return CreateResult();
                 default:
-                    return CreateResult(FormatErrorMessage(value?.ToString()));
+                    return CreateResult(RuleMessages.FileExtensionsInvalid, value, ExtensionsFormatted);
             }
         }
 

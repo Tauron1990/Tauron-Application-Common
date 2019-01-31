@@ -5,6 +5,8 @@ namespace Tauron.Application.Common.BaseLayer.Core
 {
     public abstract class OBusinessRuleBase<TOutput> : RuleBase, IOBussinesRule<TOutput>
     {
+        public override bool HasResult { get; } = true;
+
         public virtual TOutput Action()
         {
             try
@@ -20,10 +22,7 @@ namespace Tauron.Application.Common.BaseLayer.Core
             }
         }
 
-        public override object GenericAction(object input)
-        {
-            return Action();
-        }
+        public override object GenericAction(object input) => Action();
 
         public abstract TOutput ActionImpl();
     }

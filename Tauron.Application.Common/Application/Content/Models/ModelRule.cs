@@ -4,8 +4,8 @@ using JetBrains.Annotations;
 
 namespace Tauron.Application.Models
 {
-    [PublicAPI]
-    public class ModelRule : IEquatable<ModelRule>
+    [PublicAPI, AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+    public class ModelRule : Attribute, IEquatable<ModelRule>
     {
         public ModelRule([NotNull] Func<object, ValidatorContext, ValidatorResult> validator, string id)
         {
@@ -53,6 +53,8 @@ namespace Tauron.Application.Models
         protected string FindResource(string name) => ResourceManagerProvider.FindResource(name, null) ?? string.Empty;
 
         protected  static ValidatorResult CreateResult() => new ValidatorResult(string.Empty, true);
-        protected static ValidatorResult CreateResult(string message) => new ValidatorResult(message, false);
+
+        [StringFormatMethod("message")]
+        protected static ValidatorResult CreateResult(string message, params object[] format) => new ValidatorResult(message.SFormat(format), false);
     }
 }

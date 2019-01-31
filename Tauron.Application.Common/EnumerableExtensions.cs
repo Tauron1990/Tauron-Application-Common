@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -96,6 +97,22 @@ namespace Tauron
             {
                 yield return array.Skip(i * size).Take(size);
             }
+        }
+
+        public static int Count(this IEnumerable source)
+        {
+            if (source is ICollection col)
+                return col.Count;
+
+            int c = 0;
+            var e = source.GetEnumerator();
+            e.DynamicUsing(() =>
+            {
+                while (e.MoveNext())
+                    c++;
+            });
+
+            return c;
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using JetBrains.Annotations;
 
 namespace Tauron.Application.Models
@@ -68,6 +70,8 @@ namespace Tauron.Application.Models
         public bool ForceAllValidation { get; set; }
 
         private string _propertyName;
+        private Type _ownerType;
+
         [CanBeNull]
         public string DisplayName
         {
@@ -81,7 +85,12 @@ namespace Tauron.Application.Models
             Argument.NotNull(ownerType, nameof(ownerType));
             Argument.NotNull(propertyName, nameof(propertyName));
 
+            if(_propertyName != null || _ownerType != null)
+                throw new InvalidOperationException("One Metadata on Multiple Propertys");
+
             _propertyName = propertyName;
+            _ownerType = ownerType;
+
             if (string.IsNullOrWhiteSpace(DisplayName))
                 DisplayName = DisplayNameHelper.GetDisplayName(ownerType.Name, propertyName, () => ownerType.GetProperty(propertyName));
 
@@ -108,6 +117,17 @@ namespace Tauron.Application.Models
         public ObservablePropertyMetadata SetValidationRules([NotNull] params ModelRule[] rules)
         {
             ModelRules = Argument.NotNull(rules, nameof(rules));
+
+            PropertyInfo info = _ownerType.GetProperty(_propertyName);
+            if (info == null) return this;
+
+            var arules = info.GetCustomAttributes(true).OfType<ModelRule>();
+
+            if (rules.Length != 0)
+                arules = rules.Concat(arules);
+
+            ModelRules = arules.ToArray();
+
             return this;
         }
     }

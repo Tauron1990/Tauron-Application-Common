@@ -23,6 +23,6 @@ namespace Tauron.Application.Models.Rules
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ValidatorResult Error(ValidatorContext context) => CreateResult(RuleMessages.RequireRuleError.SFormat(context.Property.Name));
+        private ValidatorResult Error(ValidatorContext context) => CreateResult(RuleMessages.RequireRuleError, context.DisplayName);
     }
 }

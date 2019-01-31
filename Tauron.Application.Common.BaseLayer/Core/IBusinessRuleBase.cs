@@ -3,8 +3,10 @@ using Tauron.Application.Common.BaseLayer.BusinessLayer;
 
 namespace Tauron.Application.Common.BaseLayer.Core
 {
-    public abstract class IBusinessRuleBase<TType> : RuleBase, IIBusinessRule<TType>
+    public abstract class IBusinessRuleBase<TType> : RuleBase, IIBusinessRule<TType>, IRuleDescriptor
     {
+        public override bool HasResult { get; }
+
         public virtual void Action(TType input)
         {
             try
@@ -29,5 +31,9 @@ namespace Tauron.Application.Common.BaseLayer.Core
         }
 
         public abstract void ActionImpl(TType input);
+
+        public Type ParameterType { get; } = typeof(TType);
+
+        public Type ReturnType { get; }
     }
 }

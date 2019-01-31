@@ -24,5 +24,7 @@ namespace Tauron.Application.Models
 
         [NotNull]
         public IDictionary<object, object> Items { get; }
+
+        public string DisplayName => Property.Metadata.DisplayName;
     }
 }

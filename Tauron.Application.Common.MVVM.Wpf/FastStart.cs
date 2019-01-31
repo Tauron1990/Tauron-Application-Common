@@ -23,10 +23,10 @@ namespace Tauron.Application
         private class FastStartApp : WpfApplication
         {
             private readonly Action<IContainer> _fillcontainer;
-            private readonly Action _loadResources;
+            private readonly Action<Action<SplashMessage>> _loadResources;
 
-            public FastStartApp(System.Windows.Application app, Action<IContainer> fillcontainer, Action loadResources)
-                : base(true, app, true)
+            public FastStartApp(System.Windows.Application app, Action<IContainer> fillcontainer, Action<Action<SplashMessage>> loadResources, ISplashService splashService = null)
+                : base(true, app, true, splashService ?? new SplashService())
             {
                 _fillcontainer = fillcontainer;
                 _loadResources = loadResources;
@@ -38,6 +38,8 @@ namespace Tauron.Application
 
             protected override void ConfigSplash()
             {
+                if (!(Splash is SplashService)) return;
+
                 var dic = CurrentWpfApplication.Resources;
 
                 var control = new ContentControl
@@ -54,7 +56,7 @@ namespace Tauron.Application
                 SplashMessageListener.CurrentListner.MainLabelBackground = dic["MainLabelbackground"];
             }
 
-            protected override IWindow DoStartup(CommandLineProcessor prcessor)
+            protected override IWindow DoStartup(CommandLineProcessor prcessor, Action<SplashMessage> action)
             {
                 var temp = ViewManager.Manager.CreateWindow(MainWindowName);
                 MainWindow = temp;
@@ -67,13 +69,13 @@ namespace Tauron.Application
                 return temp;
             }
 
-            protected override void LoadCommands()
+            protected override void LoadCommands(Action<SplashMessage> action)
             {
-                base.LoadCommands();
+                base.LoadCommands(action);
                 CommandBinder.AutoRegister = true;
             }
 
-            protected override void LoadResources() => _loadResources?.Invoke();
+            protected override void LoadResources(Action<SplashMessage> action) => _loadResources?.Invoke(action);
 
             public override string GetdefaultFileLocation() => GetDicPath();
 
@@ -82,7 +84,7 @@ namespace Tauron.Application
             private static string GetDicPath() => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
                 .CombinePath($"Tauron\\{ApplicationName ?? Assembly.GetEntryAssembly().Location.GetFileNameWithoutExtension()}");
 
-            protected override void Fill(IContainer container)
+            protected override void Fill(IContainer container, Action<SplashMessage> action)
             {
                 if(_fillcontainer != null)
                     _fillcontainer(container);
@@ -93,7 +95,7 @@ namespace Tauron.Application
             public void InvokeOnStartup(string[] commandLine) => Async.StartNew(() => OnStartup(commandLine));
         }
 
-        public static void Start([NotNull]System.Windows.Application app, Action<IContainer> fillContainer = null, CultureInfo info = null, Action loadResources = null)
+        public static void Start([NotNull]System.Windows.Application app, Action<IContainer> fillContainer = null, CultureInfo info = null, Action<Action<SplashMessage>> loadResources = null)
         {
             var fastApp = new FastStartApp(Argument.NotNull(app, nameof(app)), fillContainer, loadResources);
             WpfApplicationController.Initialize(info);

@@ -274,10 +274,10 @@ namespace Tauron.Application.Ioc
             AddProvider(new TypeExportProvider(types));
         }
 
-        public void Fill(
-            [NotNull] ComponentRegistry componentRegistry,
+        public void Fill([NotNull] ComponentRegistry componentRegistry,
             [NotNull] ExportRegistry exportRegistry,
-            [NotNull] ExportProviderRegistry exportProviderRegistry)
+            [NotNull] ExportProviderRegistry exportProviderRegistry, 
+            Action<ExportMetadata> addExport)
         {
             Argument.NotNull(componentRegistry, nameof(componentRegistry));
             Argument.NotNull(exportRegistry, nameof(exportRegistry));
@@ -288,7 +288,11 @@ namespace Tauron.Application.Ioc
 
             foreach (var exportProvider in _providers)
             {
-                foreach (var export in exportProvider.CreateExports(factorys[exportProvider.Technology])) exportRegistry.Register(export.Item1, export.Item2);
+                foreach (var export in exportProvider.CreateExports(factorys[exportProvider.Technology]))
+                {
+                    foreach (var metadata in export.Item1.ExportMetadata) addExport(metadata);
+                    exportRegistry.Register(export.Item1, export.Item2);
+                }
 
                 if (exportProvider.BroadcastChanges) exportProviderRegistry.Add(exportProvider);
             }

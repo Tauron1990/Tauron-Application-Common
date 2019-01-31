@@ -43,7 +43,10 @@ namespace Tauron.Application.Ioc
 
         [NotNull]
         [DebuggerStepThrough]
-        public static string FormatExport(ExportMetadata meta) => $"{meta.InterfaceType?.Name}|{meta.ContractName} -- {meta.Export.ImplementType?.Name}";
+        public static string FormatExport(ExportMetadata meta) 
+            => meta.ContractName == null 
+                ? $"{meta.InterfaceType.Name} -- {meta.Export.ImplementType?.Name}" 
+                : $"{meta.InterfaceType.Name}|{meta.ContractName} -- {meta.Export.ImplementType?.Name}";
 
         //([CanBeNull] Type type, [CanBeNull] object exportName)
         //{

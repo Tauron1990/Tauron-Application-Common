@@ -1,17 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Tauron.Application.Common.BaseLayer.BusinessLayer;
 using Tauron.Application.Common.BaseLayer.Data;
 
 namespace Tauron.Application.Common.BaseLayer.Core
 {
-    public sealed class CompositeRule<TInput, TOutput> : RuleBase, IBusinessRule, IIBusinessRule<TInput>, IIOBusinessRule<TInput, TOutput>
+    public sealed class CompositeRule<TInput, TOutput> : RuleBase, IBusinessRule, IIBusinessRule<TInput>, IIOBusinessRule<TInput, TOutput>, IRuleDescriptor
     {
         private readonly IEnumerable<IRuleBase> _rules;
 
-        public CompositeRule(IEnumerable<IRuleBase> rules)
-        {
-            _rules = new ReadOnlyEnumerator<IRuleBase>(rules);
-        }
+        public CompositeRule(IEnumerable<IRuleBase> rules) => _rules = new ReadOnlyEnumerator<IRuleBase>(rules);
+
+        public override bool HasResult => _rules.Last().HasResult;
 
         public override string InitializeMethod { get; } = nameof(Initialize);
 
@@ -61,5 +62,9 @@ namespace Tauron.Application.Common.BaseLayer.Core
                 return (TOutput) output;
             }
         }
+
+        public Type ParameterType => _rules.First().SafeCast<IRuleDescriptor>()?.ParameterType;
+
+        public Type ReturnType => _rules.Last().SafeCast<IRuleDescriptor>()?.ReturnType;
     }
 }

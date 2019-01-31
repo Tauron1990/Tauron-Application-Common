@@ -73,7 +73,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
 
         public override string ToString()
         {
-            if (Metadata == null || !Metadata.TryGetValue("DebugName", out var name)) name = ContractName;
+            //if (Metadata == null || !Metadata.TryGetValue("DebugName", out var name)) name = ContractName;
             return ErrorTracer.FormatExport(this); //InterfaceType, name);
         }
     }

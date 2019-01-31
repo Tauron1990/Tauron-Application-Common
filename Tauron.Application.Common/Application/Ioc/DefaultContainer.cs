@@ -9,7 +9,7 @@ using Tauron.Application.Ioc.Components;
 
 namespace Tauron.Application.Ioc
 {
-    public sealed class DefaultContainer : MarshalByRefObject, IContainer
+    public sealed class DefaultContainer : ComponentMessagnerBase, IContainer
     {
         public DefaultContainer()
         {
@@ -191,9 +191,16 @@ namespace Tauron.Application.Ioc
 
         public IEnumerable<ExportMetadata> FindExports(Type interfaceType, string name, ErrorTracer errorTracer, int level) => _exports.FindAll(interfaceType, name, errorTracer, level);
 
-        public void Register(IExport exportType, int level) => _exports.Register(exportType, level);
+        public void Register(IExport exportType, int level)
+        {
+            _exports.Register(exportType, level);
+            foreach (var metadata in exportType.ExportMetadata)
+                Publish(metadata.ToString());
+        }
 
-        public void Register(ExportResolver exportResolver) => exportResolver.Fill(_componetnts, _exports, _exportproviders);
+        public void Register(ExportResolver exportResolver) => exportResolver.Fill(_componetnts, _exports, _exportproviders, AddComponent);
+
+        private void AddComponent(ExportMetadata meta) => Publish(meta.ToString());
 
         public void Register(IContainerExtension extension)
         {

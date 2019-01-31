@@ -22,6 +22,19 @@ namespace Tauron
     [PublicAPI]
     public static class ObjectExtension
     {
+        public static void DynamicUsing(this object resource, Action action)
+        {
+            try
+            {
+                action();
+            }
+            finally
+            {
+                if (resource is IDisposable d)
+                    d.Dispose();
+            }
+        }
+
         [CanBeNull]
         public static T As<T>([CanBeNull] this object value) where T : class => value as T;
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
 namespace Tauron.Application.Models.Rules
@@ -22,7 +21,7 @@ namespace Tauron.Application.Models.Rules
                 case string text when _regex.Match(text).Length > 0:
                     return CreateResult();
                 default:
-                    return CreateResult(RuleMessages.UrlInvalid);
+                    return CreateResult(RuleMessages.UrlInvalid, context.DisplayName);
             }
         }
 

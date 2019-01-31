@@ -23,7 +23,7 @@ namespace Tauron.Application.Models.Rules
                 case string text when _regex.Match(text).Length > 0:
                     return CreateResult();
                 default:
-                    return CreateResult(RuleMessages.PhoneInvalid);
+                    return CreateResult(RuleMessages.PhoneInvalid, context.DisplayName);
             }
         }
 

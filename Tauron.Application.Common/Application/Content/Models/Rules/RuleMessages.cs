@@ -7,7 +7,7 @@ namespace Tauron.Application.Models.Rules
     {
         private static ResourceManager _resourceManager;
 
-        public static ResourceManager ResourceManager => _resourceManager ??
+        private static ResourceManager ResourceManager => _resourceManager ??
                                                          (_resourceManager =
                                                              new ResourceManager(
                                                                  "System.ComponentModel.DataAnnotations.Resources.DataAnnotationsResources",
@@ -36,5 +36,29 @@ namespace Tauron.Application.Models.Rules
         internal static string InvalidMaxLength => ResourceManager.GetString("MaxLengthAttribute_InvalidMaxLength");
 
         internal static string MaxLengthValidationError => ResourceManager.GetString("MaxLengthAttribute_ValidationError");
+
+        internal static string InvalidMinLength => ResourceManager.GetString("MinLengthAttribute_InvalidMinLength");
+
+        internal static string MinLengthValidationError => ResourceManager.GetString("MinLengthAttribute_ValidationError");
+
+        internal static string RangeValidationError => ResourceManager.GetString("RangeAttribute_ValidationError");
+
+        internal static string RangeMinGreaterThanMax => ResourceManager.GetString("RangeAttribute_MinGreaterThanMax");
+
+        internal static string RangeMustSetMinAndMax => ResourceManager.GetString("RangeAttribute_Must_Set_Min_And_Max");
+
+        internal static string RangeMustSetOperandType => ResourceManager.GetString("RangeAttribute_Must_Set_Operand_Type");
+
+        internal static string RangeArbitraryTypeNotIComparable => ResourceManager.GetString("RangeAttribute_ArbitraryTypeNotIComparable");
+
+        internal static string RegexValidationError => ResourceManager.GetString("RegexAttribute_ValidationError");
+
+        internal static string RegularExpressionEmptyPattern => ResourceManager.GetString("RegularExpressionAttribute_Empty_Pattern");
+
+        internal static string StringLengthValidationError => ResourceManager.GetString("StringLengthAttribute_ValidationError");
+
+        internal static string StringLengthInvalidMaxLength => ResourceManager.GetString("StringLengthAttribute_InvalidMaxLength");
+
+        internal static string StringLengthValidationErrorIncludingMinimum => ResourceManager.GetString("StringLengthAttribute_ValidationErrorIncludingMinimum");
     }
 }

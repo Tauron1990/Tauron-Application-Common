@@ -25,7 +25,7 @@ namespace Tauron.Application
             Factory = Argument.NotNull(factory, nameof(factory));
             Current = this;
             _scheduler = taskScheduler ?? new TaskScheduler(UiSynchronize.Synchronize, "Application thread");
-            _splash = service ?? new NullSplash();
+            Splash = service ?? new NullSplash();
             _doStartup = doStartup;
             SourceAssembly = new AssemblyName(Assembly.GetAssembly(GetType()).FullName).Name;
         }
@@ -67,18 +67,18 @@ namespace Tauron.Application
 
             public override IContainer Container { get; set; }
 
-            protected override IContainer CreateContainer()
+            protected override IContainer CreateContainer(Action<SplashMessage> action)
             {
-                var con = base.CreateContainer();
+                var con = base.CreateContainer(action);
 
                 _configContainer(con);
 
                 return con;
             }
 
-            protected override void Fill(IContainer container){}
+            protected override void Fill(IContainer container, Action<SplashMessage> action){}
 
-            protected override void ConfigurateLagging(LoggingConfiguration config) => config.AddRuleForAllLevels(new VsDebuggerTarget());
+            protected override void ConfigurateLagging(LoggingConfiguration config, Action<SplashMessage> msg) => config.AddRuleForAllLevels(new VsDebuggerTarget());
 
             internal sealed class SyncTask : ITaskScheduler
             {
@@ -160,9 +160,9 @@ namespace Tauron.Application
         }
         
         private readonly bool _doStartup;
-        
-        private readonly ISplashService _splash;
-        
+
+        public ISplashService Splash { get; }
+
         private string[] _args;
         [CanBeNull]
         private IWindow _mainWindow;
@@ -220,19 +220,19 @@ namespace Tauron.Application
         [NotNull]
         public string[] GetArgs() => (string[]) _args.Clone();
 
-        protected virtual void ConfigurateLagging(LoggingConfiguration config) { }
+        protected virtual void ConfigurateLagging(LoggingConfiguration config, Action<SplashMessage> action) { }
         
         [NotNull]
-        protected virtual IContainer CreateContainer() => new DefaultContainer();
+        protected virtual IContainer CreateContainer(Action<SplashMessage> action) => new DefaultContainer();
 
         [CanBeNull]
-        protected virtual IWindow DoStartup([NotNull] CommandLineProcessor args) => null;
+        protected virtual IWindow DoStartup([NotNull] CommandLineProcessor args, Action<SplashMessage> action) => null;
 
-        protected abstract void Fill([NotNull] IContainer container);
+        protected abstract void Fill([NotNull] IContainer container, Action<SplashMessage> action);
         
-        protected virtual void LoadCommands() { }
+        protected virtual void LoadCommands(Action<SplashMessage> action) { }
         
-        protected virtual void LoadResources() { }
+        protected virtual void LoadResources(Action<SplashMessage> action) { }
         
         protected virtual void MainWindowClosed([NotNull] object sender, [NotNull] EventArgs e) { }
         
@@ -243,7 +243,7 @@ namespace Tauron.Application
             if (_doStartup)
             {
                 _args = args;
-                _splash.ShowSplash();
+                Splash.ShowSplash();
                 _scheduler.QueueTask(new UserTask(PerformStartup, false));
             }
 
@@ -257,11 +257,11 @@ namespace Tauron.Application
             Scheduler.Dispose();
         }
 
-        protected virtual void InitializeModule([NotNull] IModule module)
+        protected virtual void InitializeModule([NotNull] IModule module, Action<ComponentUpdate> addComponent)
         {
             Argument.NotNull(module, nameof(module));
 
-            module.Initialize(this);
+            module.Initialize(this, addComponent);
             ModuleHandlerRegistry.Progress(module);
         }
         
@@ -269,44 +269,89 @@ namespace Tauron.Application
         {
             try
             {
-                var listner = _splash.Listner;
+                var listner = Splash.Listner;
 
-                listner.ReceiveMessage(Resources.Resources.Init_Msg_Step1);
-
-                var config = new LoggingConfiguration();
-                ConfigurateLagging(config);
-                LogManager.Configuration = config;
-                LogManager.ReconfigExistingLoggers();
-
-                Container = CreateContainer();
-                Fill(Container);
-
-                listner.ReceiveMessage(Resources.Resources.Init_Msg_Step2);
-                foreach (var module in Container.ResolveAll(typeof(IModule), null)
-                    .Cast<IModule>()
-                    .OrderBy(m => m.Order))
-                    InitializeModule(module);
-
-                listner.ReceiveMessage(Resources.Resources.Init_Msg_Step3);
-                LoadResources();
-                LoadCommands();
-
-                listner.ReceiveMessage(Resources.Resources.Init_Msg_Step4);
-                var win = DoStartup(new CommandLineProcessor(this));
-
-                MainWindow = win;
-
-                if (win != null)
+                listner.AddTask(200, action =>
                 {
-                    UiSynchronize.Synchronize.Invoke(
-                        () =>
-                        {
-                            win.Show();
-                            win.Closed += MainWindowClosed;
-                        });
-                }
+                    string msg = Resources.Resources.Init_Msg_Step1;
+                    action(new ProgressUpdate(0, msg));
 
-                _splash.CloseSplash();
+                    var config = new LoggingConfiguration();
+                    ConfigurateLagging(config, action);
+                    LogManager.Configuration = config;
+                    LogManager.ReconfigExistingLoggers();
+                    action(new ProgressUpdate(10, msg));
+
+                    Container = CreateContainer(action);
+                    action(new ProgressUpdate(15, msg));
+
+                    using ((Container as IComponentMessager)?.Subscribe(action))
+                        Fill(Container, action);
+
+                    action(new ProgressUpdate(100, msg));
+                });
+
+                listner.AddTask(100, action =>
+                {
+                    string msg = Resources.Resources.Init_Msg_Step2;
+                    action(new ProgressUpdate(0, msg));
+                    var modules = Container.ResolveAll(typeof(IModule), null)
+                        .Cast<IModule>()
+                        .OrderBy(m => m.Order).ToArray();
+                    int count = modules.Length;
+                    if (count == 0)
+                    {
+                        action(new ProgressUpdate(100, msg));
+                        return;
+                    }
+
+                    action(new ProgressUpdate(20, msg));
+
+                    int step = 0;
+                    foreach (var module in modules)
+                    {
+                        InitializeModule(module, action);
+                        step++;
+                        action(new ProgressUpdate(100 / count * step, msg));
+                    }
+
+                    action(new ProgressUpdate(100, msg));
+                });
+
+                listner.AddTask(50, action =>
+                {
+                    string msg = Resources.Resources.Init_Msg_Step3;
+                    action(new ProgressUpdate(0, msg));
+                    LoadResources(action);
+                    action(new ProgressUpdate(50, msg));
+                    LoadCommands(action);
+                    action(new ProgressUpdate(100, msg));
+                });
+
+                listner.AddTask(100, action =>
+                {
+                    string msg = Resources.Resources.Init_Msg_Step4;
+                    action(new ProgressUpdate(0, msg));
+
+                    var win = DoStartup(new CommandLineProcessor(this), action);
+
+                    MainWindow = win;
+
+                    if (win != null)
+                    {
+                        UiSynchronize.Synchronize.Invoke(
+                            () =>
+                            {
+                                win.Show();
+                                win.Closed += MainWindowClosed;
+                            });
+                    }
+
+                    action(new ProgressUpdate(100, msg));
+                });
+
+                listner.Run();
+                Splash.CloseSplash();
                 _args = null;
             }
             catch (Exception e)

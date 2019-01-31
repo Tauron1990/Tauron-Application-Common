@@ -24,14 +24,14 @@ namespace Tauron.Application.Models.Rules
                 _propertyCache = TypeDescriptor.GetProperties(context.Model).Find(OtherProperty, false);
 
             if (_propertyCache == null)
-                return CreateResult(RuleMessages.CompareUnknownProperty.SFormat(OtherProperty));
+                return CreateResult(RuleMessages.CompareUnknownProperty, OtherProperty);
 
             object value2 = _propertyCache.GetValue(context.Model);
 
             if (Equals(value, value2)) return CreateResult();
             var name = DisplayNameHelper.GetDisplayName(context.ModelType.Name, OtherProperty, () => context.ModelType.GetProperty(OtherProperty));
 
-            return CreateResult(RuleMessages.CompareMustMatch.SFormat(context.Property.Metadata.DisplayName, name));
+            return CreateResult(RuleMessages.CompareMustMatch, context.Property.Metadata.DisplayName, name);
         }
     }
 }

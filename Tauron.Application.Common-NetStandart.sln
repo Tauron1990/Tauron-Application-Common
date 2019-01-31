@@ -15,13 +15,23 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tauron.Application.Common.M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common.MVVM.Wpf", "Tauron.Application.Common.MVVM.Wpf\Tauron.Application.Common.MVVM.Wpf.csproj", "{4DBEE1B0-5036-4C62-AF18-1F12C2512E3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common.BaseLayer", "Tauron.Application.Common.BaseLayer\Tauron.Application.Common.BaseLayer.csproj", "{0A0EF8CB-669A-4364-AF5D-AE5706489D05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tauron.Application.Common.BaseLayer", "Tauron.Application.Common.BaseLayer\Tauron.Application.Common.BaseLayer.csproj", "{0A0EF8CB-669A-4364-AF5D-AE5706489D05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common.BaseLayer.EntityFramework", "Tauron.Application.Common.BaseLayer.EntityFramework\Tauron.Application.Common.BaseLayer.EntityFramework.csproj", "{A8B21C89-1CC8-442B-8D52-1A8B8FFEE143}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tauron.Application.Common.BaseLayer.EntityFramework", "Tauron.Application.Common.BaseLayer.EntityFramework\Tauron.Application.Common.BaseLayer.EntityFramework.csproj", "{A8B21C89-1CC8-442B-8D52-1A8B8FFEE143}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Files", "Tauron.Application.Files\Tauron.Application.Files.csproj", "{323994BC-5CFF-4844-A932-774F21F6C2A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tauron.Application.Files", "Tauron.Application.Files\Tauron.Application.Files.csproj", "{323994BC-5CFF-4844-A932-774F21F6C2A7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common.Updater", "Tauron.Application.Common.Updater\Tauron.Application.Common.Updater.csproj", "{0CCFECCD-BCFB-4A3E-A6F1-F5B627FA9236}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Experimental", "Experimental", "{1BFC724D-2C77-4AC1-8805-C43931FB2578}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common.Wpf.SplashScreen", "Tauron.Application.Common.Wpf.SplashScreen\Tauron.Application.Common.Wpf.SplashScreen.csproj", "{A008DDBA-DC3A-45ED-BFBD-6A646940AD30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{8C4D7DF6-CE79-401D-B01E-8D3A1F2AB9A1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{89473D18-8162-44B9-91DD-3E969AA51E51}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{A9072E7A-DAE0-4EED-B811-04D62CFF5118}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -90,9 +100,31 @@ Global
 		{0CCFECCD-BCFB-4A3E-A6F1-F5B627FA9236}.Release Debug|Any CPU.Build.0 = Release|Any CPU
 		{0CCFECCD-BCFB-4A3E-A6F1-F5B627FA9236}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0CCFECCD-BCFB-4A3E-A6F1-F5B627FA9236}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A008DDBA-DC3A-45ED-BFBD-6A646940AD30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A008DDBA-DC3A-45ED-BFBD-6A646940AD30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A008DDBA-DC3A-45ED-BFBD-6A646940AD30}.Release Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{A008DDBA-DC3A-45ED-BFBD-6A646940AD30}.Release Debug|Any CPU.Build.0 = Release|Any CPU
+		{A008DDBA-DC3A-45ED-BFBD-6A646940AD30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A008DDBA-DC3A-45ED-BFBD-6A646940AD30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C4D7DF6-CE79-401D-B01E-8D3A1F2AB9A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C4D7DF6-CE79-401D-B01E-8D3A1F2AB9A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C4D7DF6-CE79-401D-B01E-8D3A1F2AB9A1}.Release Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{8C4D7DF6-CE79-401D-B01E-8D3A1F2AB9A1}.Release Debug|Any CPU.Build.0 = Release|Any CPU
+		{8C4D7DF6-CE79-401D-B01E-8D3A1F2AB9A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C4D7DF6-CE79-401D-B01E-8D3A1F2AB9A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9072E7A-DAE0-4EED-B811-04D62CFF5118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9072E7A-DAE0-4EED-B811-04D62CFF5118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9072E7A-DAE0-4EED-B811-04D62CFF5118}.Release Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{A9072E7A-DAE0-4EED-B811-04D62CFF5118}.Release Debug|Any CPU.Build.0 = Release|Any CPU
+		{A9072E7A-DAE0-4EED-B811-04D62CFF5118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9072E7A-DAE0-4EED-B811-04D62CFF5118}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8C4D7DF6-CE79-401D-B01E-8D3A1F2AB9A1} = {1BFC724D-2C77-4AC1-8805-C43931FB2578}
+		{A9072E7A-DAE0-4EED-B811-04D62CFF5118} = {89473D18-8162-44B9-91DD-3E969AA51E51}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {89D9E0CE-98E3-466A-B160-AE2000937FB3}

@@ -11,6 +11,8 @@ namespace Tauron.Application.Common.BaseLayer.Core
         [InjectRepositoryFactory]
         public RepositoryFactory RepositoryFactory { get; set; }
 
+        public abstract bool HasResult { get; }
+
         public bool Error { get; private set; }
         public IEnumerable<object> Errors { get; private set; }
 

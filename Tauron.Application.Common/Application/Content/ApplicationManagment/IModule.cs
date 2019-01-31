@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace Tauron.Application
 {
@@ -6,6 +7,6 @@ namespace Tauron.Application
     {
         int Order { get; }
 
-        void Initialize([NotNull] CommonApplication application);
+        void Initialize([NotNull] CommonApplication application, Action<ComponentUpdate> addComponent);
     }
 }

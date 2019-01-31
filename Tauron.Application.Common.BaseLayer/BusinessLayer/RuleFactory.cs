@@ -8,9 +8,9 @@ using Tauron.Application.Ioc;
 
 namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 {
-    [Export(typeof(RuleFactory))]
+    [Export(typeof(IRuleFactory))]
     [PublicAPI]
-    public sealed class RuleFactory
+    public sealed class RuleFactory : IRuleFactory
     {
         private readonly IDictionary<string, IRuleBase> _cache = new Dictionary<string, IRuleBase>();
 

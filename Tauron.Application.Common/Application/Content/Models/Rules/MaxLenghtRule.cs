@@ -33,43 +33,16 @@ namespace Tauron.Application.Models.Rules
                     num = array.Length;
                     break;
                 case IEnumerable enumerable:
-                    num = Count(enumerable);
+                    num = enumerable.Count();
                     break;
                 default:
                     num = 0;
                     break;
             }
 
-            return -1 != Length && num <= Length ? CreateResult() : CreateResult(RuleMessages.InvalidMaxLength);
+            return -1 != Length && num <= Length ? CreateResult() : CreateResult(RuleMessages.MaxLengthValidationError, context.DisplayName, Length);
         }
 
-        public static void DynamicUsing(object resource, Action action)
-        {
-            try
-            {
-                action();
-            }
-            finally
-            {
-                if (resource is IDisposable d)
-                    d.Dispose();
-            }
-        }
 
-        public static int Count(IEnumerable source)
-        {
-            if (source is ICollection col)
-                return col.Count;
-
-            int c = 0;
-            var e = source.GetEnumerator();
-            DynamicUsing(e, () =>
-            {
-                while (e.MoveNext())
-                    c++;
-            });
-
-            return c;
-        }
     }
 }

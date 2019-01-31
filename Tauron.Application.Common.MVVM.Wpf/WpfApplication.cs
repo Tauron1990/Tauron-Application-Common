@@ -39,7 +39,14 @@ namespace Tauron.Application
 
         protected WpfApplication(bool doStartup, System.Windows.Application app, bool isInit)
             : base(doStartup, new SplashService(), new WpfIuiControllerFactory(app, isInit)) { }
-        
+
+        protected WpfApplication(bool doStartup, ISplashService splashService)
+            : base(doStartup, splashService, new WpfIuiControllerFactory()) { }
+
+
+        protected WpfApplication(bool doStartup, System.Windows.Application app, bool isInit, ISplashService splashService)
+            : base(doStartup, splashService, new WpfIuiControllerFactory(app, isInit)) { }
+
         [CanBeNull]
         public string ThemeDictionary { get; set; }
 
@@ -48,7 +55,7 @@ namespace Tauron.Application
 
         protected virtual void ConfigSplash() { }
 
-        protected override void LoadResources()
+        protected override void LoadResources(Action<SplashMessage> action)
         {
             if (string.IsNullOrEmpty(ThemeDictionary)) return;
 
@@ -74,7 +81,7 @@ namespace Tauron.Application
             }));
         }
 
-        protected override void ConfigurateLagging(LoggingConfiguration config)
+        protected override void ConfigurateLagging(LoggingConfiguration config, Action<SplashMessage> action)
         {
             var filetarget = new FileTarget
             {
@@ -91,9 +98,9 @@ namespace Tauron.Application
             config.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, filetarget));
         }
 
-        protected override IContainer CreateContainer()
+        protected override IContainer CreateContainer(Action<SplashMessage> action)
         {
-            var con = base.CreateContainer();
+            var con = base.CreateContainer(action);
 
             con.Register(new PropertyModelExtension());
             con.Register(new ProxyExtension());

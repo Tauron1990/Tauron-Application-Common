@@ -21,7 +21,7 @@ namespace Tauron.Application.Models.Rules
                 case string text when _regex.Match(text).Length > 0:
                     return CreateResult();
                 default:
-                    return CreateResult(RuleMessages.EmailAddressInvalid);
+                    return CreateResult(RuleMessages.EmailAddressInvalid, context.DisplayName);
             }
         }
 
