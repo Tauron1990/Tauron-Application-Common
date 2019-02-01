@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -28,22 +29,24 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 
                 Type ruleType = rule.GetType();
                 Type parameterType = descriptor.ParameterType;
-                Type returnType = descriptor.ParameterType;
+                Type returnType = descriptor.ReturnType;
 
                 MethodInfo[] methods = ruleType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 MethodInfo method;
                 if (parameterType == null && returnType == null)
                 {
                     method = methods.Where(NameFilter).Single(m => m.ReturnType == typeof(void) && m.GetParameters().Length == 0);
+                    var expr = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method));
 
-                    return Expression.Lambda<Func<Return>>(CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method))).CompileFast();
+                    return Expression.Lambda(typeof(Func<Return>), expr).CompileFast();
                 }
 
                 if (parameterType == null)
                 {
                     method = methods.Where(NameFilter).Single(m => m.ReturnType == returnType && m.GetParameters().Length == 0);
+                    var tree = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method));
 
-                    return Expression.Lambda<Func<Return>>(CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method))).CompileFast();
+                    return Expression.Lambda<Func<Return>>(tree).CompileFast();
                 }
 
                 if (returnType == null)
@@ -53,7 +56,7 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
                         if (m.ReturnType != typeof(void)) return false;
                         var parms = m.GetParameters();
 
-                        return parms.Length == 1 && parms[1].ParameterType == parameterType;
+                        return parms.Length == 1 && parms[0].ParameterType == parameterType;
 
                     });
 
@@ -66,7 +69,7 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
                 
                 method = methods.Where(NameFilter).Single(m => m.GetParameters().FirstOrDefault()?.ParameterType == parameterType && m.ReturnType == returnType);
 
-                var parm2 = Expression.Parameter(parameterType ?? throw new InvalidOperationException("Parameter was Null"));
+                var parm2 = Expression.Parameter(parameterType);
                 var exp2 = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method, parm2));
                 var delegateType2 = typeof(Func<,>).MakeGenericType(parameterType, typeof(Return));
 
@@ -74,34 +77,46 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 
                 Expression CreateErrorExpression(Expression exp)
                 {
-                    Expression firstExp = exp;
-                    Expression returnVariable = Expression.Variable(returnType ?? typeof(object));
+                    List<Expression> blockList = new List<Expression>();
+                    List<ParameterExpression> variables = new List<ParameterExpression>();
+
+                    ParameterExpression callVariable = Expression.Variable(typeof(object), "callResult");
                     if (returnType != null)
-                        firstExp = Expression.Assign(returnVariable, exp);
+                    {
+                        variables.Add(callVariable);
+                        blockList.Add(Expression.Assign(callVariable, Expression.TypeAs(exp, typeof(object))));
+                    }
+                    else
+                        blockList.Add(exp);
 
                     Expression falseExpression;
+                    LabelTarget returnLabel = Expression.Label(typeof(Return), "returnLabel");
+                    //Expression returnVariable = Expression.Variable(typeof(Return), "returnVariable");
                     if (returnType == null)
                     {
-                        falseExpression = Expression.Return(Expression.Label(typeof(VoidReturn)),
+                        falseExpression = Expression.Return(returnLabel,
                             Expression.New(typeof(VoidReturn)));
                     }
                     else
                     {
-                        falseExpression = Expression.Return(Expression.Label(typeof(ObjectReturn)),
+                        falseExpression = Expression.Return(returnLabel,
                             Expression.New(typeof(ObjectReturn).GetConstructor(new[] {typeof(object)}) ?? throw new InvalidOperationException(),
-                                returnVariable));
+                                callVariable));
                     }
 
-                    return Expression.Block(firstExp,
-                        Expression.IfThenElse(Expression.Property(Expression.Constant(rule), nameof(rule.Error)),
-                            Expression.Return(Expression.Label(typeof(ErrorReturn)),
-                                Expression.New(typeof(ErrorReturn).GetConstructor(new[] {typeof(IEnumerable<object>)}) ?? throw new InvalidOperationException(),
-                                    Expression.Property(Expression.Constant(rule), nameof(rule.Errors)))), falseExpression));
+                    blockList.Add(Expression.IfThenElse(Expression.Property(Expression.Constant(rule), nameof(rule.Error)),
+                        Expression.Return(returnLabel,
+                            Expression.New(typeof(ErrorReturn).GetConstructor(new[] {typeof(IEnumerable<object>)}) ?? throw new InvalidOperationException(),
+                                Expression.Property(Expression.Constant(rule), nameof(rule.Errors)))),
+                        falseExpression));
+                    blockList.Add(Expression.Label(returnLabel, Expression.Constant(null, typeof(Return))));
 
+                    return returnType == null ? Expression.Block(blockList.ToArray()) : Expression.Block(variables, blockList);
                 }
             }
         }
 
+        [DebuggerStepThrough]
         private static bool NameFilter(MethodInfo info)
         {
             const string actionName = "Action";

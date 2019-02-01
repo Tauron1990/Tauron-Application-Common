@@ -55,5 +55,10 @@
       <Name>Tauron.Application.Common.BaseLayer</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FastExpressionCompiler">
+      <Version>2.0.0</Version>
+    </PackageReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -98,18 +98,22 @@ namespace TestApp
                     case nameof(RuleTest1):
                         mock.DirectCallVoid(nameof(RuleTest1));
                         Console.WriteLine("Test Passsed");
+                        Console.WriteLine();
                         break;
                     case nameof(RuleTest2):
                         mock.DirectCallVoid(nameof(RuleTest2), "Hello There");
                         Console.WriteLine("Test Passsed");
+                        Console.WriteLine();
                         break;
                     case nameof(RuleTest3):
                         Console.WriteLine(mock.DirectCall<int>(nameof(RuleTest3)));
                         Console.WriteLine("Test Passsed");
+                        Console.WriteLine();
                         break;
                     case nameof(RuleTest4):
                         Console.WriteLine(mock.DirectCall<int, string>(nameof(RuleTest4), "Hello There 2"));
                         Console.WriteLine("Test Passsed");
+                        Console.WriteLine();
                         break;
                     case nameof(ErrorTest):
                         try
@@ -125,6 +129,8 @@ namespace TestApp
                         break;
                 }
             }
+
+            Console.ReadKey();
         }
     }
 }

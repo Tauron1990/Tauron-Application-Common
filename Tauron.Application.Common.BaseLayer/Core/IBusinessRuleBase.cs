@@ -34,6 +34,6 @@ namespace Tauron.Application.Common.BaseLayer.Core
 
         public Type ParameterType { get; } = typeof(TType);
 
-        public Type ReturnType { get; }
+        public Type ReturnType { get; } 
     }
 }

@@ -96,7 +96,7 @@ namespace Tauron.Application.Ioc.BuildUp
             }
         }
         
-        internal object BuildUp([NotNull] Type type, [CanBeNull] object[] constructorArguments, ErrorTracer errorTracer, [CanBeNull] BuildParameter[] buildParameters)
+        public object BuildUp([NotNull] Type type, [CanBeNull] object[] constructorArguments, ErrorTracer errorTracer, [CanBeNull] BuildParameter[] buildParameters)
         {
             Argument.NotNull(type, nameof(type));
 
