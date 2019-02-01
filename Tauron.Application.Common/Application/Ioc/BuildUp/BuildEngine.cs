@@ -14,9 +14,9 @@ namespace Tauron.Application.Ioc.BuildUp
     {
         public BuildEngine([NotNull] IContainer container, [NotNull] ExportProviderRegistry providerRegistry, [NotNull] ComponentRegistry componentRegistry)
         {
-            Argument.NotNull(container, nameof(container));
-            Argument.NotNull(providerRegistry, nameof(providerRegistry));
-            Argument.NotNull(componentRegistry, nameof(componentRegistry));
+            //Argument.NotNull(container, nameof(container));
+            //Argument.NotNull(providerRegistry, nameof(providerRegistry));
+            //Argument.NotNull(componentRegistry, nameof(componentRegistry));
 
             _container = container;
             _componentRegistry = componentRegistry;
