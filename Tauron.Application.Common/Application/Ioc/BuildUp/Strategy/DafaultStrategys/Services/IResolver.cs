@@ -1,10 +1,11 @@
-﻿using JetBrains.Annotations;
+﻿using ExpressionBuilder.Fluent;
+using JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
     public interface IResolver
     {
         [CanBeNull]
-        object Create(ErrorTracer errorTracer);
+        IRightable Create(ErrorTracer errorTracer);
     }
 }

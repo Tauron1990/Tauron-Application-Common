@@ -56,6 +56,9 @@ namespace Tauron.Application.Ioc
 
         private readonly List<IContainerExtension> _extensions;
 
+        public Func<object> DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
+            => () => _buildEngine.CreateDelegate(data.Export, data.ContractName, errorTracer, parameters, false, out _)(null);
+
         [NotNull]
         public object BuildUp([NotNull] ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
         {
@@ -84,7 +87,7 @@ namespace Tauron.Application.Ioc
 
             try
             {
-                return _buildEngine.BuildUp(toBuild, errorTracer, parameters);
+                return _buildEngine.BuildUp(toBuild, errorTracer, parameters, _exports.TryFindExport(toBuild));
             }
             catch (Exception e)
             {

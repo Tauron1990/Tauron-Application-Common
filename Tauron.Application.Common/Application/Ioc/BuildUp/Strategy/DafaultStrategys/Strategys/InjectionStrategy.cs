@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ExpressionBuilder;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.Components;
 
@@ -23,17 +24,17 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         public override void OnBuild(IBuildContext context)
         {
             context.ErrorTracer.Phase = "Injecting Imports for " + context.Metadata;
-
-            if (context.Target == null) return;
-
+            
             foreach (var policy in context.Policys.GetAll<InjectMemberPolicy>())
             {
-                policy.Injector.Inject(context.Target, context.Container, policy.Metadata,
+                policy.Injector.Inject(context.CompilationUnit, context.Container, policy.Metadata,
                     policy.Interceptors == null ? null : new CompositeInterceptor(policy.Interceptors),
                     context.ErrorTracer, context.Parameters);
 
                 if (context.ErrorTracer.Exceptional) return;
             }
+
+            context.CompilationUnit.AddAndPush(CodeLine.Return());
         }
 
         public override void OnPerpare(IBuildContext context)

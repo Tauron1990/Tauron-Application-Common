@@ -41,7 +41,7 @@ namespace Tauron.Application.Ioc.BuildUp
         {
             foreach (var strategy in strategies)
             {
-                if (context.BuildCompled || context.ErrorTracer.Exceptional) return true;
+                if (context.ErrorTracer.Exceptional) return true;
 
                 invoker(strategy);
             }

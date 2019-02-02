@@ -27,7 +27,7 @@ namespace Tauron
             throw ex;
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining), NotNull]
         public static TType NotNull<TType>(TType toCheck, string parameterName)
         {
             Check(() => toCheck == null ? new ArgumentNullException(parameterName) : null, GetCurrentClassName);

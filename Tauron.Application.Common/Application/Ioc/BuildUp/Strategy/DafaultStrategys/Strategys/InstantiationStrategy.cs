@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using ExpressionBuilder;
 using Tauron.Application.Ioc.Components;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
@@ -16,12 +17,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             context.ErrorTracer.Phase = "Contruct Object for " + context.Metadata;
 
-            context.Target = policy.Constructor.Invoke(context); //(context, policy.Generator);
+            context.CompilationUnit
+                .AddCode(CodeLine.Assign(Operation.Variable(CompilationUnit.TargetName), policy.Constructor(context)));
+
+            //context.Target = policy.Constructor.Invoke(context); //(context, policy.Generator);
         }
 
         public override void OnPerpare(IBuildContext context)
         {
-            if (context.Target != null) return;
+            //if (context.Target != null) return;
 
             context.ErrorTracer.Phase = "Reciving Construtor Informations for " + context.Metadata;
 

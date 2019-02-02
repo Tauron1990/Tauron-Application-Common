@@ -11,6 +11,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         
         private void EventAction([NotNull] string topic, [NotNull] Action<EventEntry> entryAction, ErrorTracer errorTracer)
         {
+            if (errorTracer == null) errorTracer = new ErrorTracer();
             errorTracer.Phase = "Resolve Topic " + Argument.NotNull(topic, nameof(topic));
 
             var entry = _entrys.FirstOrDefault(ent => ent.Topic == topic);
@@ -103,29 +104,33 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             
             public bool IsAlive => _handler.Count != 0 && _publisher.Count != 0;
             
-            public void AddPublisher([NotNull] EventInfo info, [NotNull] object publisher, [NotNull] ErrorTracer errorTracer)
+            public void AddPublisher([NotNull] EventInfo info, [NotNull] object publisher, [CanBeNull] ErrorTracer errorTracer)
             {
+                if(errorTracer == null) errorTracer = new ErrorTracer();
                 Argument.NotNull(errorTracer, nameof(errorTracer)).Phase = "Adding Publisher " + Topic;
                 Argument.NotNull(info, nameof(info)).AddEventHandler(Argument.NotNull(publisher, nameof(publisher)), Delegate.CreateDelegate(info.EventHandlerType, this, Handlermethod));
                 _publisher.Add(publisher);
             }
             
-            public void Addhandler([NotNull] Delegate dDelegate, [NotNull] ErrorTracer errorTracer)
+            public void Addhandler([NotNull] Delegate dDelegate, [CanBeNull] ErrorTracer errorTracer)
             {
+                if (errorTracer == null) errorTracer = new ErrorTracer();
                 Argument.NotNull(errorTracer, nameof(errorTracer)).Phase = "Adding Handler " + Topic;
                 _handler.Add(new HandlerEntry(dDelegate));
             }
             
-            public void Addhandler([NotNull] MethodInfo dDelegate, [NotNull] object target, [NotNull] ErrorTracer errorTracer)
+            public void Addhandler([NotNull] MethodInfo dDelegate, [NotNull] object target, [CanBeNull] ErrorTracer errorTracer)
             {
+                if (errorTracer == null) errorTracer = new ErrorTracer();
                 Argument.NotNull(errorTracer, nameof(errorTracer)).Phase = "Adding Handler " + Topic;
                 _handler.Add(new HandlerEntry(dDelegate, target));
             }
             
         }
         
-        public void AddEventHandler([NotNull] string topic, [NotNull] Delegate handler, [NotNull] ErrorTracer errorTracer)
+        public void AddEventHandler([NotNull] string topic, [NotNull] Delegate handler, [CanBeNull] ErrorTracer errorTracer)
         {
+            if (errorTracer == null) errorTracer = new ErrorTracer();
             Argument.NotNull(errorTracer, nameof(errorTracer));
             Argument.NotNull(handler, nameof(handler));
 

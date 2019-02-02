@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
+using ExpressionBuilder;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.Components;
 
@@ -49,7 +51,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
                     true,
                     true,
                     true,
-                    con => Activator.CreateInstance(type, args),
+                    con => Operation.CreateInstance(type, args.Select(Operation.Constant).ToArray()), //Activator.CreateInstance(type, args),
                     type.Name),
                 true);
 
@@ -63,7 +65,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
             Argument.NotNull(type, nameof(type));
             Argument.NotNull(target, nameof(target));
 
-            var info = new ExternalExportInfo(true, true, true, true, context => target, null);
+            var info = new ExternalExportInfo(true, true, true, true, context => Operation.Constant(target), null);
 
             var export = new DefaultExport(type, info, true);
             export.ImportMetadata = _chain.SelectImport(export);
@@ -81,7 +83,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 
             return new DefaultExport(
                 info,
-                new ExternalExportInfo(true, false, true, false, arg1 => info.Invoke(null, null), info.Name),
+                new ExternalExportInfo(true, false, true, false, arg1 => Operation.InvokeReturn(info), info.Name),
                 false);
         }
     }

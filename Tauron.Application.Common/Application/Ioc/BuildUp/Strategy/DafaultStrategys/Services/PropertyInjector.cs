@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using ExpressionBuilder;
+using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
@@ -11,6 +13,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             : base(metadataFactory, member, resolverExtensions){}
 
         protected override Type MemberType => Member.PropertyType;
-        protected override void Inject(object target, object value) => Member.SetValue(target, value);
+
+        protected override void Inject(CompilationUnit target, IRightable value) => target.AddCode(Operation.Set(CompilationUnit.TargetName, Member, value));
     }
 }

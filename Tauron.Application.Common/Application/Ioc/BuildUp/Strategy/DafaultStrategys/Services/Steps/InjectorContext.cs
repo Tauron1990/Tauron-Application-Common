@@ -41,6 +41,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
         public IContainer Container { get; set; }
 
         [NotNull]
-        public object Target { get; set; }
+        public CompilationUnit CompilationUnit { get; set; }
     }
 }

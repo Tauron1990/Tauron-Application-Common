@@ -1,4 +1,5 @@
 ﻿using System;
+using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Strategy;
 
@@ -7,9 +8,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
     [PublicAPI]
     public sealed class ExternalExportInfo
     {
-        private readonly Func<IBuildContext, object> _createInstance;
+        private readonly Func<IBuildContext, IRightable> _createInstance;
 
-        public ExternalExportInfo(bool external, bool handlesLiftime, bool canUseBuildup, bool handlesDispose, Func<IBuildContext, object> createInstance,
+        public ExternalExportInfo(bool external, bool handlesLiftime, bool canUseBuildup, bool handlesDispose, Func<IBuildContext, IRightable> createInstance,
             string extenalComponentName)
         {
             External = external;
@@ -20,7 +21,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports
             _createInstance = createInstance;
         }
 
-        public object Create(IBuildContext context)//, ProxyGenerator service)
+        public IRightable Create(IBuildContext context)//, ProxyGenerator service)
             => _createInstance(context);
 
         public bool CanUseBuildup { get; private set; }

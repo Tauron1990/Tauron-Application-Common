@@ -154,5 +154,14 @@ namespace Tauron.Application.Ioc.Components
             lock (this)
                 _registrations.RemoveValue(export);
         }
+
+        [CanBeNull]
+        public IExport TryFindExport(object toBuild)
+        {
+            Type toBuildType = toBuild.GetType();
+
+            lock (this)
+                return _registrations.Values.SelectMany(e => e.AllValues).FirstOrDefault(export => export.ImplementType.IsAssignableFrom(toBuildType));
+        }
     }
 }

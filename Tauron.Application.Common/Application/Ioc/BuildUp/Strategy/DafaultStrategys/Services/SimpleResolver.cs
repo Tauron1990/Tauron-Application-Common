@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Linq;
+using ExpressionBuilder;
+using ExpressionBuilder.Fluent;
+using ExpressionBuilder.Operations;
+using FastExpressionCompiler;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
-    public delegate bool InterceptorCallback(ref object value);
+    public delegate (Condition IsOK, ICodeLine Operation) InterceptorCallback(string variable);
 
     [PublicAPI]
     public class SimpleResolver : IResolver
@@ -26,7 +30,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _extensions = Argument.NotNull(extensions, nameof(extensions));
         }
 
-        public object Create([NotNull] ErrorTracer errorTracer)
+        public IRightable Create([NotNull] ErrorTracer errorTracer)
         {
             errorTracer.Phase = "Injecting Import For " + Metadata;
 
@@ -34,21 +38,30 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             try
             {
-                if (_isDescriptor) return new ExportDescriptor(Metadata);
+                if (_isDescriptor) return Operation.CreateInstance(typeof(ExportDescriptor), Operation.Constant(Metadata));
 
                 if (_isExportFactory)
                 {
-                    return
-                        Activator.CreateInstance(
-                            typeof(InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
-                            new Func<BuildParameter[], object>(helper.BuildUp),
-                            new Func<object>(helper.Metadata), Metadata.Export.ImplementType);
+                    var fullType = typeof(InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType);
+                    var opBlock = helper.BuildUp(true);
+
+                    return Operation.CreateInstance(fullType,
+                        Operation.Constant(opBlock.Function.ToExpression().CompileFast<Func<BuildParameter, object>>()),
+                        Operation.Constant(new Func<object>(helper.Metadata)),
+                        Operation.Constant(new Func<object>(helper.Metadata)),
+                        Operation.Constant(Metadata.Export.ImplementType));
+
+                    //return
+                    //    Activator.CreateInstance(
+                    //        typeof(InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType),
+                    //        new Func<BuildParameter[], object>(helper.BuildUp),
+                    //        new Func<object>(helper.Metadata), Metadata.Export.ImplementType);
                 }
 
                 try
                 {
                     errorTracer.IncrementIdent();
-                    return helper.BuildUp(null, errorTracer);
+                    return helper.BuildUp(false);
                 }
                 finally
                 {
@@ -82,32 +95,50 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 _extensions = extensions;
             }
 
-            [CanBeNull]
-            public object BuildUp([CanBeNull] BuildParameter[] parameters) => BuildUp(parameters, null);
+            //[CanBeNull]
+            //public IRightable BuildUp() //([CanBeNull] BuildParameter[] parameters) => BuildUp(parameters, null);
 
-            [CanBeNull]
-            public object BuildUp([CanBeNull] BuildParameter[] parameters, [CanBeNull] ErrorTracer error)
+            [NotNull]
+            public OperationBlock BuildUp(bool hasParameter) //([CanBeNull] BuildParameter[] parameters, [CanBeNull] ErrorTracer error)
             {
-                if (error == null)
-                    error = new ErrorTracer();
+                var op = Operation.NeestedLambda("creator", _buildMetadata.InterfaceType, parameter =>
+                {
+                    const string tempObject = "TempObject";
+                    const string buildParameters = "buildParameters";
 
-                var temp = _container.BuildUp(_buildMetadata, error, parameters);
-                if (error.Exceptional) throw new BuildUpException(error);
+                    if (hasParameter)
+                        parameter.WithParameter<BuildParameter[]>(buildParameters);
 
-                var effectiveType = temp.GetType();
-                var extension = _extensions.FirstOrDefault(e => e.TargetType == effectiveType);
-                if (extension != null)
-                    temp = extension.Progress(_buildMetadata, temp);
+                    parameter
+                        .WithBody(
+                            CodeLine.CreateVariable<object>(tempObject),
+                            CodeLine.Assign(tempObject, Operation.InvokeReturn(Operation.Constant(_container), nameof(_container.BuildUp), 
+                                Operation.Constant(_buildMetadata), Operation.CreateInstance(typeof(ErrorTracer)), hasParameter 
+                                    ? Operation.Variable(buildParameters) 
+                                    : Operation.Null())),
+                            _extensions.FirstOrDefault(e => e.TargetType == _buildMetadata.Export.ImplementType)?.Progress(_buildMetadata, tempObject),
+                            CreateInterceptor(tempObject))
+                        .Returns(tempObject);
 
-                var flag = _interceptor == null || _interceptor(ref temp);
+                });
 
-                return !flag ? null : temp;
+                return op;
             }
 
             [NotNull]
             public object Metadata() => _metadataObject;
-        }
 
+            private ICodeLine CreateInterceptor(string variableName)
+            {
+                if (_interceptor == null) return CodeLine.Return();
+                var erg = _interceptor(variableName);
+
+                return CodeLine.CreateIf(erg.IsOK)
+                    .Then(erg.Operation, CodeLine.Return())
+                    .Else(CodeLine.Assign(variableName, Operation.Null()), CodeLine.Return());
+            }
+        }
+        
         private readonly Type _factoryType;
         private readonly bool _isExportFactory;
         private readonly object _metadataObject;

@@ -27,8 +27,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps
             if (context.ImportInterceptor != null)
             {
                 context.ReflectionContext.InterceptorCallback =
-                    new ImportInterceptorHelper(context.ImportInterceptor, (MemberInfo) context.MemberInfo,
-                        context.Metadata, context.Target).Intercept;
+                    new ImportInterceptorHelper(context.ImportInterceptor, (MemberInfo) context.MemberInfo, context.Metadata).Intercept;
             }
 
             if (context.Metadata.Metadata.TryGetValue(LevelSpecificImport.LevelMetadata, out var val))

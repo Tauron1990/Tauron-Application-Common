@@ -1,5 +1,4 @@
-﻿using System;
-using Tauron.Application.Ioc.LifeTime;
+﻿using ExpressionBuilder;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
@@ -25,8 +24,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             context.ErrorTracer.Phase = "Setting up Liftime for " + context.Metadata;
 
-            policy.LifetimeContext = (ILifetimeContext) Activator.CreateInstance(policy.LiftimeType);
-            policy.LifetimeContext.SetValue(context.Target);
+            const string lifetimecontext = CompilationUnit.DefaultVariableNames.LifeTimeContext;
+            const string inputName = CompilationUnit.DefaultVariableNames.Input;
+
+           context.CompilationUnit
+                .AddCode(CodeLine.CreateIf(Condition.Compare(inputName, Operation.Null()))
+                    .Then(CodeLine.Assign(lifetimecontext, Operation.CreateInstance(policy.LiftimeType)),
+                        Operation.Invoke(lifetimecontext, "SetValue", Operation.Variable(CompilationUnit.TargetName))));
         }
     }
 }

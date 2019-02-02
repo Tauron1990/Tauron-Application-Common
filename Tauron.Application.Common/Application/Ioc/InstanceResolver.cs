@@ -12,8 +12,7 @@ namespace Tauron.Application.Ioc
         private TMetadata _metadata;
         private Func<object> _metadataFactory;
 
-        public InstanceResolver([NotNull] Func<BuildParameter[], object> resolver, [NotNull] Func<object> metadataFactory,
-            [NotNull] Type realType)
+        public InstanceResolver([NotNull] Func<BuildParameter[], object> resolver, [NotNull] Func<object> metadataFactory, [NotNull] Type realType)
         {
             Argument.NotNull(resolver, nameof(resolver));
             Argument.NotNull(metadataFactory, nameof(metadataFactory));

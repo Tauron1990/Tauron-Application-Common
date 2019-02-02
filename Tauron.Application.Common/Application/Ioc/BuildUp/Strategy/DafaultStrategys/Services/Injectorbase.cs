@@ -1,4 +1,5 @@
 ﻿using System;
+using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys.Steps;
@@ -34,7 +35,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             return ResolverFactory.StartId;
         }
 
-        public override void Inject(object target, IContainer container, ImportMetadata metadata,
+        public override void Inject(CompilationUnit target, IContainer container, ImportMetadata metadata,
             IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
         {
             try
@@ -46,7 +47,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 InjectorContext.ImportInterceptor = interceptor;
                 InjectorContext.BuildParameters = parameters;
                 InjectorContext.Container = container;
-                InjectorContext.Target = target;
+                InjectorContext.CompilationUnit = target;
 
                 var start = InitializeMachine(out var fac);
 
@@ -69,6 +70,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             }
         }
 
-        protected abstract void Inject([NotNull] object target, [CanBeNull] object value);
+        protected abstract void Inject([NotNull] CompilationUnit target, [NotNull] IRightable value);
     }
 }

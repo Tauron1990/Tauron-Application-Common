@@ -32,11 +32,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         private readonly Dictionary<IExport, ILifetimeContext> _global = new Dictionary<IExport, ILifetimeContext>();
 
-        private readonly Dictionary<ExportMetadata, ILifetimeContext> _local =
-            new Dictionary<ExportMetadata, ILifetimeContext>();
+        private readonly Dictionary<ExportMetadata, ILifetimeContext> _local = new Dictionary<ExportMetadata, ILifetimeContext>();
 
         public void Add(ILifetimeContext context, ExportMetadata metadata, bool shareLifetime)
         {
+            if(context == null)
+                return;
+
             lock (this)
             {
                 if (shareLifetime) _global[metadata.Export] = context;
@@ -52,7 +54,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 if (metadata.Export.ShareLifetime) _global.TryGetValue(metadata.Export, out context);
                 else _local.TryGetValue(metadata, out context);
 
-                return context;
+                return context ?? NotSharedLifetime.DefaultNotSharedLifetime;
             }
         }
 

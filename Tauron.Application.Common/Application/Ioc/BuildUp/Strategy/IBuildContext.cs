@@ -7,10 +7,10 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
     [PublicAPI]
     public interface IBuildContext
     {
+        CompilationUnit CompilationUnit { get; }
+
         IResolverExtension[] ResolverExtensions { get; }
-
-        bool BuildCompled { get; set; }
-
+        
         [NotNull]
         IContainer Container { get; }
 
@@ -19,15 +19,10 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         [NotNull]
         ExportMetadata Metadata { get; }
-
-        BuildMode Mode { get; }
-
+        
         [NotNull]
         PolicyList Policys { get; }
-
-        [CanBeNull]
-        object Target { get; set; }
-
+        
         [NotNull]
         ErrorTracer ErrorTracer { get; }
 

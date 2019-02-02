@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ExpressionBuilder;
+using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Strategy;
 using Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys;
@@ -30,7 +32,7 @@ namespace Tauron.Application.Ioc.BuildUp
         }
 
         [NotNull]
-        public static Func<IBuildContext, object> WriteDefaultCreation([NotNull] IBuildContext context)
+        public static Func<IBuildContext, IRightable> WriteDefaultCreation([NotNull] IBuildContext context)
         {
             Argument.NotNull(context, nameof(context));
 
@@ -60,7 +62,9 @@ namespace Tauron.Application.Ioc.BuildUp
 
                 var policy = build.Policys.Get<InterceptionPolicy>();
 
-                return policy?.Interceptor == null ? constructor.Invoke(parameters.ToArray()) : policy.Interceptor(build, parameters.ToArray());
+                return policy?.Interceptor == null ? Operation.CreateInstance(constructor, parameters.ToArray()) : policy.Interceptor(build, parameters.ToArray());
+
+                //return policy?.Interceptor == null ? constructor.Invoke(parameters.ToArray()) : policy.Interceptor(build, parameters.ToArray());
 
                 //build.ErrorTracer.Phase = "Creating Direct Proxy for " + build.Metadata;
 
@@ -80,15 +84,15 @@ namespace Tauron.Application.Ioc.BuildUp
         }
 
 
-        private static object TryResolveConstructorParameter((Type Type, string Name, bool Optional) parm, IBuildContext context)
+        private static IRightable TryResolveConstructorParameter((Type Type, string Name, bool Optional) parm, IBuildContext context)
         {
             var errorTrancer = new ErrorTracer();
             var tempExport = context.Container.FindExport(parm.Type, parm.Name, errorTrancer, true);
-            if (tempExport != null) return context.Container.BuildUp(tempExport, errorTrancer, context.Parameters);
+            if (tempExport != null) return Operation.Func(context.Container.DeferBuildUp(tempExport, errorTrancer, context.Parameters));
             switch (context.Parameters)
             {
                 case null when parm.Optional:
-                    return null;
+                    return Operation.Null();
                 case null when !parm.Optional:
                     throw new BuildUpException(errorTrancer);
                 default:
@@ -98,7 +102,12 @@ namespace Tauron.Application.Ioc.BuildUp
                     foreach (var parameter in context.Parameters) tempRegistry.Register(parameter.CreateExport() ?? throw new InvalidOperationException(), 0);
 
                     var data = tempRegistry.FindOptional(parm.Type, parm.Name, context.ErrorTracer);
-                    return data == null ? null : context.Container.BuildUp(data, context.ErrorTracer, context.Parameters);
+                    if (data == null && parm.Optional)
+                        return Operation.Null();
+                    else if(data == null && !parm.Optional)
+                        throw new BuildUpException(errorTrancer);
+                    else
+                        return Operation.Func(context.Container.DeferBuildUp(data, context.ErrorTracer, context.Parameters));
             }
         }
     }

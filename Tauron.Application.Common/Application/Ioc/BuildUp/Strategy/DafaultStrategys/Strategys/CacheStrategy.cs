@@ -1,4 +1,8 @@
-﻿using Tauron.Application.Ioc.Components;
+﻿using ExpressionBuilder;
+using ExpressionBuilder.Conditions;
+using ExpressionBuilder.Enums;
+using Tauron.Application.Ioc.Components;
+using Tauron.Application.Ioc.LifeTime;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
@@ -10,17 +14,26 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         public override void OnPerpare(IBuildContext context)
         {
-            if (!context.IsBuildExport()) return;
-
             context.ErrorTracer.Phase = "Reciving Build (" + context.Metadata + ") from Cache";
-
+            
             var life = _cache.GetContext(context.Metadata);
+            const string lieftimeValiable = CompilationUnit.DefaultVariableNames.LifeTimeContext;
+            const string paramName = CompilationUnit.DefaultVariableNames.Input;
 
-            var value = life?.GetValue();
-            if (value == null) return;
+            var compareNullInput = new BinaryCondition(Operation.Variable(paramName), Operation.Null(), ComparaisonOperator.Different);
 
-            context.Target = value;
-            context.BuildCompled = true;
+            context.CompilationUnit
+                .WithParameter<object>(paramName)
+                .AddCode(
+                    CodeLine.CreateVariable<ILifetimeContext>(lieftimeValiable),
+                    CodeLine.Assign(lieftimeValiable, Operation.Constant(life)),
+                    CodeLine.CreateIf(compareNullInput)
+                        .Then(CodeLine.Assign(CompilationUnit.TargetName, paramName))
+                        .Else(CodeLine.Assign(CompilationUnit.TargetName, Operation.InvokeReturn(Operation.Variable(lieftimeValiable), "GetValue"))))
+                .AddAndPush(CodeLine.CreateIf(Condition.And(
+                        new BinaryCondition(Operation.Variable(paramName), Operation.Null(), ComparaisonOperator.Equal),
+                        new BinaryCondition(Operation.Variable(CompilationUnit.TargetName), Operation.Null(), ComparaisonOperator.Different)))
+                    .Then(CodeLine.Return()));
         }
 
         public override void OnPostBuild(IBuildContext context)
@@ -33,7 +46,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             if (policy == null) return;
 
-            _cache.Add(policy.LifetimeContext, context.Metadata, policy.ShareLiftime);
+            const string lieftimeValiable = CompilationUnit.DefaultVariableNames.LifeTimeContext;
+
+            context.CompilationUnit.AddCode(
+                Operation.Invoke(Operation.Constant(_cache), nameof(_cache.Add),
+                    Operation.Variable(lieftimeValiable), Operation.Constant(context.Metadata), Operation.Constant(policy.ShareLiftime)));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using ExpressionBuilder;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
@@ -15,7 +16,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _member = Argument.NotNull(member, nameof(member));
         }
         
-        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer,
+        public override void Inject(CompilationUnit target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer,
             BuildParameter[] parameters)
         {
             errorTracer.Phase = "EventManager Inject " + metadata.ContractName;
@@ -23,10 +24,19 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             try
             {
                 var eventInfo = _member as EventInfo;
-                if (eventInfo != null) _manager.AddPublisher(_metadata.ContractName, eventInfo, target, errorTracer);
+                if (eventInfo != null)
+                {
+                    target.AddCode(Operation.Invoke(Operation.Constant(_manager), nameof(_manager.AddPublisher), Operation.Constant(_metadata.ContractName),
+                        Operation.Constant(eventInfo), Operation.Variable(CompilationUnit.TargetName), Operation.Null()));
+                }
 
                 var method = _member as MethodInfo;
-                if (method != null) _manager.AddEventHandler(_metadata.ContractName, method, target, errorTracer);
+                if (method != null)
+                {
+                    target.AddCode(Operation.Invoke(Operation.Constant(_manager), nameof(_manager.AddEventHandler), Operation.Constant(_metadata.ContractName),
+                        Operation.Constant(method), Operation.Variable(CompilationUnit.TargetName), Operation.Null()));
+                }
+                
             }
             catch (Exception e)
             {

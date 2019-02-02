@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using ExpressionBuilder;
+using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
@@ -9,17 +11,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         private readonly IImportInterceptor _interceptor;
         private readonly MemberInfo _member;
         private readonly ImportMetadata _metadata;
-        private readonly object _target;
 
         public ImportInterceptorHelper([NotNull] IImportInterceptor interceptor, [NotNull] MemberInfo member,
-            [NotNull] ImportMetadata metadata, [NotNull] object target)
+            [NotNull] ImportMetadata metadata)
         {
             _interceptor = Argument.NotNull(interceptor, nameof(interceptor));
             _member = Argument.NotNull(member, nameof(member));
             _metadata = Argument.NotNull(metadata, nameof(metadata));
-            _target = Argument.NotNull(target, nameof(target));
         }
 
-        public bool Intercept([CanBeNull] ref object value) => _interceptor.Intercept(_member, _metadata, _target, ref value);
+        public (Condition IsOK, ICodeLine Operation) Intercept(string variable) => _interceptor.Intercept(_member, _metadata, variable);
     }
 }

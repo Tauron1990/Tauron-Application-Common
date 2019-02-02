@@ -1,4 +1,5 @@
 ﻿using System;
+using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
@@ -10,6 +11,6 @@ namespace Tauron.Application.Ioc.BuildUp
         Type TargetType { get; }
 
         [CanBeNull]
-        object Progress([NotNull] ExportMetadata metadata, [NotNull] object export);
+        ICodeLine Progress([NotNull] ExportMetadata metadata, string variableName);
     }
 }

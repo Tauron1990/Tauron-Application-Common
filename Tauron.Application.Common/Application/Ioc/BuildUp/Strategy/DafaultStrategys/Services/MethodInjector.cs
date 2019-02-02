@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ExpressionBuilder;
+using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
@@ -48,7 +50,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _resolverExtensions = Argument.NotNull(resolverExtensions, nameof(resolverExtensions));
         }
         
-        public override void Inject(object target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer,
+        public override void Inject(CompilationUnit target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer,
             BuildParameter[] parameters)
         {
             if (metadata.Metadata != null)
@@ -58,32 +60,33 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                     if ((bool) obj)
                     {
                         var topic = (string) metadata.Metadata[AopConstants.EventTopicMetadataName];
-                        _eventManager.AddEventHandler(topic, _method, target, errorTracer);
+                        target.AddCode(Operation.Invoke(Operation.Constant(_eventManager), nameof(_eventManager.AddEventHandler), Operation.Constant(topic),
+                            Operation.Constant(_method), Operation.Variable(CompilationUnit.TargetName), Operation.Null()));
                         return;
                     }
                 }
             }
 
             var parms = _method.GetParameters();
-            var args = new List<object>();
+            var args = new List<IOperation>();
 
             foreach (var parameterInfo in parms.Select(p => new ParameterMemberInfo(p)))
                 new ParameterHelper(_metadataFactory, parameterInfo, args, _resolverExtensions).Inject(target, container, metadata, interceptor, errorTracer, parameters);
 
-            _method.Invoke(target, args.ToArray());
+            target.AddCode(Operation.Invoke(CompilationUnit.TargetName, _method, args.ToArray()));
         }
         
         private class ParameterHelper : Injectorbase<ParameterMemberInfo>
         {
-            private readonly List<object> _parameters;
+            private readonly List<IOperation> _parameters;
             
             public ParameterHelper([NotNull] IMetadataFactory metadataFactory, [NotNull] ParameterMemberInfo parameter,
-                [NotNull] List<object> parameters, [NotNull] IResolverExtension[] resolverExtensions)
+                [NotNull] List<IOperation> parameters, [NotNull] IResolverExtension[] resolverExtensions)
                 : base(metadataFactory, parameter, resolverExtensions) => _parameters = Argument.NotNull(parameters, nameof(parameters));
 
             protected override Type MemberType => Member.ParameterInfo.ParameterType;
             
-            protected override void Inject(object target, object value) => _parameters.Add(value);
+            protected override void Inject(CompilationUnit target, IRightable value) => _parameters.Add(value);
         }
         
         private readonly IEventManager _eventManager;

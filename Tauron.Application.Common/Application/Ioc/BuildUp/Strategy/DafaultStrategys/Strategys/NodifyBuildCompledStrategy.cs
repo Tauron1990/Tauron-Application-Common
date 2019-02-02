@@ -1,13 +1,16 @@
-﻿namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
+﻿using ExpressionBuilder;
+
+namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
     public class NodifyBuildCompledStrategy : StrategyBase
     {
         public override void OnPostBuild(IBuildContext context)
         {
-            if (!(context.Target is INotifyBuildCompled notify)) return;
+            if (!typeof(INotifyBuildCompled).IsAssignableFrom(context.ExportType)) return;
 
             context.ErrorTracer.Phase = "Notify Build Compled for " + context.Metadata;
-            notify.BuildCompled();
+
+            context.CompilationUnit.AddAndPush(Operation.Invoke(CompilationUnit.TargetName, nameof(INotifyBuildCompled.BuildCompled)));
         }
     }
 }
