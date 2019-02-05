@@ -12,6 +12,7 @@ namespace ExpressionBuilder.Operations
     public class OperationBlock : IOperationBlock
     {
         private readonly List<ICodeLine> _codeLines = new List<ICodeLine>();
+        private string _returnVar;
 
         public OperationBlock(Type result) => ParsedType = result;
 
@@ -53,6 +54,9 @@ namespace ExpressionBuilder.Operations
                 exps.Add(expr);
             }
 
+            if(!string.IsNullOrEmpty(_returnVar))
+                exps.Add(variables.Find(pe => pe.Name == _returnVar));
+
             var block = ParsedType == null ? Expression.Block(variables, exps.ToArray()) : Expression.Block(ParsedType, variables, exps.ToArray());
 
             context.RemoveLevel();
@@ -62,7 +66,14 @@ namespace ExpressionBuilder.Operations
 
         public void PreParseExpression(ParseContext context)
         {
-            foreach (var codeLine in _codeLines) codeLine.PreParseExpression(context);
+            foreach (var codeLine in _codeLines)
+                codeLine.PreParseExpression(context);
+        }
+
+        public IOperationBlock ReturnVar(string name)
+        {
+            _returnVar = name;
+            return this;
         }
 
         public IOperationBlock WithBody(params ICodeLine[] lines)
@@ -75,6 +86,13 @@ namespace ExpressionBuilder.Operations
         {
             _codeLines.AddRange(lines.Where(l => l != null));
             return this;
+        }
+
+        public void WithBody(ICodeLine firstCodeLine, params ICodeLine[] codeLines)
+        {
+            if(firstCodeLine != null)
+                _codeLines.Add(firstCodeLine);
+            _codeLines.AddRange(codeLines.Where(l => l != null));
         }
     }
 }

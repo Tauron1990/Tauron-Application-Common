@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using ExpressionBuilder.Fluent;
 using ExpressionBuilder.Parser;
 using FastExpressionCompiler;
 using JetBrains.Annotations;
@@ -20,7 +22,7 @@ namespace Tauron.Application.Ioc.BuildUp
         private readonly IContainer _container;
         private readonly ComponentRegistry _componentRegistry;
 
-        private readonly ConcurrentDictionary<ExportMetadata, Func<object, object>> _factorys = new ConcurrentDictionary<ExportMetadata, Func<object, object>>();
+        private readonly Dictionary<ExportMetadata, Func<object, object>> _factorys = new Dictionary<ExportMetadata, Func<object, object>>();
 
         public RebuildManager RebuildManager { get; }
 
@@ -43,24 +45,44 @@ namespace Tauron.Application.Ioc.BuildUp
             providerRegistry.ExportsChanged += ExportsChanged;
         }
 
+        public ILeftRightable CreateOperationBlock(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
+        {
+            try
+            {
+                errorTracer.Phase = "Begin Building Up";
+                var context = new DefaultBuildContext(data, _container, errorTracer, parameters,
+                    _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new BlockFunctionTarget(s)));
+                Pipeline.Build(context);
+
+                return context.CompilationUnit.RealFunction.ToOperation();
+            }
+            catch (Exception e)
+            {
+                errorTracer.Exceptional = true;
+                errorTracer.Exception = e;
+                throw new BuildUpException(errorTracer);
+            }
+        }
+
         public Func<object, object> CreateDelegate(IExport export, string contractName, ErrorTracer tracer, BuildParameter[] buildParameters, bool isAnonymos, out ExportMetadata meta)
         {
-            meta = export.GetNamedExportMetadata(contractName);
-            if (meta == null) throw new BuildUpException(tracer);
-
-            return isAnonymos ? Creator(meta) : _factorys.GetOrAdd(meta, Creator);
-
-            Func<object, object> Creator(ExportMetadata meta2)
+            lock (_factorys)
             {
-                lock (meta2)
+                meta = export.GetNamedExportMetadata(contractName);
+                if (meta == null) throw new BuildUpException(tracer);
+
+                return isAnonymos ? Creator(meta) : _factorys.GetOrAdd(meta, Creator);
+
+                Func<object, object> Creator(ExportMetadata meta2)
                 {
                     try
                     {
                         tracer.Phase = "Begin Building Up";
-                        var context = new DefaultBuildContext(meta2, _container, tracer, buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
+                        var context = new DefaultBuildContext(meta2, _container, tracer, buildParameters,
+                            _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new FunctionCompilionTarget(s)));
                         Pipeline.Build(context);
-                    
-                        var expression = context.CompilationUnit.ToExpression();
+
+                        var expression = (LambdaExpression)context.CompilationUnit.ToExpression();
                         return expression.CompileFast<Func<object, object>>();
                     }
                     catch (Exception e)

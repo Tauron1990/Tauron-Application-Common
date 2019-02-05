@@ -82,12 +82,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             private readonly IContainer _container;
             private readonly IResolverExtension[] _extensions;
             private readonly CompilationUnit.VariableNamerImpl _namer;
+            private readonly ErrorTracer _errorTracer;
             private readonly InterceptorCallback _interceptor;
             private readonly object _metadataObject;
 
             public ExportFactoryHelper([NotNull] IContainer container, [NotNull] ExportMetadata buildMetadata,
                 [NotNull] object metadataObject, [CanBeNull] InterceptorCallback interceptor,
-                [NotNull] IResolverExtension[] extensions, CompilationUnit.VariableNamerImpl namer)
+                [NotNull] IResolverExtension[] extensions, CompilationUnit.VariableNamerImpl namer, ErrorTracer errorTracer)
             {
                 _container = container;
                 _buildMetadata = buildMetadata;
@@ -95,6 +96,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 _interceptor = interceptor;
                 _extensions = extensions;
                 _namer = namer;
+                _errorTracer = errorTracer;
             }
 
             //[CanBeNull]
@@ -114,10 +116,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                     parameter
                         .WithBody(
                             CodeLine.CreateVariable<object>(tempObject),
-                            CodeLine.Assign(tempObject, Operation.InvokeReturn(Operation.Constant(_container), nameof(_container.BuildUp), 
-                                Operation.Constant(_buildMetadata), Operation.CreateInstance(typeof(ErrorTracer)), hasParameter 
-                                    ? Operation.Variable(buildParameters) 
-                                    : Operation.Null<BuildParameter[]>())),
+                            CodeLine.Assign(tempObject, _container.DeferBuildUp(_buildMetadata, _errorTracer, )),
                             _extensions.FirstOrDefault(e => e.TargetType == _buildMetadata.Export.ImplementType)?.Progress(_buildMetadata, tempObject),
                             CreateInterceptor(tempObject))
                         .Returns(tempObject);

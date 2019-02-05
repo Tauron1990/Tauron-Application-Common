@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp;
 using Tauron.Application.Ioc.BuildUp.Exports;
@@ -56,17 +58,18 @@ namespace Tauron.Application.Ioc
 
         private readonly List<IContainerExtension> _extensions;
 
-        public Func<object> DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
-            => () =>
-            {
-                errorTracer.Phase = string.Empty;
-                errorTracer.Phase = data.ToString();
+        public ILeftRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
+            => _buildEngine.CreateOperationBlock(data, errorTracer, parameters);
+            //=> () =>
+            //{
+            //    errorTracer.Phase = string.Empty;
+            //    errorTracer.Phase = data.ToString();
 
-                var result = _buildEngine.CreateDelegate(data.Export, data.ContractName, errorTracer, parameters, false, out _)(null);
-                if (errorTracer.Exceptional)
-                    throw new BuildUpException(errorTracer);
-                return result;
-            };
+            //    var result = _buildEngine.CreateDelegate(data.Export, data.ContractName, errorTracer, parameters, false, out _)(null);
+            //    if (errorTracer.Exceptional)
+            //        throw new BuildUpException(errorTracer);
+            //    return result;
+            //};
 
         [NotNull]
         public object BuildUp([NotNull] ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)

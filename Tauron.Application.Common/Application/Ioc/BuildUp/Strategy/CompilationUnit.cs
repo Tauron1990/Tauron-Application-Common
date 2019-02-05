@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 namespace Tauron.Application.Ioc.BuildUp.Strategy
 {
     [PublicAPI]
-    public sealed class CompilationUnit //: IBodyOrParameter, IFunctionReturn
+    public sealed class CompilationUnit
     {
         public class VariableNamerImpl
         {
@@ -32,7 +32,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         private List<ICodeLine> _codeLines = new List<ICodeLine>();
 
-        public Function RealFunction { get; }
+        public ICompilionTarget RealFunction { get; }
 
         public string LifeTimeContext => VariableNamer.GetValiableName("LifeTimeContext");
 
@@ -42,10 +42,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         public VariableNamerImpl VariableNamer { get; } = new VariableNamerImpl();
 
-        public CompilationUnit()
+        public CompilationUnit(Func<string, ICompilionTarget> target)
         {
-            RealFunction = (Function) Function.Create("Create");
-            RealFunction.Returns(TargetName);
+            RealFunction = target(TargetName);
             PushBody(RealFunction);
             _addCode(new [] { CodeLine.CreateVariable(typeof(object), TargetName) });
         }
@@ -82,9 +81,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public void PushBody<TType>(TType body)
         {
             var type = typeof(TType);
-            if (type == typeof(Function) || type == typeof(ICodeLine) || type == typeof(IOperation))
+            if (type == typeof(ICodeLine) || type == typeof(IOperation) || type == typeof(ICompilionTarget))
             {
-                _addCode = codeLines => body.SafeCast<Function>().WithBody(codeLines);
+                _addCode = RealFunction.WithBody;
                 AutoPush = false;
             }
             else if (type == typeof(IIf))
@@ -115,7 +114,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         public CompilationUnit WithParameter<TData>(string name) => WithParameter(typeof(TData), name);
 
-        public LambdaExpression ToExpression()
+        public Expression ToExpression()
         {
             if (_codeLines.Count == 0) return RealFunction.ToExpression();
 
@@ -124,7 +123,16 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             return RealFunction.ToExpression();
         }
 
-        public TData ToLambda<TData>() where TData : class => RealFunction.ToLambda<TData>();
+        public IOperation ToOperation()
+        {
+            if (_codeLines.Count == 0) return RealFunction.ToOperation();
+
+            RealFunction.WithBody(_codeLines);
+            _codeLines.Clear();
+            return RealFunction.ToOperation();
+        }
+
+        //public TData ToLambda<TData>() where TData : class => RealFunction.ToLambda<TData>();
 
         public CompilationUnit Returns(string variableName)
         {

@@ -65,7 +65,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         private class LazyTrampoline<T> : LazyTrampolineBase
         {
-            private readonly SimpleResolver _resolver;
+            private SimpleResolver _resolver;
 
             public LazyTrampoline([NotNull] SimpleResolver resolver) => _resolver = Argument.NotNull(resolver, nameof(resolver));
 
@@ -73,6 +73,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             private Func<T> Create()
             {
+                if(_resolver == null)
+                    throw new InvalidOperationException("Resolver was set to null");
+
                 string returnVar = "ReturnVar_" + Interlocked.Increment(ref PrivateVariableStade);
                 var f = Function.Create("SimpleResolver")
                     .WithBody(
@@ -80,6 +83,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                         CodeLine.Assign(Operation.Variable(returnVar), Operation.Cast(_resolver.Create(new ErrorTracer(), null), typeof(T))))
                     .Returns(returnVar)
                     .ToExpression().CompileFast<Func<T>>();
+
+                _resolver = null;
 
                 return f;
             }

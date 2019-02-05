@@ -7,6 +7,15 @@ namespace Tauron
     [PublicAPI]
     public static class CollectionExtensions
     {
+        public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dic, TKey key, Func<TKey, TValue> valueFac)
+        {
+            if (dic.TryGetValue(key, out var value)) return value;
+
+            value = valueFac(key);
+            dic[key] = value;
+            return value;
+        }
+
         public static TValue AddIfNotExis<TKey, TValue>([NotNull] this IDictionary<TKey, TValue> dic,
             [NotNull] TKey key, [NotNull] Func<TValue> creator)
         {

@@ -88,7 +88,7 @@ namespace Tauron.Application.Ioc.BuildUp
         {
             var errorTrancer = new ErrorTracer();
             var tempExport = context.Container.FindExport(parm.Type, parm.Name, errorTrancer, true);
-            if (tempExport != null) return Operation.Func(context.Container.DeferBuildUp(tempExport, errorTrancer, context.Parameters));
+            if (tempExport != null) return context.Container.DeferBuildUp(tempExport, errorTrancer, context.Parameters);
             switch (context.Parameters)
             {
                 case null when parm.Optional:
@@ -107,7 +107,7 @@ namespace Tauron.Application.Ioc.BuildUp
                     else if(data == null && !parm.Optional)
                         throw new BuildUpException(errorTrancer);
                     else
-                        return Operation.Func(context.Container.DeferBuildUp(data, context.ErrorTracer, context.Parameters));
+                        return context.Container.DeferBuildUp(data, context.ErrorTracer, context.Parameters);
             }
         }
     }

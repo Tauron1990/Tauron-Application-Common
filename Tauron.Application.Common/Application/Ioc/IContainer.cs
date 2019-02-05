@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
@@ -8,7 +9,7 @@ namespace Tauron.Application.Ioc
     [PublicAPI]
     public interface IContainer : IDisposable, IServiceProvider
     {
-        Func<object> DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters);
+        ILeftRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters);
 
         object BuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters);
 
