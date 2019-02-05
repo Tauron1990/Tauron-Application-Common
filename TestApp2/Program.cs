@@ -14,7 +14,7 @@ namespace TestApp2
     [Export(typeof(TestClass1))]
     public sealed class TestClass1
     {
-
+        public string Hello { get; } = "Hello";
     }
 
     [Export(typeof(TestClass2))]
@@ -24,7 +24,7 @@ namespace TestApp2
         private TestClass1 _testClass1;
 
         [Inject]
-        public TestClass1 TestClass1 { get; set; }
+        public Lazy<TestClass1> TestClass1 { get; set; }
 
         [Inject]
         public TestClass1 Class1 { get; private set; }
@@ -45,7 +45,8 @@ namespace TestApp2
     [Export(typeof(ITestClass3))]
     public class TestClass3Instance1 : ITestClass3
     {
-        [Inject] public TestClass1 TestClass1;
+        [Inject]
+        public TestClass2 TestClass1;
     }
 
     [Export(typeof(ITestClass3))]
@@ -74,10 +75,7 @@ namespace TestApp2
     public sealed class TestClass5
     {
         [Inject]
-        public Lazy<TestClass4> Lazy { get; set; }
-
-        [Inject]
-        public Lazy<ITestClass3> Lazy1 { get; set; }
+        public TestClass4 Lazy { get; set; }      
     }
 
     class Program
@@ -85,13 +83,20 @@ namespace TestApp2
         static void Main(string[] args)
         {
             IContainer testContainer = new DefaultContainer();
-            
+
             ExportResolver res = new ExportResolver();
 
             res.AddAssembly(Assembly.GetCallingAssembly());
 
-            var inst = testContainer.Resolve<TestClass5>();
+            testContainer.Register(res);
 
+            var watch = Stopwatch.StartNew();
+            var inst = testContainer.Resolve<TestClass5>();
+            var testLazy = inst.Lazy.TestClass3s.Find(t => t is TestClass3Instance1).SafeCast<TestClass3Instance1>().TestClass1.TestClass1;
+            var obj = testLazy.Value;
+            Console.WriteLine(watch.ElapsedMilliseconds);
+
+            Console.ReadKey();
             Debugger.Break();
         }
     }

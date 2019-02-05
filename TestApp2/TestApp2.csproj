@@ -50,10 +50,19 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ExpressionBuilder\ExpressionBuilder.csproj">
+      <Project>{8e6676ad-2fc8-4d8b-9a9d-472b874d7759}</Project>
+      <Name>ExpressionBuilder</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Tauron.Application.Common\Tauron.Application.Common.csproj">
       <Project>{3dc40c66-d21a-4948-9564-e7054be52934}</Project>
       <Name>Tauron.Application.Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NLog">
+      <Version>4.5.11</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

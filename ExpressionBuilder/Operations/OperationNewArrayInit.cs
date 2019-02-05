@@ -74,7 +74,7 @@ namespace ExpressionBuilder.Operations
 
             foreach (var param in _variables) pars.Add(param.ToExpression(context));
 
-            return Expression.NewArrayInit(_dataType.GetElementType() ?? throw new InvalidOperationException(), pars);
+            return Expression.NewArrayInit(_dataType.GetElementType() ?? _dataType, pars);
         }
     }
 }

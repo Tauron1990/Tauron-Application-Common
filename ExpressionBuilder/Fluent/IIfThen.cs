@@ -34,5 +34,6 @@ namespace ExpressionBuilder.Fluent
     {
         IIf ElseIf(Condition elseIfCondition);
         ICodeLine Else(ICodeLine firstCodeLine, params ICodeLine[] codeLines);
+        ICodeLine Else(params ICodeLine[] codeLines);
     }
 }

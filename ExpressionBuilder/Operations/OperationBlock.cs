@@ -1,63 +1,80 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
+using ExpressionBuilder.CodeLines;
 using ExpressionBuilder.Fluent;
 using ExpressionBuilder.Parser;
 
 namespace ExpressionBuilder.Operations
 {
-    public class OperationBlock : IRightable, IBodyOrParameter, IFunctionReturn, ICodeLine
+    public class OperationBlock : IOperationBlock
     {
-        public Function Function { get; }
+        private readonly List<ICodeLine> _codeLines = new List<ICodeLine>();
 
-        public OperationBlock(string name, Type type)
-        {
-            ParsedType = type;
-            Function = (Function) Function.Create(name);
-        }
-
-        public IFunctionReturn WithBody(ICodeLine firstCodeLine, params ICodeLine[] codeLines)
-        {
-            Function.WithBody(firstCodeLine, codeLines);
-            return this;
-        }
-
-        public IFunctionReturn WithBody(IEnumerable<ICodeLine> codeLines)
-        {
-            Function.WithBody(codeLines);
-            return this;
-        }
-
-        public IBodyOrParameter WithParameter(Type type, string name)
-        {
-            Function.WithParameter(type, name);
-            return this;
-        }
-
-        public IBodyOrParameter WithParameter<TData>(string name)
-        {
-            Function.WithParameter<TData>(name);
-            return this;
-        }
-
-        public LambdaExpression ToExpression() => throw new NotSupportedException();
-
-        public TData ToLambda<TData>() where TData : class => throw new NotSupportedException();
-
-        public IExpressionResult Returns(string variableName)
-        {
-            Function.Returns(variableName);
-            return this;
-        }
+        public OperationBlock(Type result) => ParsedType = result;
 
         public Type ParsedType { get; }
 
-        public string ToString(ParseContext context) => Function.ToString(context);
+        public string ToString(ParseContext context)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.Append(context.Pad);
+            builder.AppendLine("{");
+            context.AddLevel();
 
-        public Expression ToExpression(ParseContext context) => Function.ToExpression(context);
+            foreach (var codeLine in _codeLines)
+                builder.AppendLine(codeLine.ToString(context));
+
+            context.RemoveLevel();
+            builder.Append(context.Pad);
+            builder.AppendLine("}");
+
+            return builder.ToString();
+        }
+
+        public Expression ToExpression(ParseContext context)
+        {
+            context.AddLevel();
+            List<Expression> exps = new List<Expression>();
+            List<ParameterExpression> variables = new List<ParameterExpression>();
+
+            foreach (var codeLine in _codeLines)
+            {
+                var expr = codeLine.ToExpression(context);
+                
+                if (codeLine is CreateVariable createVariable)
+                {
+                    variables.Add((ParameterExpression)expr);
+                    expr = createVariable.DefaultInitialize(context);
+                }
+
+                exps.Add(expr);
+            }
+
+            var block = ParsedType == null ? Expression.Block(variables, exps.ToArray()) : Expression.Block(ParsedType, variables, exps.ToArray());
+
+            context.RemoveLevel();
+
+            return block;
+        }
 
         public void PreParseExpression(ParseContext context)
         {
+            foreach (var codeLine in _codeLines) codeLine.PreParseExpression(context);
+        }
+
+        public IOperationBlock WithBody(params ICodeLine[] lines)
+        {
+            _codeLines.AddRange(lines.Where(l => l != null));
+            return this;
+        }
+
+        public IOperationBlock WithBody(IEnumerable<ICodeLine> lines)
+        {
+            _codeLines.AddRange(lines.Where(l => l != null));
+            return this;
         }
     }
 }

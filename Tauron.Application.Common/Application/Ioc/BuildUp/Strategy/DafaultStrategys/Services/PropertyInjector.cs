@@ -14,6 +14,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         protected override Type MemberType => Member.PropertyType;
 
-        protected override void Inject(CompilationUnit target, IRightable value) => target.AddCode(Operation.Set(CompilationUnit.TargetName, Member, value));
+        protected override void Inject(CompilationUnit target, IRightable value, CompilationUnit unit) 
+            => target.AddCode(Operation.Set(Operation.Cast(unit.TargetName, Member.DeclaringType), Member, Operation.Cast(value, MemberType)));
     }
 }

@@ -24,13 +24,15 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             context.ErrorTracer.Phase = "Setting up Liftime for " + context.Metadata;
 
-            const string lifetimecontext = CompilationUnit.DefaultVariableNames.LifeTimeContext;
-            const string inputName = CompilationUnit.DefaultVariableNames.Input;
+            var unit = context.CompilationUnit;
 
-           context.CompilationUnit
+            string lifetimecontext = unit.LifeTimeContext;
+            string inputName = unit.Input;
+
+           unit
                 .AddCode(CodeLine.CreateIf(Condition.Compare(inputName, Operation.Null()))
                     .Then(CodeLine.Assign(lifetimecontext, Operation.CreateInstance(policy.LiftimeType)),
-                        Operation.Invoke(lifetimecontext, "SetValue", Operation.Variable(CompilationUnit.TargetName))));
+                        Operation.Invoke(lifetimecontext, "SetValue", Operation.Variable(unit.TargetName))));
         }
     }
 }

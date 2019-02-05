@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
 namespace Tauron.Application.Ioc.Components
 {
-    [PublicAPI]
+    [PublicAPI, DebuggerStepThrough]
     public sealed class ExportRegistry
     {
         private readonly ExportList _registrations = new ExportList();

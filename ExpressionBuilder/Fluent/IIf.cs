@@ -33,5 +33,6 @@ namespace ExpressionBuilder.Fluent
     public interface IIf
     {
         IIfThen Then(ICodeLine firstCodeLine, params ICodeLine[] codeLines);
+        IIfThen Then(params ICodeLine[] codeLines);
     }
 }

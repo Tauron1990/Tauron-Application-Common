@@ -28,11 +28,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 namespace ExpressionBuilder.Parser
 {
     public class ParseContext
     {
+        private class ReferenceEqualsComp : IEqualityComparer<object>
+        {
+            bool IEqualityComparer<object>.Equals(object x, object y) => ReferenceEquals(x, y);
+
+            public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
+        }
+
+        private readonly Dictionary<object, Expression> _consts = new Dictionary<object, Expression>(new ReferenceEqualsComp());
         private readonly List<ParseLevel> _parseLevels;
 
         internal LabelTarget ReturnLabel;
@@ -44,9 +53,26 @@ namespace ExpressionBuilder.Parser
 
         private int Count => _parseLevels.Count;
 
-        internal ParseLevel Current => _parseLevels[Level];
+        public ParseLevel Current => _parseLevels[Level];
 
         public string Pad => GetPad(Level + 1);
+
+        public Expression PushConst(object @const, Type objt)
+        {
+            if(@const == null)
+                return Expression.Constant(null, objt);
+
+            if (_consts.TryGetValue(@const, out var exp))
+            {
+                if(exp.Type == objt)
+                    return exp;
+                return Expression.Constant(@const, objt);
+            }
+
+            exp = Expression.Constant(@const, objt);
+            _consts[@const] = exp;
+            return exp;
+        }
 
         public void AddLevel()
         {
@@ -54,7 +80,7 @@ namespace ExpressionBuilder.Parser
             _parseLevels.Add(pl);
         }
 
-        internal bool HasVariable(Variable var)
+        public bool HasVariable(Variable var)
         {
             var i = Count - 1;
             while (i >= 0)
@@ -78,7 +104,7 @@ namespace ExpressionBuilder.Parser
             return res;
         }
 
-        internal Variable GetVariable(string name)
+        public Variable GetVariable(string name)
         {
             var i = Count - 1;
             while (i >= 0)

@@ -17,8 +17,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             context.ErrorTracer.Phase = "Contruct Object for " + context.Metadata;
 
-            context.CompilationUnit
-                .AddCode(CodeLine.Assign(Operation.Variable(CompilationUnit.TargetName), policy.Constructor(context)));
+            var unit = context.CompilationUnit;
+
+            unit
+                .AddCode(CodeLine.CreateIf(Condition.Compare(unit.TargetName, Operation.Null()))
+                    .Then(CodeLine.Assign(Operation.Variable(unit.TargetName), policy.Constructor(context))));
 
             //context.Target = policy.Constructor.Invoke(context); //(context, policy.Generator);
         }

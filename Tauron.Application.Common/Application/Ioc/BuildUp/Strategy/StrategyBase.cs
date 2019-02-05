@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Diagnostics;
+using JetBrains.Annotations;
 using Tauron.Application.Ioc.Components;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy

@@ -48,10 +48,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         protected override Type MemberType => Member.FieldType;
 
-        protected override void Inject(CompilationUnit target, IRightable value)
-        {
-            target.AddCode(new FieldSetter(Member, Operation.Variable(CompilationUnit.TargetName), value));
-            Member.SetValue(target, value);
-        }
+        protected override void Inject(CompilationUnit target, IRightable value, CompilationUnit unit) 
+            => target.AddCode(new FieldSetter(Member, Operation.Cast(unit.TargetName, Member.DeclaringType), Operation.Cast(value, MemberType)));
     }
 }

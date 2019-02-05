@@ -17,13 +17,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _target = target;
         }
 
-        public IRightable Create(ErrorTracer errorTracer)
+        public IRightable Create(ErrorTracer errorTracer, CompilationUnit unit)
         {
             errorTracer.Phase = "Injecting Array for " + _target;
 
             try
             {
-                return Operation.CreateArray(_target, _resolvers.Select(r => r.Create(errorTracer)).ToArray());
+                return Operation.CreateArray(_target, _resolvers.Select(r => Operation.Cast(r.Create(errorTracer, unit), _target)).ToArray());
             }
             catch (Exception e)
             {

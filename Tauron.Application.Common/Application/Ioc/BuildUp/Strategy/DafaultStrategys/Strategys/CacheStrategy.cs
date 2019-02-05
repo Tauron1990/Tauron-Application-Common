@@ -1,6 +1,7 @@
 ﻿using ExpressionBuilder;
 using ExpressionBuilder.Conditions;
 using ExpressionBuilder.Enums;
+using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.Components;
 using Tauron.Application.Ioc.LifeTime;
 
@@ -9,30 +10,36 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     public class CacheStrategy : StrategyBase
     {
         private ICache _cache;
+        private RebuildManager _rebuildManager;
 
-        public override void Initialize(ComponentRegistry components) => _cache = components.Get<ICache>();
+        public override void Initialize(ComponentRegistry components)
+        {
+            _cache = components.Get<ICache>();
+            _rebuildManager = components.Get<RebuildManager>();
+        }
 
         public override void OnPerpare(IBuildContext context)
         {
             context.ErrorTracer.Phase = "Reciving Build (" + context.Metadata + ") from Cache";
-            
-            var life = _cache.GetContext(context.Metadata);
-            const string lieftimeValiable = CompilationUnit.DefaultVariableNames.LifeTimeContext;
-            const string paramName = CompilationUnit.DefaultVariableNames.Input;
+
+            var unit = context.CompilationUnit;
+
+            string lieftimeValiable = unit.LifeTimeContext;
+            string paramName = unit.Input;
 
             var compareNullInput = new BinaryCondition(Operation.Variable(paramName), Operation.Null(), ComparaisonOperator.Different);
 
-            context.CompilationUnit
+            unit
                 .WithParameter<object>(paramName)
                 .AddCode(
                     CodeLine.CreateVariable<ILifetimeContext>(lieftimeValiable),
-                    CodeLine.Assign(lieftimeValiable, Operation.Constant(life)),
+                    CodeLine.Assign(lieftimeValiable, Operation.InvokeReturn(Operation.Constant(_cache), nameof(_cache.GetContext), Operation.Constant(context.Metadata))),
                     CodeLine.CreateIf(compareNullInput)
-                        .Then(CodeLine.Assign(CompilationUnit.TargetName, paramName))
-                        .Else(CodeLine.Assign(CompilationUnit.TargetName, Operation.InvokeReturn(Operation.Variable(lieftimeValiable), "GetValue"))))
+                        .Then(CodeLine.Assign(unit.TargetName, paramName))
+                        .Else(CodeLine.Assign(unit.TargetName, Operation.InvokeReturn(Operation.Variable(lieftimeValiable), "GetValue"))))
                 .AddAndPush(CodeLine.CreateIf(Condition.And(
                         new BinaryCondition(Operation.Variable(paramName), Operation.Null(), ComparaisonOperator.Equal),
-                        new BinaryCondition(Operation.Variable(CompilationUnit.TargetName), Operation.Null(), ComparaisonOperator.Different)))
+                        new BinaryCondition(Operation.Variable(unit.TargetName), Operation.Null(), ComparaisonOperator.Different)))
                     .Then(CodeLine.Return()));
         }
 
@@ -46,11 +53,22 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             if (policy == null) return;
 
-            const string lieftimeValiable = CompilationUnit.DefaultVariableNames.LifeTimeContext;
+            var unit = context.CompilationUnit;
 
-            context.CompilationUnit.AddCode(
-                Operation.Invoke(Operation.Constant(_cache), nameof(_cache.Add),
-                    Operation.Variable(lieftimeValiable), Operation.Constant(context.Metadata), Operation.Constant(policy.ShareLiftime)));
+            string lieftimeValiable = unit.LifeTimeContext;
+            string buildObjectVar = unit.VariableNamer.GetValiableName("buildObject");
+
+            unit.AddCode(CodeLine.CreateIf(Condition.Compare(unit.Input, Operation.Null()))
+                .Then(Operation.Invoke(Operation.Constant(_cache), nameof(_cache.Add),
+                        Operation.Variable(lieftimeValiable), Operation.Constant(context.Metadata), Operation.Constant(policy.ShareLiftime)),
+                    CodeLine.CreateVariable(typeof(BuildObject), buildObjectVar),
+                    CodeLine.Assign(buildObjectVar, Operation.CreateInstance(typeof(BuildObject),
+                        Operation.Get(Operation.Get(Operation.Constant(context.Metadata), nameof(ExportMetadata.Export)), nameof(IExport.ImportMetadata)),
+                        Operation.Constant(context.Metadata),
+                        Operation.Constant<BuildParameter[]>(context.Parameters))),
+                    Operation.Set(buildObjectVar, nameof(BuildObject.Instance), Operation.Variable(unit.TargetName)),
+                    Operation.Invoke(Operation.Constant(_rebuildManager), nameof(RebuildManager.AddBuild), Operation.Variable(buildObjectVar))));
+
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             context.ErrorTracer.Phase = "Notify Build Compled for " + context.Metadata;
 
-            context.CompilationUnit.AddAndPush(Operation.Invoke(CompilationUnit.TargetName, nameof(INotifyBuildCompled.BuildCompled)));
+            context.CompilationUnit.AddAndPush(Operation.Invoke(context.CompilationUnit.TargetName, nameof(INotifyBuildCompled.BuildCompled)));
         }
     }
 }

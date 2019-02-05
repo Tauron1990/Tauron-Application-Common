@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace Tauron.Application
 {
     [Serializable]
     [PublicAPI]
+    [DebuggerStepThrough]
     public class GroupDictionary<TKey, TValue> : Dictionary<TKey, ICollection<TValue>>
         where TKey : class where TValue : class
     {

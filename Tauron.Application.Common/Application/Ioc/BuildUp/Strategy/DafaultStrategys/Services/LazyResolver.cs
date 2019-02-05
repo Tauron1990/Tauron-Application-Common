@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using ExpressionBuilder;
 using ExpressionBuilder.Fluent;
 using FastExpressionCompiler;
@@ -18,7 +19,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _factory = factory;
         }
 
-        public IRightable Create(ErrorTracer errorTracer) => CreateLazy(_lazy, _factory, _resolver.Metadata.Metadata ?? new Dictionary<string, object>(), _resolver, errorTracer);
+        public IRightable Create(ErrorTracer errorTracer, CompilationUnit unit) 
+            => CreateLazy(_lazy, _factory, _resolver.Metadata.Metadata ?? new Dictionary<string, object>(), _resolver, errorTracer);
 
         private static IRightable CreateLazy([NotNull] Type lazytype, [NotNull] IMetadataFactory metadataFactory, [NotNull] IDictionary<string, object> metadataValue,
             [NotNull] SimpleResolver creator, [NotNull] ErrorTracer errorTracer)
@@ -43,11 +45,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
                 var trampolineImpl = Operation.CreateInstance(trampoline, Operation.Constant(creator));
                 var metadata = openGeneric == InjectorBaseConstants.Lazy ? null : lazytype.GenericTypeArguments[1];
+                var valueFac = Operation.Cast(
+                    Operation.InvokeReturn(trampolineImpl, nameof(LazyTrampolineBase.CreateFunc)), typeof(Func<>).MakeGenericType(lazytype.GenericTypeArguments[0]));
 
-                if (metadata == null) return Operation.CreateInstance(lazytype, Operation.InvokeReturn(trampolineImpl, nameof(LazyTrampolineBase.CreateFunc)));
+                if (metadata == null) return Operation.CreateInstance(lazytype, valueFac);
 
                 return Operation.CreateInstance(lazytype,
-                    Operation.InvokeReturn(trampolineImpl, nameof(LazyTrampolineBase.CreateFunc)),
+                    valueFac,
                     Operation.InvokeReturn(Operation.Constant(metadataFactory), nameof(metadataFactory.CreateMetadata),
                         Operation.Constant(metadata), Operation.Constant(metadataValue)));
             }
@@ -65,22 +69,26 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             public LazyTrampoline([NotNull] SimpleResolver resolver) => _resolver = Argument.NotNull(resolver, nameof(resolver));
 
-            public override object CreateFunc() => (Func<T>) Create;
+            public override object CreateFunc() => Create();
 
-            private T Create()
+            private Func<T> Create()
             {
+                string returnVar = "ReturnVar_" + Interlocked.Increment(ref PrivateVariableStade);
                 var f = Function.Create("SimpleResolver")
-                    .WithParameter(typeof(T), "Return")
-                    .WithBody(CodeLine.Assign(Operation.Variable("Retrun"), _resolver.Create(new ErrorTracer())))
-                    .Returns("Return")
+                    .WithBody(
+                        CodeLine.CreateVariable<T>(returnVar),
+                        CodeLine.Assign(Operation.Variable(returnVar), Operation.Cast(_resolver.Create(new ErrorTracer(), null), typeof(T))))
+                    .Returns(returnVar)
                     .ToExpression().CompileFast<Func<T>>();
 
-                return f();
+                return f;
             }
         }
 
         private abstract class LazyTrampolineBase
         {
+            protected static int PrivateVariableStade;
+
             public abstract object CreateFunc();
 
         }

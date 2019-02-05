@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy
 {
-    [PublicAPI]
+    [PublicAPI, DebuggerStepThrough]
     public class PolicyList
     {
         private readonly GroupDictionary<Type, IPolicy> _list = new GroupDictionary<Type, IPolicy>();

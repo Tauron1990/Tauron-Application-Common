@@ -53,7 +53,11 @@ namespace ExpressionBuilder.Operations
             return Expression.Convert(expr, _toType);
         }
 
-        public void PreParseExpression(ParseContext context) => ParsedType = _toType;
+        public void PreParseExpression(ParseContext context)
+        {
+            _variable.PreParseExpression(context);
+            ParsedType = _toType;
+        }
 
         public Type ParsedType { get; private set; }
     }

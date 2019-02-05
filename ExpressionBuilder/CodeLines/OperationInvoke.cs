@@ -84,6 +84,8 @@ namespace ExpressionBuilder.CodeLines
 
         public void PreParseExpression(ParseContext context)
         {
+            _variable.PreParseExpression(context);
+
             _paramTypes = new List<Type>();
             foreach (var op in _parameters)
             {

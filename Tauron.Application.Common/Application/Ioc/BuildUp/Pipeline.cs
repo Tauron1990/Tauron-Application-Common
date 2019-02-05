@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Strategy;
@@ -36,7 +37,7 @@ namespace Tauron.Application.Ioc.BuildUp
                 context.ErrorTracer.Exception = e;
             }
         }
-
+        
         private static bool Invoke([NotNull] IEnumerable<IStrategy> strategies, [NotNull] Action<IStrategy> invoker, [NotNull] IBuildContext context)
         {
             foreach (var strategy in strategies)

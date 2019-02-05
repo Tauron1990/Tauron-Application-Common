@@ -58,13 +58,16 @@ namespace Tauron.Application.Ioc.Components
         }
 
         [System.Diagnostics.Contracts.Pure]
-        public TInterface Get<TInterface>() where TInterface : class
+        public TInterface Get<TInterface>(bool isOptional = false) where TInterface : class
         {
             lock (_dictionary)
             {
                 var type = typeof(TInterface);
                 if (_dictionary.TryGetValue(type, out var list))
                     return (TInterface) list.Single().Object;
+
+                if (isOptional)
+                    return default;
             }
 
             throw new KeyNotFoundException();

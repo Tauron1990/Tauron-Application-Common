@@ -58,6 +58,12 @@ namespace ExpressionBuilder
             return this;
         }
 
+        public IIfThen Then(params ICodeLine[] codeLines)
+        {
+            foreach (var codeLine in codeLines.Where(cl => cl != null)) _thenCodeLines.Add(codeLine);
+            return this;
+        }
+
         public IIf ElseIf(Condition elseIfCondition)
         {
             var elseIf = new If(elseIfCondition, this);
@@ -69,6 +75,12 @@ namespace ExpressionBuilder
         {
             if (firstCodeLine != null)
                 _elseCodeLines.Add(firstCodeLine);
+            foreach (var codeLine in codeLines.Where(cl => cl != null)) _elseCodeLines.Add(codeLine);
+            return this;
+        }
+
+        public ICodeLine Else(params ICodeLine[] codeLines)
+        {
             foreach (var codeLine in codeLines.Where(cl => cl != null)) _elseCodeLines.Add(codeLine);
             return this;
         }

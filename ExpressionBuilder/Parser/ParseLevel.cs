@@ -30,7 +30,7 @@ using System.Collections.Generic;
 
 namespace ExpressionBuilder.Parser
 {
-    internal class ParseLevel
+    public class ParseLevel
     {
         private readonly ParseContext _parseContext;
         private readonly Dictionary<string, Variable> _variables;
@@ -41,9 +41,9 @@ namespace ExpressionBuilder.Parser
             _parseContext = parseContext;
         }
 
-        internal void AddVariable(Variable var)
+        public void AddVariable(Variable var)
         {
-            if (_parseContext.HasVariable(var)) throw new Exception("Duplicate variable");
+            if (_parseContext.HasVariable(var)) throw new Exception("Duplicate variable -- " + var.Name);
             _variables.Add(var.Name, var);
         }
 

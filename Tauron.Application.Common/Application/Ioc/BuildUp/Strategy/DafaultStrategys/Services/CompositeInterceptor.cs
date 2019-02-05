@@ -20,7 +20,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             List<(Condition IsOK, ICodeLine Operation)> resultList = _interceptors.ConvertAll(input => input.Intercept(member, metadata, targetVariable));
 
             return (Condition.And(resultList.Select(vt => vt.IsOK).ToArray()), 
-                Operation.NeestedLambda("Interceptor", typeof(void), parameter => { parameter.WithBody(resultList.Select(sel => sel.Operation)); }));
+                Operation.Block(parameter => { parameter.WithBody(resultList.Select(sel => sel.Operation)); }));
         }
     }
 }

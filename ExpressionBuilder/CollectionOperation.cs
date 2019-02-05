@@ -37,7 +37,7 @@ namespace ExpressionBuilder
     {
         public static IRightable CreateDictionary(Type key, Type value)
         {
-            var dType = typeof(Dictionary<int, int>).MakeGenericType(key, value);
+            var dType = typeof(Dictionary<,>).MakeGenericType(key, value);
             return Operation.CreateInstance(dType);
         }
 
@@ -45,7 +45,7 @@ namespace ExpressionBuilder
 
         public static IRightable CreateList(Type value)
         {
-            var dType = typeof(List<int>).MakeGenericType(value);
+            var dType = typeof(List<>).MakeGenericType(value);
             return Operation.CreateInstance(dType);
         }
 

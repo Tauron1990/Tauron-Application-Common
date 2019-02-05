@@ -10,38 +10,53 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
     [PublicAPI]
     public sealed class CompilationUnit //: IBodyOrParameter, IFunctionReturn
     {
-        public class DefaultVariableNames
+        public class VariableNamerImpl
         {
-            public const string LifeTimeContext = "LifeTimeContext";
+            private int _currentVariable;
+            private int _currentLevel = 1;
 
-            public const string Input = "InputObject";
+            public void AddLevel() => _currentLevel++;
+
+            public void RemoveLevel() => _currentLevel--;
+
+            public string GetValiableName(string name) => $"{name}_{_currentLevel}";
+
+            public string GetRandomVariable()
+            {
+                _currentVariable++;
+                return $"TempObject_{_currentVariable}_{_currentLevel}";
+            }
         }
 
-        private Action<ICodeLine, ICodeLine[]> _addCode;
+        private Action<ICodeLine[]> _addCode;
 
         private List<ICodeLine> _codeLines = new List<ICodeLine>();
 
         public Function RealFunction { get; }
 
-        public Dictionary<string, Type> Variabeles { get; set; }
+        public string LifeTimeContext => VariableNamer.GetValiableName("LifeTimeContext");
 
-        public static string TargetName => nameof(TargetName);
+        public string Input => VariableNamer.GetValiableName("InputObject");
+
+        public string TargetName => VariableNamer.GetValiableName(nameof(TargetName));
+
+        public VariableNamerImpl VariableNamer { get; } = new VariableNamerImpl();
 
         public CompilationUnit()
         {
             RealFunction = (Function) Function.Create("Create");
-            WithParameter(typeof(object), TargetName);
             RealFunction.Returns(TargetName);
             PushBody(RealFunction);
+            _addCode(new [] { CodeLine.CreateVariable(typeof(object), TargetName) });
         }
 
         public override string ToString() => RealFunction.ToString();
 
         public bool AutoPush { get; private set; }
 
-        private CompilationUnit InternalAddCode(ICodeLine firstCodeLine)
+        private CompilationUnit InternalAddCode()
         {
-            _addCode(firstCodeLine, _codeLines.ToArray());
+            _addCode(_codeLines.ToArray());
             _codeLines.Clear();
             return this;
         }
@@ -56,7 +71,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             where  TType : ICodeLine
         {
             bool autopush = AutoPush;
-            InternalAddCode(line);
+            _codeLines.Add(line);
+            InternalAddCode();
             if(!autopush)
                 PushBody(line);
 
@@ -68,19 +84,17 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             var type = typeof(TType);
             if (type == typeof(Function) || type == typeof(ICodeLine) || type == typeof(IOperation))
             {
-                _addCode = (codeLine, codeLines) => body.SafeCast<Function>().WithBody(codeLine, codeLines);
+                _addCode = codeLines => body.SafeCast<Function>().WithBody(codeLines);
                 AutoPush = false;
             }
-
-            if (type == typeof(IIf))
+            else if (type == typeof(IIf))
             {
-                _addCode = (line, lines) => PushBody(body.SafeCast<IIf>().Then(line, lines));
+                _addCode = lines => PushBody(body.SafeCast<IIf>().Then(lines));
                 AutoPush = true;
             }
-
-            if (type == typeof(IIfThen))
+            else if (type == typeof(IIfThen))
             {
-                _addCode = (line, lines) => PushBody(body.SafeCast<IIfThen>().Else(line, lines));
+                _addCode = lines => PushBody(body.SafeCast<IIfThen>().Else(lines));
                 AutoPush = true;
             }
             else
@@ -96,13 +110,19 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public CompilationUnit WithParameter(Type type, string name)
         {
             RealFunction.WithParameter(type, name);
-            Variabeles[name] = type;
             return this;
         }
 
         public CompilationUnit WithParameter<TData>(string name) => WithParameter(typeof(TData), name);
 
-        public LambdaExpression ToExpression() => RealFunction.ToExpression();
+        public LambdaExpression ToExpression()
+        {
+            if (_codeLines.Count == 0) return RealFunction.ToExpression();
+
+            RealFunction.WithBody(_codeLines);
+            _codeLines.Clear();
+            return RealFunction.ToExpression();
+        }
 
         public TData ToLambda<TData>() where TData : class => RealFunction.ToLambda<TData>();
 

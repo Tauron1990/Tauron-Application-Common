@@ -47,12 +47,29 @@ namespace ExpressionBuilder
             return new OperationConst(value);
         }
 
-        public static OperationBlock NeestedLambda(string name, Type type, Action<IBodyOrParameter> block)
+        public static IRightable Constant<TType>(object value)
         {
-            var op = new OperationBlock(name, type);
+            if (value is OperationConst @const) return @const;
+            return new OperationConst(value, typeof(TType));
+        }
+
+        public static OperationLambda NeestedLambda(string name, Type type, Action<IOperationLambda> block)
+        {
+            var op = new OperationLambda(name, type);
             block(op);
             return op;
         }
+
+        public static IOperationBlock Block(Action<IOperationBlock> init) => Block(null, init);
+
+        public static IOperationBlock Block(Type result, Action<IOperationBlock> init)
+        {
+            var op = new OperationBlock(result);
+            init(op);
+            return op;
+        }
+
+        public static IOperationBlock Block<TResult>(Action<IOperationBlock> init) => Block(typeof(TResult), init);
 
         public static IRightable InvokeReturn(MethodInfo staticMethod, params IOperation[] parameters) => new OperationInvokeReturn(staticMethod, parameters);
 
@@ -89,6 +106,8 @@ namespace ExpressionBuilder
         public static ICodeLine Set(string variable, PropertyInfo propertyInfo, IOperation value) => Set(Variable(variable), propertyInfo, value);
 
         public static IRightable Null() => Constant(null);
+
+        public static IRightable Null<TType>() => Constant<TType>(null);
 
         public static IRightable Cast(IOperation variable, Type toType) => new OperationCast(variable, toType);
 

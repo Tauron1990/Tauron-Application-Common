@@ -36,7 +36,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         }
 
         public override void Inject(CompilationUnit target, IContainer container, ImportMetadata metadata,
-            IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters)
+            IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters, CompilationUnit unit)
         {
             try
             {
@@ -57,11 +57,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
                 if (InjectorContext.Resolver == null) throw new InvalidOperationException("No Resolver Created");
 
-                var value = InjectorContext.Resolver.Create(errorTracer);
+                var value = InjectorContext.Resolver.Create(errorTracer, unit);
 
                 if (errorTracer.Exceptional) return;
 
-                Inject(target, value);
+                Inject(target, value, unit);
             }
             catch (Exception e)
             {
@@ -70,6 +70,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             }
         }
 
-        protected abstract void Inject([NotNull] CompilationUnit target, [NotNull] IRightable value);
+        protected abstract void Inject([NotNull] CompilationUnit target, [NotNull] IRightable value, CompilationUnit unit);
     }
 }

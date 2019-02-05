@@ -14,7 +14,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public DefaultBuildContext([NotNull] ExportMetadata targetExport,[NotNull] IContainer container, 
             [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] parameters, [CanBeNull] IResolverExtension[] resolverExtensions)
         {
-            errorTracer.Export = Metadata.ToString();
+            errorTracer.Export = targetExport.ToString();
             ExportType = targetExport.Export.ImplementType;
             Metadata = Argument.NotNull(targetExport, nameof(targetExport));
             Policys = new PolicyList();

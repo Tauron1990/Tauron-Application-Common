@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using ExpressionBuilder.Parser;
 using FastExpressionCompiler;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
@@ -37,7 +39,7 @@ namespace Tauron.Application.Ioc.BuildUp
                 .SafeCast<DefaultExportFactory>();
 
             Pipeline = new Pipeline(componentRegistry);
-            RebuildManager = new RebuildManager();
+            RebuildManager = componentRegistry.Get<RebuildManager>();
             providerRegistry.ExportsChanged += ExportsChanged;
         }
 
@@ -50,19 +52,23 @@ namespace Tauron.Application.Ioc.BuildUp
 
             Func<object, object> Creator(ExportMetadata meta2)
             {
-                try
+                lock (meta2)
                 {
-                    tracer.Phase = "Begin Building Up";
-                    var context = new DefaultBuildContext(meta2, _container, tracer, buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
-                    Pipeline.Build(context);
-
-                    return context.CompilationUnit.ToExpression().CompileFast<Func<object, object>>();
-                }
-                catch (Exception e)
-                {
-                    tracer.Exceptional = true;
-                    tracer.Exception = e;
-                    throw new BuildUpException(tracer);
+                    try
+                    {
+                        tracer.Phase = "Begin Building Up";
+                        var context = new DefaultBuildContext(meta2, _container, tracer, buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
+                        Pipeline.Build(context);
+                    
+                        var expression = context.CompilationUnit.ToExpression();
+                        return expression.CompileFast<Func<object, object>>();
+                    }
+                    catch (Exception e)
+                    {
+                        tracer.Exceptional = true;
+                        tracer.Exception = e;
+                        throw new BuildUpException(tracer);
+                    }
                 }
             }
         }
@@ -72,24 +78,10 @@ namespace Tauron.Application.Ioc.BuildUp
             Argument.NotNull(export, nameof(export));
             Argument.NotNull(tracer, nameof(tracer));
 
-            try
-            {
-                tracer.Phase = "Begin Building Up";
-                var result = CreateDelegate(export, contractName, tracer, buildParameters, false, out var meta)(null);
-                var buildObject = new BuildObject(export.ImportMetadata, meta, buildParameters);
-                if (export.ExternalInfo.External || export.ExternalInfo.HandlesLiftime) return result;
+            tracer.Phase = "Begin Building Up";
+            var result = CreateDelegate(export, contractName, tracer, buildParameters, false, out var meta)(null);
 
-                buildObject.Instance = result;
-                RebuildManager.AddBuild(buildObject);
-
-                return result;
-            }
-            catch (Exception e)
-            {
-                tracer.Exceptional = true;
-                tracer.Exception = e;
-                return null;
-            }
+            return result;
         }
 
         public object BuildUp([NotNull] object toBuild, [NotNull] ErrorTracer errorTracer, [NotNull] BuildParameter[] buildParameters, IExport relatedExport)
@@ -98,19 +90,10 @@ namespace Tauron.Application.Ioc.BuildUp
             Argument.NotNull(errorTracer, nameof(errorTracer));
             Argument.NotNull(buildParameters, nameof(buildParameters));
 
-            try
-            {
-                errorTracer.Phase = "Begin Building Up";
-                var export = relatedExport ?? _factory.CreateAnonymosWithTarget(toBuild.GetType(), toBuild);
-                var result = CreateDelegate(export, string.Empty, errorTracer, buildParameters, relatedExport == null, out _)(toBuild);
-                return result;
-            }
-            catch (Exception e)
-            {
-                errorTracer.Exceptional = true;
-                errorTracer.Exception = e;
-                return null;
-            }
+            errorTracer.Phase = "Begin Building Up";
+            var export = relatedExport ?? _factory.CreateAnonymosWithTarget(toBuild.GetType(), toBuild);
+            var result = CreateDelegate(export, string.Empty, errorTracer, buildParameters, relatedExport == null, out _)(toBuild);
+            return result;
         }
 
         internal object BuildUp([NotNull] Type type, [CanBeNull] object[] constructorArguments, ErrorTracer errorTracer, [CanBeNull] BuildParameter[] buildParameters)
@@ -118,21 +101,15 @@ namespace Tauron.Application.Ioc.BuildUp
             Argument.NotNull(type, nameof(type));
 
             errorTracer.Phase = "Begin Building Up";
-            try
-            {
-                return CreateDelegate(_factory.CreateAnonymos(type, constructorArguments), string.Empty, errorTracer, buildParameters, true, out _)(null);
-            }
-            catch (Exception e)
-            {
-                errorTracer.Exceptional = true;
-                errorTracer.Exception = e;
-                return null;
-            }
+            return CreateDelegate(_factory.CreateAnonymos(type, constructorArguments), string.Empty, errorTracer, buildParameters, true, out _)(null);
         }
 
         private void BuildUp(BuildObject build, ErrorTracer errorTracer, BuildParameter[] buildParameters)
         {
-            build.Instance = CreateDelegate(build.Export, build.Metadata.ContractName, errorTracer, build.BuildParameters, false, out _)(build.Instance);
+            object inst = build.Instance;
+            if(inst == null) return;
+            
+            build.Instance = CreateDelegate(build.Export, build.Metadata.ContractName, errorTracer, build.BuildParameters, false, out _)(inst);
         }
 
         private void ExportsChanged([NotNull] object sender, [NotNull] ExportChangedEventArgs e)
@@ -147,7 +124,20 @@ namespace Tauron.Application.Ioc.BuildUp
             foreach (var buildObject in parts)
             {
                 var errorTracer = new ErrorTracer();
-                BuildUp(buildObject, errorTracer, buildObject.BuildParameters);
+
+                try
+                {
+
+                    BuildUp(buildObject, errorTracer, buildObject.BuildParameters);
+                }
+                catch (Exception exception)
+                {
+                    if (!(exception is BuildUpException))
+                    {
+                        errorTracer.Exceptional = true;
+                        errorTracer.Exception = exception;
+                    }
+                }
 
                 if (errorTracer.Exceptional)
                     errors.Add(errorTracer);

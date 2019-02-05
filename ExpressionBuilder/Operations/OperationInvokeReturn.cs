@@ -45,6 +45,7 @@ namespace ExpressionBuilder.Operations
         private readonly IOperation _variable;
 
         private List<Type> _paramTypes;
+        private MethodCallDescriptor _staticMethodCallDescriptor;
 
         public OperationInvokeReturn(IOperation variable, string methodName, IOperation[] parameters)
         {
@@ -91,12 +92,21 @@ namespace ExpressionBuilder.Operations
             var type = _staticDataType;
             if (_staticDataType == null)
             {
+                _variable.PreParseExpression(context);
                 type = _variable.ParsedType;
-                if (_variable is OperationVariable operationVariable)
+                switch (_variable)
                 {
+                    case OperationVariable operationVariable:
                     var variable = context.GetVariable(operationVariable.Name);
-                    type = variable.DataType;
+                        type = variable.DataType;
+                        break;
                 }
+            }
+
+            if (_staticMethod != null)
+            {
+                _staticMethodCallDescriptor = ReflectionUtil.EvaluateCorrectness(_staticMethod.GetParameters(), _paramTypes);
+                _staticMethodCallDescriptor.Method = _staticMethod;
             }
 
             var methodInfo = _staticMethod ?? type.GetMethod(
@@ -136,7 +146,7 @@ namespace ExpressionBuilder.Operations
                 }
             }
 
-            var method = ReflectionUtil.GetMethod(type, _methodName, _paramTypes);
+            var method = _staticMethodCallDescriptor ?? ReflectionUtil.GetMethod(type, _methodName, _paramTypes);
 
             if (method.GoodFrom >= 0)
             {

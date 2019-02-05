@@ -51,7 +51,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         }
         
         public override void Inject(CompilationUnit target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer,
-            BuildParameter[] parameters)
+            BuildParameter[] parameters, CompilationUnit unit)
         {
             if (metadata.Metadata != null)
             {
@@ -61,7 +61,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                     {
                         var topic = (string) metadata.Metadata[AopConstants.EventTopicMetadataName];
                         target.AddCode(Operation.Invoke(Operation.Constant(_eventManager), nameof(_eventManager.AddEventHandler), Operation.Constant(topic),
-                            Operation.Constant(_method), Operation.Variable(CompilationUnit.TargetName), Operation.Null()));
+                            Operation.Constant(_method), Operation.Variable(unit.TargetName), Operation.Null()));
                         return;
                     }
                 }
@@ -71,9 +71,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             var args = new List<IOperation>();
 
             foreach (var parameterInfo in parms.Select(p => new ParameterMemberInfo(p)))
-                new ParameterHelper(_metadataFactory, parameterInfo, args, _resolverExtensions).Inject(target, container, metadata, interceptor, errorTracer, parameters);
+                new ParameterHelper(_metadataFactory, parameterInfo, args, _resolverExtensions).Inject(target, container, metadata, interceptor, errorTracer, parameters, unit);
 
-            target.AddCode(Operation.Invoke(CompilationUnit.TargetName, _method, args.ToArray()));
+            target.AddCode(Operation.Invoke(Operation.Cast(unit.TargetName, _method.DeclaringType), _method, args.ToArray()));
         }
         
         private class ParameterHelper : Injectorbase<ParameterMemberInfo>
@@ -86,7 +86,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             protected override Type MemberType => Member.ParameterInfo.ParameterType;
             
-            protected override void Inject(CompilationUnit target, IRightable value) => _parameters.Add(value);
+            protected override void Inject(CompilationUnit target, IRightable value, CompilationUnit unit) => _parameters.Add(Operation.Cast(value, MemberType));
         }
         
         private readonly IEventManager _eventManager;

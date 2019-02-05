@@ -11,17 +11,15 @@ namespace Tauron.Application.Ioc.Components
     {
         public void Initialize(ComponentRegistry components)
         {
-            //components.Register<IMetadataFactory, MetadataFactory>();
+            components.Register<RebuildManager, RebuildManager>();
             components.Register<IImportSelectorChain, ImportSelectorChain>();
             components.Register<IExportFactory, DefaultExportFactory>(DefaultExportFactory.Factory);
             components.Register<ICache, BuildCache>();
             components.Register<IEventManager, EventManager>();
-            //components.Register<IProxyService, ProxyService>();
 
             components.Register<IStrategy, CacheStrategy>();
             components.Register<IStrategy, LiftimeStrategy>();
             components.Register<IStrategy, InstantiationStrategy>();
-            //components.Register<IStrategy, InterceptionStrategy>();
             components.Register<IStrategy, InjectionStrategy>();
             components.Register<IStrategy, NodifyBuildCompledStrategy>();
 

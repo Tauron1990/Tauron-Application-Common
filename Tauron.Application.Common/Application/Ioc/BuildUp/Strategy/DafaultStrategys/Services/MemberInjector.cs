@@ -6,7 +6,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     public abstract class MemberInjector
     {
         public abstract void Inject([NotNull] CompilationUnit target, [NotNull] IContainer container, [NotNull] ImportMetadata metadata, [CanBeNull] IImportInterceptor interceptor,
-            [NotNull] ErrorTracer errorTracer,
-            [CanBeNull] BuildParameter[] parameters);
+            [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] parameters, CompilationUnit unit);
     }
 }

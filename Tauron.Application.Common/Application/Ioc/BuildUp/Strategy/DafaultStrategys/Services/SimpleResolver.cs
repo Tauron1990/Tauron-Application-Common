@@ -30,11 +30,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _extensions = Argument.NotNull(extensions, nameof(extensions));
         }
 
-        public IRightable Create([NotNull] ErrorTracer errorTracer)
+        public IRightable Create([NotNull] ErrorTracer errorTracer, CompilationUnit unit)
         {
             errorTracer.Phase = "Injecting Import For " + Metadata;
 
-            var helper = new ExportFactoryHelper(Container, Metadata, _metadataObject, _interceptor, _extensions);
+            var helper = new ExportFactoryHelper(Container, Metadata, _metadataObject, _interceptor, _extensions, unit?.VariableNamer ?? new CompilationUnit.VariableNamerImpl());
 
             try
             {
@@ -61,7 +61,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 try
                 {
                     errorTracer.IncrementIdent();
-                    return helper.BuildUp(false);
+                    return Operation.InvokeReturn(helper.BuildUp(false), nameof(Func<object>.Invoke));
                 }
                 finally
                 {
@@ -81,29 +81,31 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             private readonly ExportMetadata _buildMetadata;
             private readonly IContainer _container;
             private readonly IResolverExtension[] _extensions;
+            private readonly CompilationUnit.VariableNamerImpl _namer;
             private readonly InterceptorCallback _interceptor;
             private readonly object _metadataObject;
 
             public ExportFactoryHelper([NotNull] IContainer container, [NotNull] ExportMetadata buildMetadata,
                 [NotNull] object metadataObject, [CanBeNull] InterceptorCallback interceptor,
-                [NotNull] IResolverExtension[] extensions)
+                [NotNull] IResolverExtension[] extensions, CompilationUnit.VariableNamerImpl namer)
             {
                 _container = container;
                 _buildMetadata = buildMetadata;
                 _metadataObject = metadataObject;
                 _interceptor = interceptor;
                 _extensions = extensions;
+                _namer = namer;
             }
 
             //[CanBeNull]
             //public IRightable BuildUp() //([CanBeNull] BuildParameter[] parameters) => BuildUp(parameters, null);
 
             [NotNull]
-            public OperationBlock BuildUp(bool hasParameter) //([CanBeNull] BuildParameter[] parameters, [CanBeNull] ErrorTracer error)
+            public OperationLambda BuildUp(bool hasParameter) //([CanBeNull] BuildParameter[] parameters, [CanBeNull] ErrorTracer error)
             {
                 var op = Operation.NeestedLambda("creator", _buildMetadata.InterfaceType, parameter =>
                 {
-                    const string tempObject = "TempObject";
+                    string tempObject = _namer.GetRandomVariable();
                     const string buildParameters = "buildParameters";
 
                     if (hasParameter)
@@ -115,7 +117,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                             CodeLine.Assign(tempObject, Operation.InvokeReturn(Operation.Constant(_container), nameof(_container.BuildUp), 
                                 Operation.Constant(_buildMetadata), Operation.CreateInstance(typeof(ErrorTracer)), hasParameter 
                                     ? Operation.Variable(buildParameters) 
-                                    : Operation.Null())),
+                                    : Operation.Null<BuildParameter[]>())),
                             _extensions.FirstOrDefault(e => e.TargetType == _buildMetadata.Export.ImplementType)?.Progress(_buildMetadata, tempObject),
                             CreateInterceptor(tempObject))
                         .Returns(tempObject);

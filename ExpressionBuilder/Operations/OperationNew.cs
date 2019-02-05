@@ -40,7 +40,7 @@ namespace ExpressionBuilder.Operations
         private readonly Type _dataType;
         private readonly IRightable[] _variables;
         private List<Type> _constructorTypes;
-        private ConstructorInfo _constructorInfoMethod;
+        private readonly ConstructorInfo _constructorInfoMethod;
         private MethodCallDescriptor _constructorInfo;
 
         public OperationNew(Type dataType, IRightable[] variables)

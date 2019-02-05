@@ -35,8 +35,15 @@ namespace ExpressionBuilder.Operations
     public class OperationConst : IRightable
     {
         private readonly object _value;
+        private readonly Type _type;
 
         public OperationConst(object value) => _value = value;
+
+        public OperationConst(object value, Type type)
+        {
+            _value = value;
+            _type = type;
+        }
 
         public string ToString(ParseContext context)
         {
@@ -46,9 +53,16 @@ namespace ExpressionBuilder.Operations
             return "\"" + _value + "\"";
         }
 
-        public Expression ToExpression(ParseContext context) => Expression.Constant(_value);
+        public Expression ToExpression(ParseContext context)
+        {
+            return context.PushConst(_value, ParsedType);
+            //return Expression.Constant(_value, ParsedType);
+        }
 
-        public void PreParseExpression(ParseContext context) => ParsedType = _value == null ? typeof(object) : _value.GetType();
+        public void PreParseExpression(ParseContext context)
+        {
+            ParsedType = _value == null ? _type ?? typeof(object) : _type ?? _value.GetType();
+        }
 
         public Type ParsedType { get; private set; }
     }

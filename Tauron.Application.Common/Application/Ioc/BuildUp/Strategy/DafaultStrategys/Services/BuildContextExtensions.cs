@@ -5,9 +5,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     [PublicAPI]
     public static class BuildContextExtensions
     {
-        public static bool CanCache([NotNull] this IBuildContext context) => 
-            Argument.NotNull(context, nameof(context)).Metadata.Export.ExternalInfo.External
-                                             && !context.Metadata.Export.ExternalInfo.HandlesLiftime;
+        public static bool CanCache([NotNull] this IBuildContext context)
+        {
+            Argument.NotNull(context, nameof(context));
+            var info = context.Metadata.Export.ExternalInfo;
+
+            return !info.External || info.HandlesLiftime;
+        }
 
         public static bool CanHandleLiftime([NotNull] this IBuildContext context) => !Argument.NotNull(context, nameof(context)).Metadata.Export.ExternalInfo.External
                                                                                      && !context.Metadata.Export.ExternalInfo.HandlesLiftime;

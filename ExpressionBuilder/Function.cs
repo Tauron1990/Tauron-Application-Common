@@ -144,7 +144,7 @@ namespace ExpressionBuilder
 
         public Expression ToExpression(ParseContext context)
         {
-            PreParseExpression(context);
+            PreParseExpression();
 
             var expressionsList = new List<Expression>();
             var exprParams = new List<ParameterExpression>();
@@ -227,12 +227,12 @@ namespace ExpressionBuilder
             return ToString(ctx);
         }
 
-        //private void PreParseExpression()
-        //{
-        //    var ctx = new ParseContext();
-        //    ctx.AddLevel();
-        //    PreParseExpression(ctx);
-        //    ctx.RemoveLevel();
-        //}
+        private void PreParseExpression()
+        {
+            var ctx = new ParseContext();
+            ctx.AddLevel();
+            PreParseExpression(ctx);
+            ctx.RemoveLevel();
+        }
     }
 }

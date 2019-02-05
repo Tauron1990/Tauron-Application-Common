@@ -89,7 +89,7 @@ namespace ExpressionBuilder.Utils
                 return result;
             }
 
-            throw new MissingMethodException();
+            throw new MissingMethodException(type.Name, methodName);
         }
 
         public static MethodCallDescriptor GetConstructor(Type type, List<Type> paramTypes)
@@ -104,7 +104,7 @@ namespace ExpressionBuilder.Utils
                 return result;
             }
 
-            throw new MissingMethodException();
+            throw new MissingMethodException(type.Name, ".ctor(" + string.Concat(paramTypes.Select(t => t.Name)) + ")");
         }
 
         public static MethodCallDescriptor EvaluateCorrectness(ParameterInfo[] mp, List<Type> paramTypes)

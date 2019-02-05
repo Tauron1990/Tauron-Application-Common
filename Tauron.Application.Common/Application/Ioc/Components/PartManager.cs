@@ -9,8 +9,7 @@ namespace Tauron.Application.Ioc.Components
     [PublicAPI]
     public class RebuildManager
     {
-        private readonly GroupDictionary<ExportMetadata, BuildObject> _objects =
-            new GroupDictionary<ExportMetadata, BuildObject>(typeof(WeakReferenceCollection<BuildObject>));
+        private readonly GroupDictionary<ExportMetadata, BuildObject> _objects = new GroupDictionary<ExportMetadata, BuildObject>(typeof(WeakReferenceCollection<BuildObject>));
 
         public void AddBuild([NotNull] BuildObject instance)
         {
@@ -34,13 +33,7 @@ namespace Tauron.Application.Ioc.Components
                 return from o in _objects
                     from buildObject in o.Value
                     where
-                        buildObject.GetImports()
-                            .Any(
-                                tup =>
-                                    changed.Any(
-                                        meta =>
-                                            tup.InterfaceType == meta.InterfaceType
-                                            && tup.ContractName == meta.ContractName))
+                        buildObject.GetImports().Any(tup => changed.Any(meta => tup.InterfaceType == meta.InterfaceType && tup.ContractName == meta.ContractName))
                     where buildObject.IsAlive
                     select buildObject;
             }

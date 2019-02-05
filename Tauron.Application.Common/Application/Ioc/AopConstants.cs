@@ -7,7 +7,7 @@ namespace Tauron.Application.Ioc
         public const string ContextMetadataName = "ContextName";
 
         public const BindingFlags DefaultBindingFlags =
-            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy;
 
         public const string DefaultExportFactoryName = "Internal";
 
