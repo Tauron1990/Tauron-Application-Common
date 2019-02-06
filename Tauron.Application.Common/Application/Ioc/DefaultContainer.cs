@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.BuildUp.Exports.DefaultExports;
+using Tauron.Application.Ioc.BuildUp.Strategy;
 using Tauron.Application.Ioc.Components;
 
 namespace Tauron.Application.Ioc
@@ -58,8 +59,8 @@ namespace Tauron.Application.Ioc
 
         private readonly List<IContainerExtension> _extensions;
 
-        public ILeftRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
-            => _buildEngine.CreateOperationBlock(data, errorTracer, parameters);
+        public ILeftRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, CompilationUnit.VariableNamerImpl namer, params BuildParameter[] parameters)
+            => _buildEngine.CreateOperationBlock(data, errorTracer, namer, parameters);
             //=> () =>
             //{
             //    errorTracer.Phase = string.Empty;

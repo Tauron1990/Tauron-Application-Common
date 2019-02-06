@@ -99,14 +99,16 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
                     var temp = Operation.CreateInstance(closed);
 
-                    return Operation.InvokeReturn(Operation.NeestedLambda("ListCreator", typeof(object), parameter =>
+                    var block = Operation.Block(parameter =>
                     {
-                        parameter.Returns(variable);
+                        parameter.ReturnVar(variable);
                         parameter.WithBody(
                             CodeLine.CreateVariable(closed, variable),
                             CodeLine.Assign(variable, temp));
                         parameter.WithBody(args);
-                    }), "Invoke");
+                    });
+
+                    return block;
 
                     //return Operation.InvokeReturn(Operation.NeestedLambda("ListCreator", typeof(object), parameter =>
                     //{

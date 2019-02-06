@@ -13,18 +13,23 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public class VariableNamerImpl
         {
             private int _currentVariable;
-            private int _currentLevel = 1;
+            private int _nextLevel = 1;
+            private int _actualLevel = 1;
 
-            public void AddLevel() => _currentLevel++;
+            public void AddLevel()
+            {
+                _nextLevel++;
+                _actualLevel = _nextLevel;
+            }
 
-            public void RemoveLevel() => _currentLevel--;
+            public void RemoveLevel() => _actualLevel = 1;
 
-            public string GetValiableName(string name) => $"{name}_{_currentLevel}";
+            public string GetValiableName(string name) => $"{name}_{_actualLevel}";
 
             public string GetRandomVariable()
             {
                 _currentVariable++;
-                return $"TempObject_{_currentVariable}_{_currentLevel}";
+                return $"TempObject_{_currentVariable}_{_actualLevel}";
             }
         }
 
@@ -40,10 +45,11 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         public string TargetName => VariableNamer.GetValiableName(nameof(TargetName));
 
-        public VariableNamerImpl VariableNamer { get; } = new VariableNamerImpl();
+        public VariableNamerImpl VariableNamer { get; private set; }
 
-        public CompilationUnit(Func<string, ICompilionTarget> target)
+        public CompilationUnit(Func<string, ICompilionTarget> target, VariableNamerImpl namer)
         {
+            VariableNamer = namer ?? new VariableNamerImpl();
             RealFunction = target(TargetName);
             PushBody(RealFunction);
             _addCode(new [] { CodeLine.CreateVariable(typeof(object), TargetName) });

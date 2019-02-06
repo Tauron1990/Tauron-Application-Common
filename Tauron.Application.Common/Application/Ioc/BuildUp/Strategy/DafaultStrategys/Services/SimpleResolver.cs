@@ -17,7 +17,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         public SimpleResolver([NotNull] ExportMetadata metadata, [NotNull] IContainer container,
             bool isExportFactory, [CanBeNull] Type factoryType, [CanBeNull] object metadataObject,
             [CanBeNull] Type metadataType, [CanBeNull] InterceptorCallback interceptor, bool isDescriptor,
-            [NotNull] IResolverExtension[] extensions)
+            [NotNull] IResolverExtension[] extensions, BuildParameter[] param)
         {
             Metadata = Argument.NotNull(metadata, nameof(metadata));
             Container = Argument.NotNull(container, nameof(container));
@@ -27,6 +27,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _metadataType = metadataType;
             _interceptor = interceptor;
             _isDescriptor = isDescriptor;
+            _param = param;
             _extensions = Argument.NotNull(extensions, nameof(extensions));
         }
 
@@ -34,7 +35,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         {
             errorTracer.Phase = "Injecting Import For " + Metadata;
 
-            var helper = new ExportFactoryHelper(Container, Metadata, _metadataObject, _interceptor, _extensions, unit?.VariableNamer ?? new CompilationUnit.VariableNamerImpl());
+            var helper = new ExportFactoryHelper(Container, Metadata, _metadataObject, _interceptor, _extensions, 
+                unit?.VariableNamer ?? new CompilationUnit.VariableNamerImpl(), errorTracer, _param);
 
             try
             {
@@ -43,10 +45,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 if (_isExportFactory)
                 {
                     var fullType = typeof(InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType);
-                    var opBlock = helper.BuildUp(true);
+                    var opBlock = helper.BuildUp();
+
+                    var func = (Function)Function.Create();
+                    func.WithBody(opBlock);
 
                     return Operation.CreateInstance(fullType,
-                        Operation.Constant(opBlock.Function.ToExpression().CompileFast<Func<BuildParameter, object>>()),
+                        Operation.Constant(func.ToExpression().CompileFast<Func<BuildParameter, object>>()),
                         Operation.Constant(new Func<object>(helper.Metadata)),
                         Operation.Constant(new Func<object>(helper.Metadata)),
                         Operation.Constant(Metadata.Export.ImplementType));
@@ -61,7 +66,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 try
                 {
                     errorTracer.IncrementIdent();
-                    return Operation.InvokeReturn(helper.BuildUp(false), nameof(Func<object>.Invoke));
+                    return helper.BuildUp();
                 }
                 finally
                 {
@@ -83,12 +88,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             private readonly IResolverExtension[] _extensions;
             private readonly CompilationUnit.VariableNamerImpl _namer;
             private readonly ErrorTracer _errorTracer;
+            private readonly BuildParameter[] _param;
             private readonly InterceptorCallback _interceptor;
             private readonly object _metadataObject;
 
             public ExportFactoryHelper([NotNull] IContainer container, [NotNull] ExportMetadata buildMetadata,
                 [NotNull] object metadataObject, [CanBeNull] InterceptorCallback interceptor,
-                [NotNull] IResolverExtension[] extensions, CompilationUnit.VariableNamerImpl namer, ErrorTracer errorTracer)
+                [NotNull] IResolverExtension[] extensions, CompilationUnit.VariableNamerImpl namer, ErrorTracer errorTracer, BuildParameter[] param)
             {
                 _container = container;
                 _buildMetadata = buildMetadata;
@@ -97,29 +103,26 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 _extensions = extensions;
                 _namer = namer;
                 _errorTracer = errorTracer;
+                _param = param;
             }
 
             //[CanBeNull]
             //public IRightable BuildUp() //([CanBeNull] BuildParameter[] parameters) => BuildUp(parameters, null);
 
             [NotNull]
-            public OperationLambda BuildUp(bool hasParameter) //([CanBeNull] BuildParameter[] parameters, [CanBeNull] ErrorTracer error)
+            public IOperationBlock BuildUp() //([CanBeNull] BuildParameter[] parameters, [CanBeNull] ErrorTracer error)
             {
-                var op = Operation.NeestedLambda("creator", _buildMetadata.InterfaceType, parameter =>
+                var op = Operation.Block(parameter =>
                 {
                     string tempObject = _namer.GetRandomVariable();
-                    const string buildParameters = "buildParameters";
 
-                    if (hasParameter)
-                        parameter.WithParameter<BuildParameter[]>(buildParameters);
-
+                    parameter.ReturnVar(tempObject);
                     parameter
                         .WithBody(
                             CodeLine.CreateVariable<object>(tempObject),
-                            CodeLine.Assign(tempObject, _container.DeferBuildUp(_buildMetadata, _errorTracer, )),
+                            CodeLine.Assign(tempObject, _container.DeferBuildUp(_buildMetadata, _errorTracer, _param)),
                             _extensions.FirstOrDefault(e => e.TargetType == _buildMetadata.Export.ImplementType)?.Progress(_buildMetadata, tempObject),
-                            CreateInterceptor(tempObject))
-                        .Returns(tempObject);
+                            CreateInterceptor(tempObject));
 
                 });
 
@@ -146,6 +149,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
         private readonly Type _metadataType;
         private readonly InterceptorCallback _interceptor;
         private readonly bool _isDescriptor;
+        private readonly BuildParameter[] _param;
         private readonly IResolverExtension[] _extensions;
         
         public IContainer Container { get; }

@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using ExpressionBuilder.Fluent;
-using ExpressionBuilder.Parser;
 using FastExpressionCompiler;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
@@ -45,14 +42,16 @@ namespace Tauron.Application.Ioc.BuildUp
             providerRegistry.ExportsChanged += ExportsChanged;
         }
 
-        public ILeftRightable CreateOperationBlock(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
+        public ILeftRightable CreateOperationBlock(ExportMetadata data, ErrorTracer errorTracer, CompilationUnit.VariableNamerImpl namer, params BuildParameter[] parameters)
         {
             try
             {
+                namer.AddLevel();
                 errorTracer.Phase = "Begin Building Up";
                 var context = new DefaultBuildContext(data, _container, errorTracer, parameters,
-                    _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new BlockFunctionTarget(s)));
+                    _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new BlockFunctionTarget(s), namer));
                 Pipeline.Build(context);
+                namer.RemoveLevel();
 
                 return context.CompilationUnit.RealFunction.ToOperation();
             }
@@ -79,7 +78,7 @@ namespace Tauron.Application.Ioc.BuildUp
                     {
                         tracer.Phase = "Begin Building Up";
                         var context = new DefaultBuildContext(meta2, _container, tracer, buildParameters,
-                            _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new FunctionCompilionTarget(s)));
+                            _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new FunctionCompilionTarget(s), null));
                         Pipeline.Build(context);
 
                         var expression = (LambdaExpression)context.CompilationUnit.ToExpression();
@@ -101,7 +100,7 @@ namespace Tauron.Application.Ioc.BuildUp
             Argument.NotNull(tracer, nameof(tracer));
 
             tracer.Phase = "Begin Building Up";
-            var result = CreateDelegate(export, contractName, tracer, buildParameters, false, out var meta)(null);
+            var result = CreateDelegate(export, contractName, tracer, buildParameters, false, out _)(null);
 
             return result;
         }

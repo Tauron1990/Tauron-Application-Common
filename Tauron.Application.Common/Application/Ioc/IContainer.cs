@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
+using Tauron.Application.Ioc.BuildUp.Strategy;
 
 namespace Tauron.Application.Ioc
 {
     [PublicAPI]
     public interface IContainer : IDisposable, IServiceProvider
     {
-        ILeftRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters);
+        ILeftRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, CompilationUnit.VariableNamerImpl namer, params BuildParameter[] parameters);
 
         object BuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters);
 
