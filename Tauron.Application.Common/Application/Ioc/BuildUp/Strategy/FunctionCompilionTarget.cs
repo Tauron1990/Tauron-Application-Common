@@ -28,6 +28,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         public void Returns(string variableName) => _function.Returns(variableName);
 
-        public ILeftRightable ToOperation() => throw new NotSupportedException("Function Can not Convert to Operation!");
+        public IOperation ToOperation() => throw new NotSupportedException("Function Can not Convert to Operation!");
     }
 }

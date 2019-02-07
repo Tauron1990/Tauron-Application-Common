@@ -17,7 +17,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _target = target;
         }
 
-        public IRightable Create(ErrorTracer errorTracer, CompilationUnit unit)
+        public IRightable Create(ErrorTracer errorTracer, SubCompilitionUnit unit)
         {
             errorTracer.Phase = "Injecting Array for " + _target;
 

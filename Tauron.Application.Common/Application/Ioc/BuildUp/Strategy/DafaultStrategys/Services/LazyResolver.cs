@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq.Expressions;
 using ExpressionBuilder;
 using ExpressionBuilder.Fluent;
 using FastExpressionCompiler;
@@ -19,7 +19,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _factory = factory;
         }
 
-        public IRightable Create(ErrorTracer errorTracer, CompilationUnit unit) 
+        public IRightable Create(ErrorTracer errorTracer, SubCompilitionUnit unit) 
             => CreateLazy(_lazy, _factory, _resolver.Metadata.Metadata ?? new Dictionary<string, object>(), _resolver, errorTracer);
 
         private static IRightable CreateLazy([NotNull] Type lazytype, [NotNull] IMetadataFactory metadataFactory, [NotNull] IDictionary<string, object> metadataValue,
@@ -76,13 +76,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 if(_resolver == null)
                     throw new InvalidOperationException("Resolver was set to null");
 
-                string returnVar = "ReturnVar_" + Interlocked.Increment(ref PrivateVariableStade);
-                var f = Function.Create("SimpleResolver")
-                    .WithBody(
-                        CodeLine.CreateVariable<T>(returnVar),
-                        CodeLine.Assign(Operation.Variable(returnVar), Operation.Cast(_resolver.Create(new ErrorTracer(), null), typeof(T))))
-                    .Returns(returnVar)
-                    .ToExpression().CompileFast<Func<T>>();
+                CompilationUnit unit = new CompilationUnit(s => new FunctionCompilionTarget(s), new CompilationUnit.VariableNamerImpl());
+                unit.WithBody(
+                    CodeLine.CreateVariable<T>(unit.TargetName),
+                    CodeLine.Assign(Operation.Variable(unit.TargetName),
+                        Operation.Cast(_resolver.Create(new ErrorTracer(), unit.CreateSubUnit()), typeof(T))));
+
+                var f = unit.ToExpression().SafeCast<LambdaExpression>().CompileFast<Func<T>>();
 
                 _resolver = null;
 
@@ -92,8 +92,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         private abstract class LazyTrampolineBase
         {
-            protected static int PrivateVariableStade;
-
             public abstract object CreateFunc();
 
         }

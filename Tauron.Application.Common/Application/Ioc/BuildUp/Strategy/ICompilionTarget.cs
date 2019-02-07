@@ -13,6 +13,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         Expression ToExpression();
         void WithBody(IEnumerable<ICodeLine> codeLines);
         void Returns(string variableName);
-        ILeftRightable ToOperation();
+        IOperation ToOperation();
     }
 }

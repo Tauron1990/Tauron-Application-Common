@@ -42,18 +42,16 @@ namespace Tauron.Application.Ioc.BuildUp
             providerRegistry.ExportsChanged += ExportsChanged;
         }
 
-        public ILeftRightable CreateOperationBlock(ExportMetadata data, ErrorTracer errorTracer, CompilationUnit.VariableNamerImpl namer, params BuildParameter[] parameters)
+        public IOperationBlock CreateOperationBlock(ExportMetadata data, ErrorTracer errorTracer, SubCompilitionUnit subUnit, params BuildParameter[] parameters)
         {
             try
             {
-                namer.AddLevel();
                 errorTracer.Phase = "Begin Building Up";
                 var context = new DefaultBuildContext(data, _container, errorTracer, parameters,
-                    _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new BlockFunctionTarget(s), namer));
+                    _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new BlockFunctionTarget(s), subUnit.VariableNamer));
                 Pipeline.Build(context);
-                namer.RemoveLevel();
 
-                return context.CompilationUnit.RealFunction.ToOperation();
+                return (IOperationBlock)context.CompilationUnit.RealFunction.ToOperation();
             }
             catch (Exception e)
             {

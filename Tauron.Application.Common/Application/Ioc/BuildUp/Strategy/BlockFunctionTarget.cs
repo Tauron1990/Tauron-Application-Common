@@ -36,7 +36,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         public void Returns(string variableName) => _returnVariable = variableName;
 
-        public ILeftRightable ToOperation()
+        public IOperation ToOperation()
         {
             _operationBlock.ReturnVar(_returnVariable);
             return _operationBlock;

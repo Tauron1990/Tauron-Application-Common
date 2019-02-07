@@ -57,7 +57,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
                 if (InjectorContext.Resolver == null) throw new InvalidOperationException("No Resolver Created");
 
-                var value = InjectorContext.Resolver.Create(errorTracer, unit);
+                var value = InjectorContext.Resolver.Create(errorTracer, unit.CreateSubUnit());
 
                 if (errorTracer.Exceptional) return;
 

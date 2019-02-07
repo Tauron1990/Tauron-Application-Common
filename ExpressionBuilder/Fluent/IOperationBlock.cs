@@ -2,7 +2,7 @@
 
 namespace ExpressionBuilder.Fluent
 {
-    public interface IOperationBlock : ILeftRightable
+    public interface IOperationBlock : IOperation, ICodeLine
     {
         IOperationBlock ReturnVar(string name);
         IOperationBlock WithBody(params ICodeLine[] lines);

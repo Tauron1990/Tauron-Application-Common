@@ -78,7 +78,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _target = Argument.NotNull(target, nameof(target));
         }
         
-        public IRightable Create(ErrorTracer errorTracer, CompilationUnit unit)
+        public IRightable Create(ErrorTracer errorTracer, SubCompilitionUnit unit)
         {
             try
             {
@@ -95,20 +95,23 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                     var args = _resolvers.Select(resolver => Operation.Invoke(Operation.Variable(variable), info, Operation.Cast(resolver.Create(errorTracer, unit), targetType)))
                         .TakeWhile(vtemp => !errorTracer.Exceptional).ToList();
 
-                    if (errorTracer.Exceptional) return null;
+                    if (errorTracer.Exceptional) return Operation.Null();
 
                     var temp = Operation.CreateInstance(closed);
+
+                    unit.AddCode(CodeLine.CreateVariable(closed, variable),
+                        CodeLine.Assign(variable, temp));
+                    unit.AddCode(args);
 
                     var block = Operation.Block(parameter =>
                     {
                         parameter.ReturnVar(variable);
                         parameter.WithBody(
-                            CodeLine.CreateVariable(closed, variable),
-                            CodeLine.Assign(variable, temp));
+                            );
                         parameter.WithBody(args);
                     });
 
-                    return block;
+                    return Operation.Variable(variable);
 
                     //return Operation.InvokeReturn(Operation.NeestedLambda("ListCreator", typeof(object), parameter =>
                     //{

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
+using ExpressionBuilder;
 using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp;
@@ -59,9 +59,22 @@ namespace Tauron.Application.Ioc
 
         private readonly List<IContainerExtension> _extensions;
 
-        public ILeftRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, CompilationUnit.VariableNamerImpl namer, params BuildParameter[] parameters)
-            => _buildEngine.CreateOperationBlock(data, errorTracer, namer, parameters);
-            //=> () =>
+        public IRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, SubCompilitionUnit subUnit, params BuildParameter[] parameters)
+        {
+            try
+            {
+                subUnit.VariableNamer.AddLevel();
+                var op = _buildEngine.CreateOperationBlock(data, errorTracer, subUnit, parameters);
+                subUnit.AddCode(op);
+
+                return Operation.Variable(subUnit.TargetName);
+            }
+            finally
+            {
+                subUnit.VariableNamer.RemoveLevel();
+            }
+        }
+        //=> () =>
             //{
             //    errorTracer.Phase = string.Empty;
             //    errorTracer.Phase = data.ToString();

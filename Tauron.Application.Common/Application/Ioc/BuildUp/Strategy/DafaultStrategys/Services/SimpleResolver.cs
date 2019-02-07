@@ -31,12 +31,12 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _extensions = Argument.NotNull(extensions, nameof(extensions));
         }
 
-        public IRightable Create([NotNull] ErrorTracer errorTracer, CompilationUnit unit)
+        public IRightable Create([NotNull] ErrorTracer errorTracer, SubCompilitionUnit unit)
         {
             errorTracer.Phase = "Injecting Import For " + Metadata;
 
             var helper = new ExportFactoryHelper(Container, Metadata, _metadataObject, _interceptor, _extensions, 
-                unit?.VariableNamer ?? new CompilationUnit.VariableNamerImpl(), errorTracer, _param);
+                 errorTracer, _param);
 
             try
             {
@@ -45,7 +45,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 if (_isExportFactory)
                 {
                     var fullType = typeof(InstanceResolver<,>).MakeGenericType(_factoryType, _metadataType);
-                    var opBlock = helper.BuildUp();
+                    var opBlock = helper.BuildUpBlock(unit);
 
                     var func = (Function)Function.Create();
                     func.WithBody(opBlock);
@@ -66,7 +66,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 try
                 {
                     errorTracer.IncrementIdent();
-                    return helper.BuildUp();
+                    return helper.BuildUp(unit);
                 }
                 finally
                 {
@@ -86,7 +86,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             private readonly ExportMetadata _buildMetadata;
             private readonly IContainer _container;
             private readonly IResolverExtension[] _extensions;
-            private readonly CompilationUnit.VariableNamerImpl _namer;
             private readonly ErrorTracer _errorTracer;
             private readonly BuildParameter[] _param;
             private readonly InterceptorCallback _interceptor;
@@ -94,34 +93,47 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
             public ExportFactoryHelper([NotNull] IContainer container, [NotNull] ExportMetadata buildMetadata,
                 [NotNull] object metadataObject, [CanBeNull] InterceptorCallback interceptor,
-                [NotNull] IResolverExtension[] extensions, CompilationUnit.VariableNamerImpl namer, ErrorTracer errorTracer, BuildParameter[] param)
+                [NotNull] IResolverExtension[] extensions, ErrorTracer errorTracer, BuildParameter[] param)
             {
                 _container = container;
                 _buildMetadata = buildMetadata;
                 _metadataObject = metadataObject;
                 _interceptor = interceptor;
                 _extensions = extensions;
-                _namer = namer;
                 _errorTracer = errorTracer;
                 _param = param;
             }
 
-            //[CanBeNull]
-            //public IRightable BuildUp() //([CanBeNull] BuildParameter[] parameters) => BuildUp(parameters, null);
 
             [NotNull]
-            public IOperationBlock BuildUp() //([CanBeNull] BuildParameter[] parameters, [CanBeNull] ErrorTracer error)
+            public IRightable BuildUp(SubCompilitionUnit unit) 
+            {
+                string tempObject = unit.VariableNamer.GetRandomVariable();
+
+                unit.AddCode(
+                        CodeLine.CreateVariable<object>(tempObject),
+                        CodeLine.Assign(tempObject, _container.DeferBuildUp(_buildMetadata, _errorTracer, unit, _param)),
+                        _extensions.FirstOrDefault(e => e.TargetType == _buildMetadata.Export.ImplementType)?.Progress(_buildMetadata, tempObject),
+                        CreateInterceptor(tempObject));
+
+                return Operation.Variable(tempObject);
+            }
+
+            [NotNull]
+            public IOperationBlock BuildUpBlock(SubCompilitionUnit unit)
             {
                 var op = Operation.Block(parameter =>
                 {
-                    string tempObject = _namer.GetRandomVariable();
+                    string tempObject = unit.VariableNamer.GetRandomVariable();
 
                     parameter.ReturnVar(tempObject);
                     parameter
                         .WithBody(
                             CodeLine.CreateVariable<object>(tempObject),
-                            CodeLine.Assign(tempObject, _container.DeferBuildUp(_buildMetadata, _errorTracer, _param)),
-                            _extensions.FirstOrDefault(e => e.TargetType == _buildMetadata.Export.ImplementType)?.Progress(_buildMetadata, tempObject),
+                            CodeLine.Assign(tempObject,
+                                _container.DeferBuildUp(_buildMetadata, _errorTracer, unit, _param)),
+                            _extensions.FirstOrDefault(e => e.TargetType == _buildMetadata.Export.ImplementType)
+                                ?.Progress(_buildMetadata, tempObject),
                             CreateInterceptor(tempObject));
 
                 });

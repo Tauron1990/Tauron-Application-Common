@@ -10,7 +10,7 @@ namespace Tauron.Application.Ioc
     [PublicAPI]
     public interface IContainer : IDisposable, IServiceProvider
     {
-        ILeftRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, CompilationUnit.VariableNamerImpl namer, params BuildParameter[] parameters);
+        IRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, SubCompilitionUnit subUnit, params BuildParameter[] parameters);
 
         object BuildUp(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters);
 
