@@ -6,6 +6,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     public interface IResolver
     {
         [NotNull]
-        IRightable Create(ErrorTracer errorTracer, CompilationUnit unit);
+        IRightable Create(ErrorTracer errorTracer, SubCompilitionUnit unit);
     }
 }
