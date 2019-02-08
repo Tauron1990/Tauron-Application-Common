@@ -22,7 +22,7 @@ namespace Tauron.Application.Ioc
             _exportproviders = new ExportProviderRegistry();
             _exportproviders.ExportsChanged += ExportsChanged;
             Register(new DefaultExtension());
-            _buildEngine = new BuildEngine(this, _exportproviders, _componetnts);
+            _buildEngine = new Lazy<BuildEngine>(() => new BuildEngine(this, _exportproviders, _componetnts));
             _exports.Register(DefaultExportFactory.Factory.CreateAnonymosWithTarget(typeof(IContainer), this), 0);
         }
 
@@ -49,7 +49,9 @@ namespace Tauron.Application.Ioc
             }
         }
 
-        private readonly BuildEngine _buildEngine;
+        private readonly Lazy<BuildEngine> _buildEngine;
+
+        private BuildEngine BuildEngine => _buildEngine.Value;
 
         private readonly ComponentRegistry _componetnts;
 
@@ -64,7 +66,7 @@ namespace Tauron.Application.Ioc
             try
             {
                 subUnit.VariableNamer.AddLevel();
-                var op = _buildEngine.CreateOperationBlock(data, errorTracer, subUnit, parameters);
+                var op = BuildEngine.CreateOperationBlock(data, errorTracer, subUnit, parameters);
                 subUnit.AddCode(op);
 
                 return Operation.Variable(subUnit.TargetName);
@@ -94,7 +96,7 @@ namespace Tauron.Application.Ioc
             try
             {
                 errorTracer.Export = data.ToString();
-                return _buildEngine.BuildUp(data.Export, data.ContractName, errorTracer, parameters);
+                return BuildEngine.BuildUp(data.Export, data.ContractName, errorTracer, parameters);
             }
             catch (Exception e)
             {
@@ -113,7 +115,7 @@ namespace Tauron.Application.Ioc
 
             try
             {
-                return _buildEngine.BuildUp(toBuild, errorTracer, parameters, _exports.TryFindExport(toBuild));
+                return BuildEngine.BuildUp(toBuild, errorTracer, parameters, _exports.TryFindExport(toBuild));
             }
             catch (Exception e)
             {
@@ -132,7 +134,7 @@ namespace Tauron.Application.Ioc
 
             try
             {
-                return _buildEngine.BuildUp(type, constructorArguments, errorTracer, buildParameters);
+                return BuildEngine.BuildUp(type, constructorArguments, errorTracer, buildParameters);
             }
             catch (Exception e)
             {

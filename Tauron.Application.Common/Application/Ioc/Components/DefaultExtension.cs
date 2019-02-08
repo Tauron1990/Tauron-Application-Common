@@ -28,6 +28,8 @@ namespace Tauron.Application.Ioc.Components
             chain.Register(new PropertyImportSelector());
             chain.Register(new MethodImportSelector());
             chain.Register(new EventImportSelector());
+
+            DefaultExportFactory.Factory.Initialize(components);
         }
     }
 }

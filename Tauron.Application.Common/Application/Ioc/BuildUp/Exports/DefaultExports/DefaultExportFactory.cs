@@ -9,8 +9,10 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
 {
     public sealed class DefaultExportFactory : IExportFactory
     {
-        private IImportSelectorChain _chain;
-        
+        private IImportSelectorChain Chain => _componentRegistry.Get<IImportSelectorChain>();
+
+        private ComponentRegistry _componentRegistry;
+
         public static readonly DefaultExportFactory Factory = new DefaultExportFactory();
         
         public string TechnologyName => AopConstants.DefaultExportFactoryName;
@@ -18,12 +20,9 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         private DefaultExportFactory()
         {
         }
-        
-        public void Initialize(ComponentRegistry components)
-        {
-            _chain = components.Get<IImportSelectorChain>();
-        }
-        
+
+        public void Initialize(ComponentRegistry components) => _componentRegistry = components;
+
         public IExport Create([NotNull] Type type, ref int level)
         {
             if (!DefaultExport.IsExport(Argument.NotNull(type, nameof(type)))) return null;
@@ -37,7 +36,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
             if (attr != null) level = attr.Level;
 
 
-            export.ImportMetadata = _chain.SelectImport(export);
+            export.ImportMetadata = Chain.SelectImport(export);
 
             return export;
         }
@@ -55,7 +54,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
                     type.Name),
                 true);
 
-            export.ImportMetadata = _chain.SelectImport(export);
+            export.ImportMetadata = Chain.SelectImport(export);
             return export;
         }
         
@@ -68,7 +67,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
             var info = new ExternalExportInfo(true, true, true, true, context => Operation.Constant(target), null);
 
             var export = new DefaultExport(type, info, true);
-            export.ImportMetadata = _chain.SelectImport(export);
+            export.ImportMetadata = Chain.SelectImport(export);
 
             return export;
         }
