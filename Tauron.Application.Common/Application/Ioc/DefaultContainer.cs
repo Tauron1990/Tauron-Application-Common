@@ -66,10 +66,7 @@ namespace Tauron.Application.Ioc
             try
             {
                 subUnit.VariableNamer.AddLevel();
-                var op = BuildEngine.CreateOperationBlock(data, errorTracer, subUnit, parameters);
-                subUnit.AddCode(op);
-
-                return Operation.Variable(subUnit.TargetName);
+                return (IRightable)BuildEngine.CreateOperationBlock(data, errorTracer, subUnit, parameters);             
             }
             finally
             {

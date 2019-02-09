@@ -78,7 +78,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
                 CompilationUnit unit = new CompilationUnit(s => new FunctionCompilionTarget(s), new CompilationUnit.VariableNamerImpl());
                 unit.WithBody(
-                    CodeLine.CreateVariable<T>(unit.TargetName),
+                    //CodeLine.CreateVariable<T>(unit.TargetName),
                     CodeLine.Assign(Operation.Variable(unit.TargetName),
                         Operation.Cast(_resolver.Create(new ErrorTracer(), unit.CreateSubUnit()), typeof(T))));
 
