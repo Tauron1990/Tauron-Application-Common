@@ -31,5 +31,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public void Returns(string variableName) => throw new NotSupportedException();
 
         public IOperation ToOperation() => Operation.Variable(_returnVariable);
+
+        public bool NoInput => true;
     }
 }

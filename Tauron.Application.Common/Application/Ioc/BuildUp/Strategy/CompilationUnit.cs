@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using ExpressionBuilder;
 using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 
@@ -52,7 +51,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             VariableNamer = namer ?? new VariableNamerImpl();
             RealFunction = target(TargetName);
             PushBody(RealFunction);
-            _addCode(new [] { CodeLine.CreateVariable(typeof(object), TargetName) });
+            //_addCode(new [] { CodeLine.CreateVariable(typeof(object), TargetName) });
         }
 
         public override string ToString() => RealFunction.ToString();

@@ -14,5 +14,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         void WithBody(IEnumerable<ICodeLine> codeLines);
         void Returns(string variableName);
         IOperation ToOperation();
+        bool NoInput { get; }
     }
 }

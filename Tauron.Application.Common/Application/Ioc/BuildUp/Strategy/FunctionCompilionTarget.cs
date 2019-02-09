@@ -14,6 +14,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         {
             _function = (Function)Function.Create("Create");
             _function.Returns(returnVariable);
+            WithBody(CodeLine.CreateVariable(typeof(object), returnVariable));
         }
 
         public void WithBody(params ICodeLine[] code) => _function.WithBody(code);
@@ -29,5 +30,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         public void Returns(string variableName) => _function.Returns(variableName);
 
         public IOperation ToOperation() => throw new NotSupportedException("Function Can not Convert to Operation!");
+
+        public bool NoInput => false;
     }
 }

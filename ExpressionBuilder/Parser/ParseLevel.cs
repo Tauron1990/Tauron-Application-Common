@@ -43,7 +43,8 @@ namespace ExpressionBuilder.Parser
 
         public void AddVariable(Variable var)
         {
-            if (_parseContext.HasVariable(var)) throw new Exception("Duplicate variable -- " + var.Name);
+            if (_parseContext.HasVariable(var))
+                throw new Exception("Duplicate variable -- " + var.Name);
             _variables.Add(var.Name, var);
         }
 

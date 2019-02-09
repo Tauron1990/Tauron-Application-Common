@@ -29,10 +29,20 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             string lifetimecontext = unit.LifeTimeContext;
             string inputName = unit.Input;
 
-           unit
-                .AddCode(CodeLine.CreateIf(Condition.Compare(inputName, Operation.Null()))
-                    .Then(CodeLine.Assign(lifetimecontext, Operation.CreateInstance(policy.LiftimeType)),
-                        Operation.Invoke(lifetimecontext, "SetValue", Operation.Variable(unit.TargetName))));
+            var finshOp = new[]
+            {
+                CodeLine.Assign(lifetimecontext, Operation.CreateInstance(policy.LiftimeType)),
+                Operation.Invoke(lifetimecontext, "SetValue", Operation.Variable(unit.TargetName))
+            };
+
+            if (unit.RealFunction.NoInput)
+                unit.AddCode(finshOp);
+            else
+            {
+                unit
+                    .AddCode(CodeLine.CreateIf(Condition.Compare(inputName, Operation.Null()))
+                        .Then(finshOp));
+            }
         }
     }
 }
