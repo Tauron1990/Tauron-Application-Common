@@ -16,105 +16,102 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
     {
         private static ConcurrentDictionary<string, Delegate> _delegates = new ConcurrentDictionary<string, Delegate>();
 
-        private static Delegate CreateDelegate(IRuleFactory factory, string name)
+        public static LambdaExpression  CreateExpression(this IRuleFactory factory, string name)
         {
-            return _delegates.GetOrAdd(name, Factory);
+            var rule = factory.Create(name);
 
-            Delegate Factory(string key)
+            if (!(rule is IRuleDescriptor descriptor))
+                throw new NotSupportedException("No Descriptor");
+
+            Type ruleType = rule.GetType();
+            Type parameterType = descriptor.ParameterType;
+            Type returnType = descriptor.ReturnType;
+
+            MethodInfo[] methods = ruleType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            MethodInfo method;
+            if (parameterType == null && returnType == null)
             {
-                var rule = factory.Create(key);
+                method = methods.Where(NameFilter).Single(m => m.ReturnType == typeof(void) && m.GetParameters().Length == 0);
+                var expr = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method));
 
-                if (!(rule is IRuleDescriptor descriptor))
-                    throw new NotSupportedException("No Descriptor");
+                return Expression.Lambda(typeof(Func<Return>), expr);
+            }
 
-                Type ruleType = rule.GetType();
-                Type parameterType = descriptor.ParameterType;
-                Type returnType = descriptor.ReturnType;
+            if (parameterType == null)
+            {
+                method = methods.Where(NameFilter).Single(m => m.ReturnType == returnType && m.GetParameters().Length == 0);
+                var tree = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method));
 
-                MethodInfo[] methods = ruleType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                MethodInfo method;
-                if (parameterType == null && returnType == null)
+                return Expression.Lambda<Func<Return>>(tree);
+            }
+
+            if (returnType == null)
+            {
+                method = methods.Where(NameFilter).Single(m =>
                 {
-                    method = methods.Where(NameFilter).Single(m => m.ReturnType == typeof(void) && m.GetParameters().Length == 0);
-                    var expr = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method));
+                    if (m.ReturnType != typeof(void)) return false;
+                    var parms = m.GetParameters();
 
-                    return Expression.Lambda(typeof(Func<Return>), expr).CompileFast();
-                }
+                    return parms.Length == 1 && parms[0].ParameterType == parameterType;
 
-                if (parameterType == null)
+                });
+
+                var parm = Expression.Parameter(parameterType);
+                var call = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method, parm));
+                var delegateType = typeof(Func<,>).MakeGenericType(parameterType, typeof(Return));
+
+                return Expression.Lambda(delegateType, call, parm);
+            }
+
+            method = methods.Where(NameFilter).Single(m => m.GetParameters().FirstOrDefault()?.ParameterType == parameterType && m.ReturnType == returnType);
+
+            var parm2 = Expression.Parameter(parameterType);
+            var exp2 = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method, parm2));
+            var delegateType2 = typeof(Func<,>).MakeGenericType(parameterType, typeof(Return));
+
+            return Expression.Lambda(delegateType2, exp2, parm2);
+
+            Expression CreateErrorExpression(Expression exp)
+            {
+                List<Expression> blockList = new List<Expression>();
+                List<ParameterExpression> variables = new List<ParameterExpression>();
+
+                ParameterExpression callVariable = Expression.Variable(typeof(object), "callResult");
+                if (returnType != null)
                 {
-                    method = methods.Where(NameFilter).Single(m => m.ReturnType == returnType && m.GetParameters().Length == 0);
-                    var tree = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method));
-
-                    return Expression.Lambda<Func<Return>>(tree).CompileFast();
+                    variables.Add(callVariable);
+                    blockList.Add(Expression.Assign(callVariable, Expression.TypeAs(exp, typeof(object))));
                 }
+                else
+                    blockList.Add(exp);
 
+                Expression falseExpression;
+                LabelTarget returnLabel = Expression.Label(typeof(Return), "returnLabel");
+                //Expression returnVariable = Expression.Variable(typeof(Return), "returnVariable");
                 if (returnType == null)
                 {
-                    method = methods.Where(NameFilter).Single(m =>
-                    {
-                        if (m.ReturnType != typeof(void)) return false;
-                        var parms = m.GetParameters();
-
-                        return parms.Length == 1 && parms[0].ParameterType == parameterType;
-
-                    });
-
-                    var parm = Expression.Parameter(parameterType);
-                    var call = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method, parm));
-                    var delegateType = typeof(Func<,>).MakeGenericType(parameterType, typeof(Return));
-
-                    return Expression.Lambda(delegateType, call, parm).CompileFast();
+                    falseExpression = Expression.Return(returnLabel,
+                        Expression.New(typeof(VoidReturn)));
                 }
-                
-                method = methods.Where(NameFilter).Single(m => m.GetParameters().FirstOrDefault()?.ParameterType == parameterType && m.ReturnType == returnType);
-
-                var parm2 = Expression.Parameter(parameterType);
-                var exp2 = CreateErrorExpression(Expression.Call(Expression.Constant(rule, ruleType), method, parm2));
-                var delegateType2 = typeof(Func<,>).MakeGenericType(parameterType, typeof(Return));
-
-                return Expression.Lambda(delegateType2, exp2, parm2).CompileFast();
-
-                Expression CreateErrorExpression(Expression exp)
+                else
                 {
-                    List<Expression> blockList = new List<Expression>();
-                    List<ParameterExpression> variables = new List<ParameterExpression>();
-
-                    ParameterExpression callVariable = Expression.Variable(typeof(object), "callResult");
-                    if (returnType != null)
-                    {
-                        variables.Add(callVariable);
-                        blockList.Add(Expression.Assign(callVariable, Expression.TypeAs(exp, typeof(object))));
-                    }
-                    else
-                        blockList.Add(exp);
-
-                    Expression falseExpression;
-                    LabelTarget returnLabel = Expression.Label(typeof(Return), "returnLabel");
-                    //Expression returnVariable = Expression.Variable(typeof(Return), "returnVariable");
-                    if (returnType == null)
-                    {
-                        falseExpression = Expression.Return(returnLabel,
-                            Expression.New(typeof(VoidReturn)));
-                    }
-                    else
-                    {
-                        falseExpression = Expression.Return(returnLabel,
-                            Expression.New(typeof(ObjectReturn).GetConstructor(new[] {typeof(object)}) ?? throw new InvalidOperationException(),
-                                callVariable));
-                    }
-
-                    blockList.Add(Expression.IfThenElse(Expression.Property(Expression.Constant(rule), nameof(rule.Error)),
-                        Expression.Return(returnLabel,
-                            Expression.New(typeof(ErrorReturn).GetConstructor(new[] {typeof(IEnumerable<object>)}) ?? throw new InvalidOperationException(),
-                                Expression.Property(Expression.Constant(rule), nameof(rule.Errors)))),
-                        falseExpression));
-                    blockList.Add(Expression.Label(returnLabel, Expression.Constant(null, typeof(Return))));
-
-                    return returnType == null ? Expression.Block(blockList.ToArray()) : Expression.Block(variables, blockList);
+                    falseExpression = Expression.Return(returnLabel,
+                        Expression.New(typeof(ObjectReturn).GetConstructor(new[] { typeof(object) }) ?? throw new InvalidOperationException(),
+                            callVariable));
                 }
+
+                blockList.Add(Expression.IfThenElse(Expression.Property(Expression.Constant(rule), nameof(rule.Error)),
+                    Expression.Return(returnLabel,
+                        Expression.New(typeof(ErrorReturn).GetConstructor(new[] { typeof(IEnumerable<object>) }) ?? throw new InvalidOperationException(),
+                            Expression.Property(Expression.Constant(rule), nameof(rule.Errors)))),
+                    falseExpression));
+                blockList.Add(Expression.Label(returnLabel, Expression.Constant(null, typeof(Return))));
+
+                return returnType == null ? Expression.Block(blockList.ToArray()) : Expression.Block(variables, blockList);
             }
         }
+
+        public static Delegate CreateDelegate(this IRuleFactory factory, string name) => _delegates.GetOrAdd(name, key => CreateExpression(factory, key).CompileFast());
 
         [DebuggerStepThrough]
         private static bool NameFilter(MethodInfo info)
@@ -130,7 +127,7 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 
             return name.StartsWith(iRule) || name.StartsWith(rule) || name.StartsWith(ioRule) && name.Contains(actionName);
         }
-
+        
         public static Func<Return> Delegate(this IRuleFactory fac, string name) => (Func<Return>)CreateDelegate(fac, name);
 
         public static Func<TArg, Return> DelegateArg<TArg>(this IRuleFactory fac, string name) => (Func<TArg, Return>) CreateDelegate(fac, name);
@@ -139,7 +136,7 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 
         public static Return Call<TArg>(this IRuleFactory factory, string name, TArg arg) => DelegateArg<TArg>(factory, name)(arg);
 
-        private static void ThrowError(Return ret)
+        public static void ThrowError(this Return ret)
         {
             if(ret is ErrorReturn error)
                 throw new CallErrorException(error.Errors);

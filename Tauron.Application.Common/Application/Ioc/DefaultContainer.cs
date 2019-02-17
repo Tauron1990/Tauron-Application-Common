@@ -19,8 +19,8 @@ namespace Tauron.Application.Ioc
             _exportproviders = new ExportProviderRegistry();
             _exportproviders.ExportsChanged += ExportsChanged;
             Register(new DefaultExtension());
-            _buildEngine = new BuildEngine(this, _exportproviders, _componetnts);
-            _exports.Register(DefaultExportFactory.Factory.CreateAnonymosWithTarget(typeof(IContainer), this), 0);
+            _buildEngine = new Lazy<BuildEngine>(() =>  new BuildEngine(this, _exportproviders, _componetnts));
+            _exports.Register(((DefaultExportFactory)_componetnts.GetAll<IExportFactory>().Single()).CreateAnonymosWithTarget(typeof(IContainer), this), 0);
         }
 
         private void ExportsChanged(object sender, ExportChangedEventArgs e)
@@ -46,7 +46,7 @@ namespace Tauron.Application.Ioc
             }
         }
 
-        private readonly BuildEngine _buildEngine;
+        private readonly Lazy<BuildEngine> _buildEngine;
 
         private readonly ComponentRegistry _componetnts;
 
@@ -65,7 +65,7 @@ namespace Tauron.Application.Ioc
             try
             {
                 errorTracer.Export = data.ToString();
-                return _buildEngine.BuildUp(data.Export, data.ContractName, errorTracer, parameters);
+                return _buildEngine.Value.BuildUp(data.Export, data.ContractName, errorTracer, parameters);
             }
             catch (Exception e)
             {
@@ -84,7 +84,7 @@ namespace Tauron.Application.Ioc
 
             try
             {
-                return _buildEngine.BuildUp(toBuild, errorTracer, parameters);
+                return _buildEngine.Value.BuildUp(toBuild, errorTracer, parameters);
             }
             catch (Exception e)
             {
@@ -103,7 +103,7 @@ namespace Tauron.Application.Ioc
 
             try
             {
-                return _buildEngine.BuildUp(type, constructorArguments, errorTracer, buildParameters);
+                return _buildEngine.Value.BuildUp(type, constructorArguments, errorTracer, buildParameters);
             }
             catch (Exception e)
             {

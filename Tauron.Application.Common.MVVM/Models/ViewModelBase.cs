@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Tauron.Application.Commands;
 using Tauron.Application.Ioc;
 using Tauron.Application.Models.Interfaces;
+using Tauron.Application.Models.Rules;
 using Tauron.Application.UIConnector;
 using Tauron.Application.Views;
 

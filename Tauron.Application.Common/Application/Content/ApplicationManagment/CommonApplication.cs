@@ -10,6 +10,7 @@ using NLog.Config;
 using NLog.Targets;
 using Tauron.Application.Implement;
 using Tauron.Application.Ioc;
+using Tauron.Application.Models;
 using Tauron.Application.Modules;
 
 namespace Tauron.Application
@@ -264,7 +265,12 @@ namespace Tauron.Application
             module.Initialize(this, addComponent);
             ModuleHandlerRegistry.Progress(module);
         }
-        
+
+        public virtual IValidator CreateValidator()
+        {
+            return null;
+        }
+
         private void PerformStartup()
         {
             try
@@ -283,6 +289,8 @@ namespace Tauron.Application
                     action(new ProgressUpdate(10, msg));
 
                     Container = CreateContainer(action);
+                    ValidatorConfiguration.Validator = CreateValidator();
+
                     action(new ProgressUpdate(15, msg));
 
                     using ((Container as IComponentMessager)?.Subscribe(action))

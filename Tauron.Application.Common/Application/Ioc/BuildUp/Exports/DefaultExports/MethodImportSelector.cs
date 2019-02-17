@@ -27,7 +27,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
                 }
                 else
                 {
-                    meta.Add(AopConstants.ParameterMetadataName, Helper.MapParameters(methodInfo).ToArray());
+                    meta.Add(AopConstants.ParameterMetadataName, ConstructorHelper.MapParameters(methodInfo).ToArray());
 
                     yield return
                         new ImportMetadata(

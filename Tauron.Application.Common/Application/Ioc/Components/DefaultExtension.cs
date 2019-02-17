@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.BuildUp.Exports.DefaultExports;
 using Tauron.Application.Ioc.BuildUp.Strategy;
@@ -13,7 +14,7 @@ namespace Tauron.Application.Ioc.Components
         {
             //components.Register<IMetadataFactory, MetadataFactory>();
             components.Register<IImportSelectorChain, ImportSelectorChain>();
-            components.Register<IExportFactory, DefaultExportFactory>(DefaultExportFactory.Factory);
+            components.Register<IExportFactory, DefaultExportFactory>();
             components.Register<ICache, BuildCache>();
             components.Register<IEventManager, EventManager>();
             //components.Register<IProxyService, ProxyService>();

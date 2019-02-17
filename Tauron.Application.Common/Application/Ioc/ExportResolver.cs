@@ -239,13 +239,14 @@ namespace Tauron.Application.Ioc
                 : this(types) => _level = level;
         }
 
-        public void AddAssembly([NotNull] Assembly assembly)
+        public ExportResolver AddAssembly([NotNull] Assembly assembly)
         {
             Argument.NotNull(assembly, nameof(assembly));
             AddProvider(new AssemblyExportProvider(assembly));
+            return this;
         }
 
-        public void AddPath([NotNull] string path, [NotNull] string searchpattern, SearchOption option, bool discoverChanges)
+        public ExportResolver AddPath([NotNull] string path, [NotNull] string searchpattern, SearchOption option, bool discoverChanges)
         {
             Argument.NotNull((object)path, nameof(path));
             Argument.NotNull(searchpattern, nameof(searchpattern));
@@ -253,25 +254,30 @@ namespace Tauron.Application.Ioc
 
             path = path.GetFullPath();
 
-            if (!path.ExisDirectory()) return;
+            if (!path.ExisDirectory()) return this;
 
             AddProvider(new PathExportProvider(path, searchpattern, option, discoverChanges));
+
+            return this;
         }
 
-        public void AddPath([NotNull] string path) => AddPath(path, "*.dll");
-        public void AddPath([NotNull] string path, string searchpattern) => AddPath(path, searchpattern, SearchOption.TopDirectoryOnly);
-        public void AddPath([NotNull] string path, [NotNull] string searchpattern, SearchOption searchOption) => AddPath(path, searchpattern, searchOption, false);
+        public ExportResolver AddPath([NotNull] string path) => AddPath(path, "*.dll");
+        public ExportResolver AddPath([NotNull] string path, string searchpattern) => AddPath(path, searchpattern, SearchOption.TopDirectoryOnly);
+        public ExportResolver AddPath([NotNull] string path, [NotNull] string searchpattern, SearchOption searchOption) => AddPath(path, searchpattern, searchOption, false);
 
-        public void AddProvider([NotNull] ExportProvider provider)
+        public ExportResolver AddProvider([NotNull] ExportProvider provider)
         {
             Argument.NotNull(provider, nameof(provider));
             _providers.Add(provider);
+            return this;
         }
 
-        public void AddTypes([NotNull] IEnumerable<Type> types)
+        public ExportResolver AddTypes([NotNull] IEnumerable<Type> types)
         {
             Argument.NotNull(types, nameof(types));
             AddProvider(new TypeExportProvider(types));
+
+            return this;
         }
 
         public void Fill([NotNull] ComponentRegistry componentRegistry,

@@ -251,15 +251,8 @@ namespace Tauron.Application.Models
 
         private void ValidateProperty([NotNull] ObservableProperty property, [CanBeNull] object value)
         {
-            var rules = property.Metadata.ModelRules;
-            if (rules == null) return;
-
             ValidatorContext.Property = property;
-            SetIssues(property.Name,
-                rules.Select(r => r.IsValidValue(value, ValidatorContext))
-                    .Where(e => !e.Succseeded)
-                    .Select(r => new PropertyIssue(property.Name, value, r.Message ?? value?.ToString() ?? string.Empty))
-                    .ToArray());
+            SetIssues(property.Name, ValidatorConfiguration.Validator.Validate(ValidatorContext, value));
 
             // ReSharper disable once AssignNullToNotNullAttribute
             ValidatorContext.Property = null;

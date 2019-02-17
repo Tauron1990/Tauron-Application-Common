@@ -7,6 +7,7 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using Tauron.Application.Common.CastleProxy;
+using Tauron.Application.Common.MVVM.Dynamic;
 using Tauron.Application.Implementation;
 using Tauron.Application.Ioc;
 
@@ -104,6 +105,7 @@ namespace Tauron.Application
 
             con.Register(new PropertyModelExtension());
             con.Register(new ProxyExtension());
+            con.Register(new MvvmDynamicExtension());
             return con;
         }
 

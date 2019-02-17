@@ -10,7 +10,7 @@ using Tauron.Application.Ioc.Components;
 namespace Tauron.Application.Ioc.BuildUp
 {
     [PublicAPI]
-    public static class Helper
+    public static class ConstructorHelper
     {
 
         public static IEnumerable<(Type Type, string Name, bool Optional)> MapParameters([NotNull] MethodBase info)
@@ -29,12 +29,11 @@ namespace Tauron.Application.Ioc.BuildUp
             }
         }
 
-        [NotNull]
-        public static Func<IBuildContext, object> WriteDefaultCreation([NotNull] IBuildContext context)
+        public static Func<IBuildContext, object> WriteCreationFor(Type target, IBuildContext context)
         {
             Argument.NotNull(context, nameof(context));
 
-            var type = context.Metadata.Export.ImplementType;
+            var type = target;
 
             var construcors = type.GetConstructors(AopConstants.DefaultBindingFlags);
             ConstructorInfo constructor = null;
@@ -78,6 +77,9 @@ namespace Tauron.Application.Ioc.BuildUp
                 //        .ToArray());
             };
         }
+
+        [NotNull]
+        public static Func<IBuildContext, object> WriteDefaultCreation([NotNull] IBuildContext context) => WriteCreationFor(context.Metadata.Export.ImplementType, context);
 
 
         private static object TryResolveConstructorParameter((Type Type, string Name, bool Optional) parm, IBuildContext context)

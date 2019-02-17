@@ -64,18 +64,15 @@ namespace Tauron.Application.Models
         [CanBeNull]
         public Func<ObservableProperty, object> CustomGetter { get; set; }
 
-        [CanBeNull]
-        public ModelRule[] ModelRules { get; private set; }
-
         public bool ForceAllValidation { get; set; }
 
-        private string _propertyName;
-        private Type _ownerType;
+        public string PropertyName { get; private set; }
+        public Type OwnerType { get; private set; }
 
         [CanBeNull]
         public string DisplayName
         {
-            get => _displayName ?? _propertyName;
+            get => _displayName ?? PropertyName;
             set => _displayName = value;
         }
 
@@ -85,11 +82,11 @@ namespace Tauron.Application.Models
             Argument.NotNull(ownerType, nameof(ownerType));
             Argument.NotNull(propertyName, nameof(propertyName));
 
-            if(_propertyName != null || _ownerType != null)
+            if(PropertyName != null || OwnerType != null)
                 throw new InvalidOperationException("One Metadata on Multiple Propertys");
 
-            _propertyName = propertyName;
-            _ownerType = ownerType;
+            PropertyName = propertyName;
+            OwnerType = ownerType;
 
             if (string.IsNullOrWhiteSpace(DisplayName))
                 DisplayName = DisplayNameHelper.GetDisplayName(ownerType.Name, propertyName, () => ownerType.GetProperty(propertyName));
@@ -113,23 +110,6 @@ namespace Tauron.Application.Models
             return true;
         }
 
-        [NotNull]
-        public ObservablePropertyMetadata SetValidationRules([NotNull] params ModelRule[] rules)
-        {
-            ModelRules = Argument.NotNull(rules, nameof(rules));
-
-            PropertyInfo info = _ownerType.GetProperty(_propertyName);
-            if (info == null) return this;
-
-            var arules = info.GetCustomAttributes(true).OfType<ModelRule>();
-
-            if (rules.Length != 0)
-                arules = rules.Concat(arules);
-
-            ModelRules = arules.ToArray();
-
-            return this;
-        }
     }
 
     [PublicAPI]

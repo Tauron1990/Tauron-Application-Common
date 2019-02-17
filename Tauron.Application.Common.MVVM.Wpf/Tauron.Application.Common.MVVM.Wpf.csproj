@@ -121,6 +121,10 @@
       <Project>{aa4879b3-c839-4f2e-bb32-be2de695632a}</Project>
       <Name>Tauron.Application.Common.CastleProxy</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Tauron.Application.Common.MVVM.Dynamic\Tauron.Application.Common.MVVM.Dynamic.csproj">
+      <Project>{3ba41e89-b76b-4683-ae1c-6be0e47ed389}</Project>
+      <Name>Tauron.Application.Common.MVVM.Dynamic</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Tauron.Application.Common.MVVM\Tauron.Application.Common.MVVM.csproj">
       <Project>{8423cdbc-5304-4cbf-9e02-4f74a85fa6d7}</Project>
       <Name>Tauron.Application.Common.MVVM</Name>

@@ -30,7 +30,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 {
                     Constructor =
                         context.UseInternalInstantiation()
-                            ? Helper.WriteDefaultCreation(context)
+                            ? ConstructorHelper.WriteDefaultCreation(context)
                             : context.Metadata.Export.ExternalInfo.Create
                 });
 

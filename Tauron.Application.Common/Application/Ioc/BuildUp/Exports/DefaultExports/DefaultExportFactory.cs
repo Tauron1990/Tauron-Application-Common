@@ -8,17 +8,18 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
     public sealed class DefaultExportFactory : IExportFactory
     {
         private IImportSelectorChain _chain;
-        
-        public static readonly DefaultExportFactory Factory = new DefaultExportFactory();
-        
+
+        public static DefaultExportFactory Factory { get; private set; }
+
         public string TechnologyName => AopConstants.DefaultExportFactoryName;
 
-        private DefaultExportFactory()
+        public DefaultExportFactory()
         {
         }
         
         public void Initialize(ComponentRegistry components)
         {
+            Factory = this;
             _chain = components.Get<IImportSelectorChain>();
         }
         

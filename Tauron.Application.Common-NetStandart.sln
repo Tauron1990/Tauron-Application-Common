@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{89473D18
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{A9072E7A-DAE0-4EED-B811-04D62CFF5118}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tauron.Application.Common.MVVM.Dynamic", "Tauron.Application.Common.MVVM.Dynamic\Tauron.Application.Common.MVVM.Dynamic.csproj", "{3BA41E89-B76B-4683-AE1C-6BE0E47ED389}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -118,6 +120,12 @@ Global
 		{A9072E7A-DAE0-4EED-B811-04D62CFF5118}.Release Debug|Any CPU.Build.0 = Release|Any CPU
 		{A9072E7A-DAE0-4EED-B811-04D62CFF5118}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9072E7A-DAE0-4EED-B811-04D62CFF5118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BA41E89-B76B-4683-AE1C-6BE0E47ED389}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BA41E89-B76B-4683-AE1C-6BE0E47ED389}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BA41E89-B76B-4683-AE1C-6BE0E47ED389}.Release Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{3BA41E89-B76B-4683-AE1C-6BE0E47ED389}.Release Debug|Any CPU.Build.0 = Release|Any CPU
+		{3BA41E89-B76B-4683-AE1C-6BE0E47ED389}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BA41E89-B76B-4683-AE1C-6BE0E47ED389}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
