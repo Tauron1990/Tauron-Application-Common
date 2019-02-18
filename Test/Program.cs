@@ -60,10 +60,14 @@ namespace Test
         }
     }
 
-    [Export(typeof(TestClass))]
-    [CreateRuleCall]
-    public abstract class TestClass
+    public abstract class ServiceBaseClass
     {
+        [RuleErrorHandler]
+        protected virtual void ErrorHandler(ErrorReturn error)
+        {
+            Con.WriteLine("Hello from Error Handler");
+        }
+
         [BindRule(Program.TestRule1)]
         protected abstract void Test1();
 
@@ -78,7 +82,12 @@ namespace Test
 
         [BindRule(Program.ErrorTest)]
         protected abstract void Error();
+    }
 
+    [Export(typeof(TestClass))]
+    [CreateRuleCall]
+    public abstract class TestClass : ServiceBaseClass
+    {
         public void RunTest()
         {
             Test1();
@@ -120,7 +129,7 @@ namespace Test
             }
             catch (CallErrorException e)
             {
-                foreach (var o in e.Error)
+                foreach (var o in e.Errors)
                 {
                     Con.WriteLine(o);
                 }

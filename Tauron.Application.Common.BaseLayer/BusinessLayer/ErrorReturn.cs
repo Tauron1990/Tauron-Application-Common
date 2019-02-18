@@ -6,8 +6,14 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
     {
         public IEnumerable<object> Errors { get; }
 
+        public IRuleBase RuleBase { get; }
+
         public override bool Error { get; } = true;
 
-        public ErrorReturn(IEnumerable<object> errors) => Errors = errors;
+        public ErrorReturn(IRuleBase rule)
+        {
+            Errors = rule.Errors;
+            RuleBase = rule;
+        }
     }
 }

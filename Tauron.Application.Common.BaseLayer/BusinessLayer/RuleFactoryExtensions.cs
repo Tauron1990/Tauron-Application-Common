@@ -102,8 +102,8 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 
                 blockList.Add(Expression.IfThenElse(Expression.Property(Expression.Constant(rule), nameof(rule.Error)),
                     Expression.Return(returnLabel,
-                        Expression.New(typeof(ErrorReturn).GetConstructor(new[] { typeof(IEnumerable<object>) }) ?? throw new InvalidOperationException(),
-                            Expression.Property(Expression.Constant(rule), nameof(rule.Errors)))),
+                        Expression.New(typeof(ErrorReturn).GetConstructor(new[] { typeof(IRuleBase) }) ?? throw new InvalidOperationException(),
+                            Expression.Constant(rule))),
                     falseExpression));
                 blockList.Add(Expression.Label(returnLabel, Expression.Constant(null, typeof(Return))));
 
@@ -139,7 +139,7 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
         public static void ThrowError(this Return ret)
         {
             if(ret is ErrorReturn error)
-                throw new CallErrorException(error.Errors);
+                throw new CallErrorException(error);
             throw new InvalidOperationException("No Compatiple Return");
         }
 

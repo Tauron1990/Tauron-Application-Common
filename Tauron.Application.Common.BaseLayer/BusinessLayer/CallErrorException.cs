@@ -5,7 +5,14 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 {
     public class CallErrorException : Exception
     {
-        public CallErrorException(IEnumerable<object> error) => Error = error;
-        public IEnumerable<object> Error { get; }
+        public CallErrorException(ErrorReturn error)
+        {
+            Errors = error.Errors;
+            Rule = error.RuleBase;
+        }
+
+        public IEnumerable<object> Errors { get; }
+
+        public IRuleBase Rule { get; }
     }
 }

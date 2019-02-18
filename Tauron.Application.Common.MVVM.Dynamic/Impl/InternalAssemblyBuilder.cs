@@ -12,8 +12,7 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
     public class InternalAssemblyBuilder
     {
         private static readonly MethodInfo GetError = typeof(Return).GetProperty(nameof(Return.Error))?.GetMethod;
-        private static readonly MethodInfo GetErrors = typeof(ErrorReturn).GetProperty(nameof(ErrorReturn.Errors))?.GetMethod;
-        private static readonly ConstructorInfo CallErrorException = typeof(CallErrorException).GetConstructor(new[] {typeof(IEnumerable<object>)});
+        private static readonly ConstructorInfo CallErrorException = typeof(CallErrorException).GetConstructor(new[] {typeof(ErrorReturn)});
         private static readonly MethodInfo GetResult = typeof(ObjectReturn).GetProperty(nameof(ObjectReturn.Result))?.GetMethod;
 
         private List<IExport> _toWrap = new List<IExport>();
@@ -30,8 +29,6 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
 
         public void Build(IContainer container)
         {
-            var ruleFactory = container.Resolve<IRuleFactory>();
-
             lock (this)
             {
                 if(IsBuilded) return;
@@ -41,6 +38,8 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
                     _toWrap = null;
                     return;
                 }
+
+                var ruleFactory = container.Resolve<IRuleFactory>();
                 _defindTypes = new Dictionary<string, Type>();
 
                 _internalAssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("MvvmDynamic"), AssemblyBuilderAccess.Run);
@@ -56,11 +55,23 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
 
                     List<(string Name, Delegate Del)> toSet = new List<(string Name, Delegate Del)>();
 
+                    var errorHandler = target.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(m =>
+                    {
+                        if (!m.IsDefined(typeof(RuleErrorHandlerAttribute)))
+                            return false;
+
+                        if (m.ReturnParameter?.ParameterType != typeof(void)) return false;
+
+                        var parms = m.GetParameters();
+                        return parms.Length == 1 && parms[0].ParameterType == typeof(ErrorReturn);
+
+                    });
+
                     foreach (var method in from methodInfo in target.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                         where methodInfo.IsAbstract
                         let attr = methodInfo.GetCustomAttribute<BindRuleAttribute>()
                         where attr != null
-                        select new {Method = methodInfo, attr.Name})
+                        select new {Method = methodInfo, attr.Name, attr.NoThrow})
                     {
                         var realMethod = method.Method;
 
@@ -85,7 +96,31 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
                         
                         if(typeof(Return).IsAssignableFrom(realMethod.ReturnType))
                         {
+                            var errorLabel = il.DefineLabel();
+                            var returnVar = il.DeclareLocal(realMethod.ReturnType);
+
                             EmitCall(il, fieldBuilder, del, (short)realMethod.GetParameters().Length);
+
+                            il.Emit(OpCodes.Stloc, returnVar);
+                            il.Emit(OpCodes.Ldloc, returnVar);
+                            il.Emit(OpCodes.Callvirt, GetError);
+                            il.Emit(OpCodes.Brfalse, errorLabel);
+
+                            if (errorHandler != null)
+                            {
+                                var tempvar = il.DeclareLocal(typeof(ErrorReturn));
+                                il.Emit(OpCodes.Ldloc, returnVar);
+                                il.Emit(OpCodes.Castclass, typeof(ErrorReturn));
+                                il.Emit(OpCodes.Stloc, tempvar);
+                                il.Emit(OpCodes.Ldarg_0);
+                                il.Emit(OpCodes.Ldloc, tempvar);
+
+                                il.Emit(OpCodes.Callvirt, errorHandler);
+                            }
+
+                            il.MarkLabel(errorLabel);
+
+                            il.Emit(OpCodes.Ldloc, returnVar);
                             il.Emit(OpCodes.Ret);
                         }
                         else
@@ -93,7 +128,6 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
                             bool isVoid = realMethod.ReturnType == typeof(void);
 
                             var returnVar = il.DeclareLocal(typeof(Return));
-                            var error = il.DeclareLocal(typeof(bool));
                             var falseLabel = il.DefineLabel();
 
                             EmitCall(il, fieldBuilder, del, (short)realMethod.GetParameters().Length);
@@ -102,20 +136,49 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
                             il.Emit(OpCodes.Ldloc, returnVar);
 
                             il.Emit(OpCodes.Callvirt, GetError);
-                            il.Emit(OpCodes.Stloc, error);
-                            il.Emit(OpCodes.Ldloc, error);
-
                             il.Emit(OpCodes.Brfalse, falseLabel);
 
-                            il.Emit(OpCodes.Ldloc, returnVar);
-                            il.Emit(OpCodes.Castclass, typeof(ErrorReturn));
-                            il.Emit(OpCodes.Callvirt, GetErrors);
-                            il.Emit(OpCodes.Newobj, CallErrorException);
-                            il.Emit(OpCodes.Throw);
+                            if (errorHandler != null)
+                            {
+                                var tempvar = il.DeclareLocal(typeof(ErrorReturn));
+                                il.Emit(OpCodes.Ldloc, returnVar);
+                                il.Emit(OpCodes.Castclass, typeof(ErrorReturn));
+                                il.Emit(OpCodes.Stloc, tempvar);
+                                il.Emit(OpCodes.Ldarg_0);
+                                il.Emit(OpCodes.Ldloc, tempvar);
+
+                                il.Emit(OpCodes.Callvirt, errorHandler);
+                            }
+
+
+                            if (method.NoThrow)
+                            {
+                                if (isVoid)
+                                {
+                                    il.Emit(OpCodes.Ret);
+                                }
+                               else if (realMethod.ReturnType.IsValueType)
+                               {
+                                   il.Emit(OpCodes.Newobj, realMethod.ReturnType.GetConstructor(Type.EmptyTypes));
+                                   il.Emit(OpCodes.Ret);
+                               }
+                               else
+                                   il.Emit(OpCodes.Ret);
+                            }
+                            else
+                            {
+                                il.Emit(OpCodes.Ldloc, returnVar);
+                                il.Emit(OpCodes.Castclass, typeof(ErrorReturn));
+                                il.Emit(OpCodes.Newobj, CallErrorException);
+                                il.Emit(OpCodes.Throw);
+                            }
 
                             il.MarkLabel(falseLabel);
                             if (isVoid)
+                            {
+                                
                                 il.Emit(OpCodes.Ret);
+                            }
                             else
                             {
                                 il.Emit(OpCodes.Ldloc, returnVar);
