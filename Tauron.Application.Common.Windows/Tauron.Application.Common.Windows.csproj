@@ -49,6 +49,7 @@
     <Compile Include="KnownFolder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Impl\TauronEnviroment.cs" />
+    <Compile Include="WindowsExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tauron.Application.Common\Tauron.Application.Common.csproj">

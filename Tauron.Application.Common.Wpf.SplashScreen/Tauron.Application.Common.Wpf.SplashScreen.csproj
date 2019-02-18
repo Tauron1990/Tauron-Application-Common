@@ -48,7 +48,7 @@
   <ItemGroup>
     <Compile Include="AppTitle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SplashCore.cs" />
+    <Compile Include="RichSplashCore.cs" />
     <Compile Include="SplashScreen.xaml.cs">
       <DependentUpon>SplashScreen.xaml</DependentUpon>
     </Compile>

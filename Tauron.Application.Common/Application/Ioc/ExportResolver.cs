@@ -57,6 +57,8 @@ namespace Tauron.Application.Ioc
             }
 
             public override int GetHashCode() => Asm != null ? Asm.GetHashCode() : 0;
+
+            public override string ToString() => Asm.ToString();
         }
 
         [Serializable]
@@ -245,6 +247,10 @@ namespace Tauron.Application.Ioc
             AddProvider(new AssemblyExportProvider(assembly));
             return this;
         }
+
+        public ExportResolver AddAssembly([NotNull] Type assembly) => AddAssembly(assembly?.Assembly);
+
+        public ExportResolver AddAssembly() => AddAssembly(Assembly.GetCallingAssembly());
 
         public ExportResolver AddPath([NotNull] string path, [NotNull] string searchpattern, SearchOption option, bool discoverChanges)
         {

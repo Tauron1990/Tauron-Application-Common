@@ -6,10 +6,13 @@ using JetBrains.Annotations;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using Tauron.Application.Common.BaseLayer.BusinessLayer;
+using Tauron.Application.Common.BaseLayer.Core;
 using Tauron.Application.Common.CastleProxy;
 using Tauron.Application.Common.MVVM.Dynamic;
 using Tauron.Application.Implementation;
 using Tauron.Application.Ioc;
+using Tauron.Application.Views;
 
 namespace Tauron.Application
 {
@@ -19,7 +22,6 @@ namespace Tauron.Application
         public static void Run<TApp>(Action<TApp> runBeforStart = null, CultureInfo info = null) 
             where TApp : WpfApplication, new()
         {
-
             WpfApplicationController.Initialize(info);
             
             if (info != null && !info.Equals(CultureInfo.InvariantCulture))
@@ -54,7 +56,7 @@ namespace Tauron.Application
         [NotNull]
         public static System.Windows.Application CurrentWpfApplication => System.Windows.Application.Current;
 
-        protected virtual void ConfigSplash() { }
+        public virtual void ConfigSplash() { }
 
         protected override void LoadResources(Action<SplashMessage> action)
         {
@@ -99,6 +101,16 @@ namespace Tauron.Application
             config.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, filetarget));
         }
 
+        protected override void Fill(ExportResolver container, Action<SplashMessage> action)
+        {
+            container.AddAssembly(typeof(WpfApplication).Assembly);
+            container.AddAssembly(typeof(ProxyExtension).Assembly);
+            container.AddAssembly(typeof(PropertyModelExtension).Assembly);
+            container.AddAssembly(typeof(MvvmDynamicExtension).Assembly);
+            container.AddAssembly(typeof(IRuleFactory).Assembly);
+            container.AddAssembly(typeof(CommonDatabase<>).Assembly);
+        }
+
         protected override IContainer CreateContainer(Action<SplashMessage> action)
         {
             var con = base.CreateContainer(action);
@@ -112,5 +124,6 @@ namespace Tauron.Application
         protected override void OnStartupError(Exception e) => MessageBox.Show(e.ToString());
 
         protected override void OnMainWindowChanged(IWindow window) => Factory.CreateController().MainWindow = window;
+        public void InvokeOnStartup(string[] commandLine) => Async.StartNew(() => OnStartup(commandLine));
     }
 }

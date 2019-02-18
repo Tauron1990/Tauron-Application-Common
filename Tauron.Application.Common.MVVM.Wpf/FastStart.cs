@@ -22,10 +22,10 @@ namespace Tauron.Application
 
         private class FastStartApp : WpfApplication
         {
-            private readonly Action<IContainer> _fillcontainer;
+            private readonly Action<ExportResolver> _fillcontainer;
             private readonly Action<Action<SplashMessage>> _loadResources;
 
-            public FastStartApp(System.Windows.Application app, Action<IContainer> fillcontainer, Action<Action<SplashMessage>> loadResources, ISplashService splashService = null)
+            public FastStartApp(System.Windows.Application app, Action<ExportResolver> fillcontainer, Action<Action<SplashMessage>> loadResources, ISplashService splashService = null)
                 : base(true, app, true, splashService ?? new SplashService())
             {
                 _fillcontainer = fillcontainer;
@@ -33,10 +33,8 @@ namespace Tauron.Application
             }
 
             public override IContainer Container { get; set; }
-
-            public void CallConfigSplash() => ConfigSplash();
-
-            protected override void ConfigSplash()
+            
+            public override void ConfigSplash()
             {
                 if (!(Splash is SplashService)) return;
 
@@ -84,20 +82,38 @@ namespace Tauron.Application
             private static string GetDicPath() => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
                 .CombinePath($"Tauron\\{ApplicationName ?? Assembly.GetEntryAssembly().Location.GetFileNameWithoutExtension()}");
 
-            protected override void Fill(IContainer container, Action<SplashMessage> action)
+            protected override void Fill(ExportResolver container, Action<SplashMessage> action)
             {
                 if(_fillcontainer != null)
                     _fillcontainer(container);
                 else
                     container.AddApplicationPath();
-            }
 
-            public void InvokeOnStartup(string[] commandLine) => Async.StartNew(() => OnStartup(commandLine));
+                base.Fill(container, action);
+            }
         }
 
-        public static void Start([NotNull]System.Windows.Application app, Action<IContainer> fillContainer = null, CultureInfo info = null, Action<Action<SplashMessage>> loadResources = null)
+        public static void Start([NotNull]System.Windows.Application app, Action<ExportResolver> fillContainer = null, CultureInfo info = null, Action<Action<SplashMessage>> loadResources = null, ISplashService splashService = null)
         {
-            var fastApp = new FastStartApp(Argument.NotNull(app, nameof(app)), fillContainer, loadResources);
+            WpfIuiControllerFactory.SetSynchronizationContext();
+            var fastApp = new FastStartApp(Argument.NotNull(app, nameof(app)), fillContainer, loadResources, splashService);
+            //WpfApplicationController.Initialize(info);
+
+            if (info != null && !info.Equals(CultureInfo.InvariantCulture))
+            {
+                Thread.CurrentThread.CurrentCulture = info;
+                Thread.CurrentThread.CurrentUICulture = info;
+            }
+
+            fastApp.ConfigSplash();
+            fastApp.InvokeOnStartup(Environment.GetCommandLineArgs());
+        }
+
+        public static void Start<TApp>(CultureInfo info = null)
+            where TApp : WpfApplication, new()
+        {
+            var fastApp = new TApp();
+
             WpfApplicationController.Initialize(info);
 
             if (info != null && !info.Equals(CultureInfo.InvariantCulture))
@@ -106,7 +122,7 @@ namespace Tauron.Application
                 Thread.CurrentThread.CurrentUICulture = info;
             }
 
-            fastApp.CallConfigSplash();
+            fastApp.ConfigSplash();
             fastApp.InvokeOnStartup(Environment.GetCommandLineArgs());
         }
     }

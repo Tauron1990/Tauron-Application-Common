@@ -2,7 +2,7 @@
 
 namespace Tauron.Application.Common.Wpf.SplashScreen
 {
-    public class SplashCore : ISplashService
+    public class RichSplashCore : ISplashService
     {
         public SplashMessageListener Listner { get; } = SplashMessageListener.CurrentListner;
 
@@ -14,14 +14,14 @@ namespace Tauron.Application.Common.Wpf.SplashScreen
 
         public bool ShowInTaskbar { get; set; }
 
-        public SplashCore(AppTitle appTitle)
+        public RichSplashCore(AppTitle appTitle)
             : this()
             => AppTitle = appTitle;
 
-        public SplashCore()
+        public RichSplashCore()
         {
             Listner.Width = 450;
-            Listner.Height = 700;
+            Listner.Height = 350;
         }
 
         public void CloseSplash() => UISync.Invoke(() =>
@@ -37,7 +37,7 @@ namespace Tauron.Application.Common.Wpf.SplashScreen
                 if(_splashScreen != null) 
                     throw new InvalidOperationException();
 
-                _splashScreen = new SplashScreen { DataContext = this };
+                _splashScreen = new SplashScreen {DataContext = this, Width = Listner.Width, Height = Listner.Height};
                 _splashScreen.Show();
             });
         }

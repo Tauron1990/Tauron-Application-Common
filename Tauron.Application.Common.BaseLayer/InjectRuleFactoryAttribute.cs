@@ -6,7 +6,7 @@ namespace Tauron.Application.Common.BaseLayer
     public class InjectRuleFactoryAttribute : InjectAttribute
     {
         public InjectRuleFactoryAttribute()
-            : base(typeof(RuleFactory))
+            : base(typeof(IRuleFactory))
         {
         }
     }

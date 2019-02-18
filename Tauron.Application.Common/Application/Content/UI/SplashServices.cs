@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using JetBrains.Annotations;
 
 namespace Tauron.Application
@@ -161,6 +162,7 @@ namespace Tauron.Application
                         _progressWeight += splashTask.Weight;
                         _taskweight = -1;
                         CalculatePercent();
+                        Thread.Sleep(700);
                     }
                     finally
                     {
@@ -179,16 +181,21 @@ namespace Tauron.Application
 
         private void MessageRecive(SplashMessage progress)
         {
-            switch (progress)
+            lock (this)
             {
-                case ComponentUpdate cu:
-                    Components.Add(cu.Component);
-                    break;
-                case ProgressUpdate pu:
-                    Message = pu.Message;
-                    _taskweight = _currentWeight * ((double)pu.Percent / 100);
-                    CalculatePercent();
-                    break;
+                switch (progress)
+                {
+                    case ComponentUpdate cu:
+                        Components.Add(cu.Component);
+                        break;
+                    case ProgressUpdate pu:
+                        Message = pu.Message;
+                        _taskweight = _currentWeight * ((double)pu.Percent / 100);
+                        CalculatePercent();
+                        break;
+                }
+
+                Thread.Sleep(5);
             }
         }
 
@@ -203,9 +210,9 @@ namespace Tauron.Application
             if (_taskweight == -1)
                 Progress = 100;
             else
-                Progress = 100d / _currentWeight * _taskweight;
+                Progress = (int)(100d / _currentWeight * _taskweight);
 
-            OverallProgress = 100d / _maximumWeight * (_progressWeight + overallwight);
+            OverallProgress = (int)(100d / _maximumWeight * (_progressWeight + overallwight));
         }
     }
 

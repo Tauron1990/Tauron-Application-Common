@@ -77,7 +77,7 @@ namespace Tauron.Application
                 return con;
             }
 
-            protected override void Fill(IContainer container, Action<SplashMessage> action){}
+            protected override void Fill(ExportResolver container, Action<SplashMessage> action){}
 
             protected override void ConfigurateLagging(LoggingConfiguration config, Action<SplashMessage> msg) => config.AddRuleForAllLevels(new VsDebuggerTarget());
 
@@ -229,7 +229,7 @@ namespace Tauron.Application
         [CanBeNull]
         protected virtual IWindow DoStartup([NotNull] CommandLineProcessor args, Action<SplashMessage> action) => null;
 
-        protected abstract void Fill([NotNull] IContainer container, Action<SplashMessage> action);
+        protected abstract void Fill([NotNull] ExportResolver container, Action<SplashMessage> action);
         
         protected virtual void LoadCommands(Action<SplashMessage> action) { }
         
@@ -294,7 +294,12 @@ namespace Tauron.Application
                     action(new ProgressUpdate(15, msg));
 
                     using ((Container as IComponentMessager)?.Subscribe(action))
-                        Fill(Container, action);
+                    {
+                        ExportResolver resolver = new ExportResolver();
+                        Fill(resolver, action);
+                        resolver.AddAssembly(typeof(CommonApplication).Assembly);
+                        Container.Register(resolver);
+                    }
 
                     action(new ProgressUpdate(100, msg));
                 });

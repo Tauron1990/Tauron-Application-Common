@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 
 namespace Tauron.Application
 {
-    [DebuggerNonUserCode]
+    //[DebuggerNonUserCode]
     [PublicAPI]
     [Serializable]
     public class UIObservableCollection<TType> : ObservableCollection<TType>

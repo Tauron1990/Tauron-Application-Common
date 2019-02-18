@@ -11,6 +11,8 @@ namespace Tauron.Application.Ioc
     {
         public static void AddApplicationPath(this IContainer continer) => AddPath(continer, AppDomain.CurrentDomain.BaseDirectory, "*.*", SearchOption.AllDirectories, false);
 
+        public static void AddApplicationPath(this ExportResolver continer) => continer.AddPath(AppDomain.CurrentDomain.BaseDirectory, "*.*", SearchOption.AllDirectories, false);
+
         public static void AddAssembly([NotNull]this IContainer container, [NotNull] Assembly assembly)
         {
             Argument.NotNull(assembly, nameof(assembly));

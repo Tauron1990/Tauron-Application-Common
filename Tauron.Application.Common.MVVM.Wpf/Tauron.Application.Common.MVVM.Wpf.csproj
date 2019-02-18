@@ -117,6 +117,14 @@
     <Compile Include="WpfWindow.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Tauron.Application.Common.BaseLayer.EntityFramework\Tauron.Application.Common.BaseLayer.EntityFramework.csproj">
+      <Project>{ee886ec8-a094-4a50-830c-c69ad3d70f54}</Project>
+      <Name>Tauron.Application.Common.BaseLayer.EntityFramework</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tauron.Application.Common.BaseLayer\Tauron.Application.Common.BaseLayer.csproj">
+      <Project>{61b20382-2628-4866-8eb2-19b551c67acf}</Project>
+      <Name>Tauron.Application.Common.BaseLayer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Tauron.Application.Common.CastleProxy\Tauron.Application.Common.CastleProxy.csproj">
       <Project>{aa4879b3-c839-4f2e-bb32-be2de695632a}</Project>
       <Name>Tauron.Application.Common.CastleProxy</Name>
