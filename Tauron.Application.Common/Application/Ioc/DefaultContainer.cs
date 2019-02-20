@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ExpressionBuilder;
-using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.BuildUp.Exports.DefaultExports;
-using Tauron.Application.Ioc.BuildUp.Strategy;
 using Tauron.Application.Ioc.Components;
 
 namespace Tauron.Application.Ioc
@@ -22,7 +19,7 @@ namespace Tauron.Application.Ioc
             _exportproviders = new ExportProviderRegistry();
             _exportproviders.ExportsChanged += ExportsChanged;
             Register(new DefaultExtension());
-            _buildEngine = new Lazy<BuildEngine>(() => new BuildEngine(this, _exportproviders, _componetnts));
+            _buildEngine = new Lazy<BuildEngine>(() => new BuildEngine(_exportproviders, _componetnts, _exports));
             _exports.Register(DefaultExportFactory.Factory.CreateAnonymosWithTarget(typeof(IContainer), this), 0);
         }
 
@@ -60,29 +57,6 @@ namespace Tauron.Application.Ioc
         private readonly ExportRegistry _exports;
 
         private readonly List<IContainerExtension> _extensions;
-
-        public IRightable DeferBuildUp(ExportMetadata data, ErrorTracer errorTracer, SubCompilitionUnit subUnit, params BuildParameter[] parameters)
-        {
-            try
-            {
-                subUnit.VariableNamer.AddLevel();
-                return (IRightable)BuildEngine.CreateOperationBlock(data, errorTracer, subUnit, parameters);             
-            }
-            finally
-            {
-                subUnit.VariableNamer.RemoveLevel();
-            }
-        }
-        //=> () =>
-            //{
-            //    errorTracer.Phase = string.Empty;
-            //    errorTracer.Phase = data.ToString();
-
-            //    var result = _buildEngine.CreateDelegate(data.Export, data.ContractName, errorTracer, parameters, false, out _)(null);
-            //    if (errorTracer.Exceptional)
-            //        throw new BuildUpException(errorTracer);
-            //    return result;
-            //};
 
         [NotNull]
         public object BuildUp([NotNull] ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)

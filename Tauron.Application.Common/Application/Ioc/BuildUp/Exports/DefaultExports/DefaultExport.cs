@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using ExpressionBuilder;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.LifeTime;
 
@@ -88,7 +88,7 @@ namespace Tauron.Application.Ioc.BuildUp.Exports.DefaultExports
         }
 
         public DefaultExport(Type exportetType, object obj)
-            : this(exportetType, new ExternalExportInfo(true, true, true, false, Operation.Constant, exportetType?.FullName), true)
+            : this(exportetType, new ExternalExportInfo(true, true, true, false, context => Expression.Constant(obj), exportetType?.FullName), true)
         {
         }
 

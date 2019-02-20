@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using ExpressionBuilder.Fluent;
 using FastExpressionCompiler;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
@@ -16,8 +15,8 @@ namespace Tauron.Application.Ioc.BuildUp
     public sealed class BuildEngine
     {
         private readonly DefaultExportFactory _factory;
-        private readonly IContainer _container;
         private readonly ComponentRegistry _componentRegistry;
+        private readonly ExportRegistry _exportRegistry;
 
         private readonly Dictionary<ExportMetadata, Func<object, object>> _factorys = new Dictionary<ExportMetadata, Func<object, object>>();
 
@@ -25,14 +24,14 @@ namespace Tauron.Application.Ioc.BuildUp
 
         public Pipeline Pipeline { get; set; }
 
-        public BuildEngine([NotNull] IContainer container, [NotNull] ExportProviderRegistry providerRegistry, [NotNull] ComponentRegistry componentRegistry)
+        public BuildEngine([NotNull] ExportProviderRegistry providerRegistry, [NotNull] ComponentRegistry componentRegistry, [NotNull] ExportRegistry exportRegistry)
         {
-            Argument.NotNull(container, nameof(container));
             Argument.NotNull(providerRegistry, nameof(providerRegistry));
             Argument.NotNull(componentRegistry, nameof(componentRegistry));
-
-            _container = container;
+            Argument.NotNull(exportRegistry, nameof(exportRegistry));
+            
             _componentRegistry = componentRegistry;
+            _exportRegistry = exportRegistry;
             _factory = componentRegistry.GetAll<IExportFactory>()
                 .First(fac => fac.TechnologyName == AopConstants.DefaultExportFactoryName)
                 .SafeCast<DefaultExportFactory>();
@@ -42,16 +41,37 @@ namespace Tauron.Application.Ioc.BuildUp
             providerRegistry.ExportsChanged += ExportsChanged;
         }
 
-        public IOperation CreateOperationBlock(ExportMetadata data, ErrorTracer errorTracer, SubCompilitionUnit subUnit, params BuildParameter[] parameters)
+        public Expression AddExpressionsFor(CompilationUnit unit, ExportMetadata data, ErrorTracer errorTracer, BuildParameter[] parameters)
+        {
+            try
+            {
+                unit.VariableNamer.AddLevel();
+                errorTracer.Phase = "Begin Building Up";
+
+                var context = new DefaultBuildContext(data, this, errorTracer, parameters,
+                    _componentRegistry.GetAll<IResolverExtension>().ToArray(), unit);
+                Pipeline.Build(context);
+
+                return Expression.Variable(typeof(object), unit.TargetName);
+            }
+            finally
+            {
+                unit.VariableNamer.RemoveLevel();
+            }
+        }
+
+        public Expression CreateOperationBlock(ExportMetadata data, ErrorTracer errorTracer, params BuildParameter[] parameters)
         {
             try
             {
                 errorTracer.Phase = "Begin Building Up";
-                var context = new DefaultBuildContext(data, _container, errorTracer, parameters,
-                    _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new BlockFunctionTarget(s, subUnit), subUnit.VariableNamer));
+                var unit = new CompilationUnit();
+
+                var context = new DefaultBuildContext(data, this, errorTracer, parameters,
+                    _componentRegistry.GetAll<IResolverExtension>().ToArray(), unit);
                 Pipeline.Build(context);
 
-                return context.CompilationUnit.RealFunction.ToOperation();
+                return Expression.Block(unit.Variables.Values, unit.Expressions);
             }
             catch (Exception e)
             {
@@ -74,12 +94,12 @@ namespace Tauron.Application.Ioc.BuildUp
                 {
                     try
                     {
-                        tracer.Phase = "Begin Building Up";
-                        var context = new DefaultBuildContext(meta2, _container, tracer, buildParameters,
-                            _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new FunctionCompilionTarget(s), null));
-                        Pipeline.Build(context);
+                        //tracer.Phase = "Begin Building Up";
+                        //var context = new DefaultBuildContext(meta2, _container, tracer, buildParameters,
+                        //    _componentRegistry.GetAll<IResolverExtension>().ToArray(), new CompilationUnit(s => new FunctionCompilionTarget(s), null));
+                        //Pipeline.Build(context);
 
-                        var expression = (LambdaExpression)context.CompilationUnit.ToExpression();
+                        var expression = Expression.Lambda(CreateOperationBlock(meta2, tracer, buildParameters));
                         return expression.CompileFast<Func<object, object>>();
                     }
                     catch (Exception e)
@@ -164,6 +184,13 @@ namespace Tauron.Application.Ioc.BuildUp
 
             if (errors.Count != 0)
                 throw new AggregateException(errors.Select(err => new BuildUpException(err)));
+        }
+
+        public ExportMetadata FindExport(Type interfaceType, string name, ErrorTracer errorTrancer, bool optional)
+        {
+            return optional 
+                ? _exportRegistry.FindOptional(interfaceType, name, errorTrancer) 
+                : _exportRegistry.FindSingle(interfaceType, name, errorTrancer);
         }
     }
 }

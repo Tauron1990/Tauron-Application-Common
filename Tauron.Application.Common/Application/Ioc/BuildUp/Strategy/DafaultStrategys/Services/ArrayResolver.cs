@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ExpressionBuilder;
-using ExpressionBuilder.Fluent;
+using System.Linq.Expressions;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
@@ -17,13 +16,13 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _target = target;
         }
 
-        public IRightable Create(ErrorTracer errorTracer, SubCompilitionUnit unit)
+        public Expression Create(ErrorTracer errorTracer, CompilationUnit unit)
         {
             errorTracer.Phase = "Injecting Array for " + _target;
 
             try
             {
-                return Operation.CreateArray(_target, _resolvers.Select(r => Operation.Cast(r.Create(errorTracer, unit), _target)).ToArray());
+                return Expression.NewArrayInit(_target, _resolvers.Select(r => Expression.Convert(r.Create(errorTracer, unit), _target)));
             }
             catch (Exception e)
             {

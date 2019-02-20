@@ -1,4 +1,4 @@
-﻿using ExpressionBuilder.Fluent;
+﻿using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
@@ -6,6 +6,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
     public interface IResolver
     {
         [NotNull]
-        IRightable Create(ErrorTracer errorTracer, SubCompilitionUnit unit);
+        Expression Create(ErrorTracer errorTracer, CompilationUnit unit);
     }
 }

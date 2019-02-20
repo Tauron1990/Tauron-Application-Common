@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
-using ExpressionBuilder;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
 
@@ -22,7 +22,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             _member = Argument.NotNull(member, nameof(member));
         }
         
-        public override void Inject(CompilationUnit target, IContainer container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters,
+        public override void Inject(CompilationUnit target, BuildEngine container, ImportMetadata metadata, IImportInterceptor interceptor, ErrorTracer errorTracer, BuildParameter[] parameters,
             CompilationUnit unit)
         {
             errorTracer.Phase = "EventManager Inject " + metadata.ContractName;
@@ -32,6 +32,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 var eventInfo = _member as EventInfo;
                 if (eventInfo != null)
                 {
+                    target.Expressions.Add(
+                        Expression.Call());
+
                     target.AddCode(Operation.Invoke(Operation.Constant(_manager), nameof(_manager.AddPublisher), Operation.Constant(_metadata.ContractName),
                         Operation.Constant(eventInfo), Operation.Variable(_unit.TargetName), Operation.Null()));
                 }

@@ -1,12 +1,13 @@
 ﻿using System;
-using ExpressionBuilder.Fluent;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 {
     /// <summary>The interception policy.</summary>
     public class InterceptionPolicy : IPolicy
     {
-        public Func<IBuildContext, IRightable[], IRightable> Interceptor { get; set; }
+        public Func<IBuildContext, IEnumerable<Expression>, Expression> Interceptor { get; set; }
 
         //public object Param { get; set; }
 

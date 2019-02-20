@@ -12,7 +12,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         IResolverExtension[] ResolverExtensions { get; }
         
         [NotNull]
-        IContainer Container { get; }
+        BuildEngine BuildEngine { get; }
 
         [NotNull]
         Type ExportType { get; set; }

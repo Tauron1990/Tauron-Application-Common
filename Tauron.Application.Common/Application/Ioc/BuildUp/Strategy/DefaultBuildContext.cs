@@ -11,21 +11,21 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         
         [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1027:TabsMustNotBeUsed",
             Justification = "Reviewed. Suppression is OK here.")]
-        public DefaultBuildContext([NotNull] ExportMetadata targetExport,[NotNull] IContainer container, 
+        public DefaultBuildContext([NotNull] ExportMetadata targetExport,[NotNull] BuildEngine engine, 
             [NotNull] ErrorTracer errorTracer, [CanBeNull] BuildParameter[] parameters, [CanBeNull] IResolverExtension[] resolverExtensions, CompilationUnit compilationUnit)
         {
             errorTracer.Export = targetExport.ToString();
             ExportType = targetExport.Export.ImplementType;
             Metadata = Argument.NotNull(targetExport, nameof(targetExport));
             Policys = new PolicyList();
-            Container = Argument.NotNull(container, nameof(container));
+            BuildEngine = Argument.NotNull(engine, nameof(engine));
             ErrorTracer = Argument.NotNull(errorTracer, nameof(errorTracer));
             Parameters = parameters;
             ResolverExtensions = resolverExtensions;
             CompilationUnit = Argument.NotNull(compilationUnit, nameof(compilationUnit));
         }
         
-        public IContainer Container { get; private set; }
+        public BuildEngine BuildEngine { get; }
 
         public Type ExportType { get; set; }
 

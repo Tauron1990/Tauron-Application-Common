@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using ExpressionBuilder;
-using ExpressionBuilder.Fluent;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Strategy;
 using Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys;
@@ -31,13 +30,10 @@ namespace Tauron.Application.Ioc.BuildUp
             }
         }
 
-        [NotNull]
-        public static Func<IBuildContext, IRightable> WriteDefaultCreation([NotNull] IBuildContext context)
+        public static Func<IBuildContext, Expression> WriteDefaultCreationFor(Type type, IBuildContext context)
         {
             Argument.NotNull(context, nameof(context));
-
-            var type = context.Metadata.Export.ImplementType;
-
+            
             var construcors = type.GetConstructors(AopConstants.DefaultBindingFlags);
             ConstructorInfo constructor = null;
             foreach (var constructorInfo in
@@ -57,12 +53,14 @@ namespace Tauron.Application.Ioc.BuildUp
                 Argument.NotNull(build, nameof(build));
 
                 var parameters = from parm in MapParameters(constructor)
-                    select TryResolveConstructorParameter(parm, build);
+                                 select TryResolveConstructorParameter(parm, build);
 
 
                 var policy = build.Policys.Get<InterceptionPolicy>();
 
-                return policy?.Interceptor == null ? Operation.CreateInstance(constructor, parameters.ToArray()) : policy.Interceptor(build, parameters.ToArray());
+                return policy?.Interceptor == null 
+                    ? Expression.New(constructor, parameters) 
+                    : policy.Interceptor(build, parameters);
 
                 //return policy?.Interceptor == null ? constructor.Invoke(parameters.ToArray()) : policy.Interceptor(build, parameters.ToArray());
 
@@ -83,16 +81,28 @@ namespace Tauron.Application.Ioc.BuildUp
             };
         }
 
+        [NotNull]
+        public static Func<IBuildContext, Expression> WriteDefaultCreation([NotNull] IBuildContext context)
+        {
+            Argument.NotNull(context, nameof(context));
 
-        private static IRightable TryResolveConstructorParameter((Type Type, string Name, bool Optional) parm, IBuildContext context)
+            var type = context.Metadata.Export.ImplementType;
+
+            return WriteDefaultCreationFor(type, context);
+        }
+
+
+        private static Expression TryResolveConstructorParameter((Type Type, string Name, bool Optional) parm, IBuildContext context)
         {
             var errorTrancer = new ErrorTracer();
-            var tempExport = context.Container.FindExport(parm.Type, parm.Name, errorTrancer, true);
-            if (tempExport != null) return context.Container.DeferBuildUp(tempExport, errorTrancer, context.CompilationUnit.CreateSubUnit(), context.Parameters);
+            var tempExport = context.BuildEngine.FindExport(parm.Type, parm.Name, errorTrancer, true);
+            if (tempExport != null)
+                return context.BuildEngine.AddExpressionsFor(context.CompilationUnit, tempExport, errorTrancer,
+                    context.Parameters); //.DeferBuildUp(tempExport, errorTrancer, context.CompilationUnit.CreateSubUnit(), context.Parameters);
             switch (context.Parameters)
             {
                 case null when parm.Optional:
-                    return Operation.Null();
+                    return Expression.Constant(null, parm.Type);
                 case null when !parm.Optional:
                     throw new BuildUpException(errorTrancer);
                 default:
@@ -103,11 +113,11 @@ namespace Tauron.Application.Ioc.BuildUp
 
                     var data = tempRegistry.FindOptional(parm.Type, parm.Name, context.ErrorTracer);
                     if (data == null && parm.Optional)
-                        return Operation.Null();
+                        return Expression.Constant(null, parm.Type);
                     else if(data == null && !parm.Optional)
                         throw new BuildUpException(errorTrancer);
                     else
-                        return context.Container.DeferBuildUp(data, context.ErrorTracer, context.CompilationUnit.CreateSubUnit(), context.Parameters);
+                        return context.BuildEngine.AddExpressionsFor(context.CompilationUnit, data, context.ErrorTracer, context.Parameters); //.DeferBuildUp(data, context.ErrorTracer, context.CompilationUnit.CreateSubUnit(), context.Parameters);
             }
         }
     }
