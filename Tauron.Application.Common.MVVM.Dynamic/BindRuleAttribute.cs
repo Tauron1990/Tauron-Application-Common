@@ -10,5 +10,10 @@ namespace Tauron.Application.Common.MVVM.Dynamic
         public bool NoThrow { get; set; }
 
         public BindRuleAttribute(string name) => Name = name;
+
+        public BindRuleAttribute()
+        {
+            
+        }
     }
 }

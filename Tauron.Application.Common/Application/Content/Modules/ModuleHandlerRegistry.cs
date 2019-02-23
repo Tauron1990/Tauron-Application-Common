@@ -28,7 +28,8 @@ namespace Tauron.Application.Modules
         }
 
         [NotNull]
-        public static IEnumerable<Action<MemberInfo, Attribute, IModule>> GetHandler([NotNull] Type key) => Handlers.TryGetValue(Argument.NotNull(key, nameof(key)), out var action) ? action : Enumerable.Empty<Action<MemberInfo, Attribute, IModule>>();
+        public static IEnumerable<Action<MemberInfo, Attribute, IModule>> GetHandler([NotNull] Type key) 
+            => Handlers.TryGetValue(Argument.NotNull(key, nameof(key)), out var action) ? action : Enumerable.Empty<Action<MemberInfo, Attribute, IModule>>();
 
         public static void Progress([NotNull] IModule module)
         {
@@ -36,9 +37,13 @@ namespace Tauron.Application.Modules
             var type = module.GetType();
 
             foreach (var info in type.GetMembers(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
-            foreach (var attribute in info.GetCustomAttributes(true))
-            foreach (var action in GetHandler(attribute.GetType()))
-                action(info, (Attribute) attribute, module);
+            {
+                foreach (var attribute in info.GetCustomAttributes(true))
+                {
+                    foreach (var action in GetHandler(attribute.GetType()))
+                        action(info, (Attribute) attribute, module);
+                }
+            }
         }
     }
 }

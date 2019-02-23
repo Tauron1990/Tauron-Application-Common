@@ -13,7 +13,7 @@ namespace Tauron.Application.Common.MVVM.Dynamic
         public void Initialize(ComponentRegistry components)
         {
             components.Register<IStrategy, DynamicStrategy>();
-            components.Register<InternalAssemblyBuilder, InternalAssemblyBuilder>();
+            components.Register<InternalAssemblyBuilder, InternalAssemblyBuilder>(InternalAssemblyBuilder.AssemblyBuilderSingleton);
 
             var chain = components.Get<IImportSelectorChain>();
 

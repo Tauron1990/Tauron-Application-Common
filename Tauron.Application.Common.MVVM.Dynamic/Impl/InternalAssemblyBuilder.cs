@@ -11,6 +11,8 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
 {
     public class InternalAssemblyBuilder
     {
+        internal static InternalAssemblyBuilder AssemblyBuilderSingleton { get; } = new InternalAssemblyBuilder();
+
         private static readonly MethodInfo GetError = typeof(Return).GetProperty(nameof(Return.Error))?.GetMethod;
         private static readonly ConstructorInfo CallErrorException = typeof(CallErrorException).GetConstructor(new[] {typeof(ErrorReturn)});
         private static readonly MethodInfo GetResult = typeof(ObjectReturn).GetProperty(nameof(ObjectReturn.Result))?.GetMethod;
@@ -19,6 +21,10 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
         private Dictionary<string, Type> _defindTypes;
 
         private AssemblyBuilder _internalAssemblyBuilder;
+
+        private InternalAssemblyBuilder()
+        {
+        }
 
         public void AddType(IExport type) => _toWrap.Add(Argument.NotNull(type, nameof(type)));
 
@@ -71,7 +77,7 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
                         where methodInfo.IsAbstract
                         let attr = methodInfo.GetCustomAttribute<BindRuleAttribute>()
                         where attr != null
-                        select new {Method = methodInfo, attr.Name, attr.NoThrow})
+                        select new {Method = methodInfo, Name = attr.Name ?? methodInfo.Name, attr.NoThrow})
                     {
                         var realMethod = method.Method;
 

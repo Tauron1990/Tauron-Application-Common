@@ -102,17 +102,20 @@ namespace Tauron.Application
             }
         }
         
-        [NotNull]
-        public virtual string GetValue([NotNull] string key, [NotNull] string defaultValue)
+        [CanBeNull]
+        public virtual string GetValue([NotNull] string key, [CanBeNull] string defaultValue)
         {
             Argument.NotNull(key, nameof(key));
-            Argument.NotNull((object)defaultValue, nameof(defaultValue));
 
             IlligalCharCheck(key);
 
             return !_settings.ContainsKey(key) ? defaultValue : _settings[key];
         }
-        
+
+        [NotNull]
+        public virtual int GetValueInt([NotNull] string key, [NotNull] int defaultValue) 
+            => int.TryParse(GetValue(key, null), out var result) ? result : defaultValue;
+
         public virtual void SetVaue([NotNull] string key, [NotNull] object value)
         {
             Argument.NotNull(key, nameof(key));

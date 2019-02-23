@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using FastExpressionCompiler;
 using JetBrains.Annotations;
 
 namespace Tauron
@@ -12,6 +14,74 @@ namespace Tauron
     {
         private const BindingFlags DefaultBindingFlags =
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        
+        private static Dictionary<ConstructorInfo, Func<object[], object>> _creatorCache = new Dictionary<ConstructorInfo, Func<object[], object>>();
+
+        public static Func<object[], object> GetCreator(Type target, Type[] arguments)
+        {
+            // Get constructor information?
+            var constructor = target.GetConstructor(arguments);
+
+            // Is there at least 1?
+            if (constructor == null) return null;
+
+            if (_creatorCache.TryGetValue(constructor, out var func)) return func;
+
+            // Yes, does this constructor take some parameters?
+            var paramsInfo = constructor.GetParameters();
+
+            // Create a single param of type object[].
+            var param = Expression.Parameter(typeof(object[]), "args");
+
+            if (paramsInfo.Length > 0)
+            {
+                // Pick each arg from the params array and create a typed expression of them.
+                var argsExpressions = new Expression[paramsInfo.Length];
+
+                for (var i = 0; i < paramsInfo.Length; i++)
+                {
+                    Expression index = Expression.Constant(i);
+                    Type paramType = paramsInfo[i].ParameterType;
+                    Expression paramAccessorExp = Expression.ArrayIndex(param, index);
+                    Expression paramCastExp = Expression.Convert(paramAccessorExp, paramType);
+                    argsExpressions[i] = paramCastExp;
+                }
+
+                // Make a NewExpression that calls the constructor with the args we just created.
+                var newExpression = Expression.New(constructor, argsExpressions);
+
+                // Create a lambda with the NewExpression as body and our param object[] as arg.
+                var lambda = Expression.Lambda(typeof(Func<object[], object>), newExpression, param);
+
+                // Compile it
+                var compiled = (Func<object[], object>)lambda.CompileFast();
+
+                _creatorCache[constructor] = compiled;
+
+                // Success
+                return compiled;
+            }
+            else
+            {
+                // Make a NewExpression that calls the constructor with the args we just created.
+                var newExpression = Expression.New(constructor);
+
+                // Create a lambda with the NewExpression as body and our param object[] as arg.
+                var lambda = Expression.Lambda(typeof(Func<object[], object>), newExpression, param);
+
+                // Compile it
+                var compiled = (Func<object[], object>)lambda.CompileFast();
+
+                _creatorCache[constructor] = compiled;
+                
+                // Success
+                return compiled;
+            }
+
+        }
+
+        public static object FastCreateInstance(this Type target, params object[] parm) 
+            => GetCreator(target, parm.Select(o => o.GetType()).ToArray())(parm);
 
         public static T ParseEnum<T>([NotNull] this string value, bool ignoreCase)
             where T : struct => Enum.TryParse(value, ignoreCase, out T evalue) ? evalue : default;
@@ -28,10 +98,12 @@ namespace Tauron
             if (nonPublic) bindingflags |= BindingFlags.NonPublic;
 
             if (!Enum.IsDefined(typeof(BindingFlags), BindingFlags.FlattenHierarchy))
+            {
                 return from mem in type.GetMembers(bindingflags)
                     let attr = CustomAttributeExtensions.GetCustomAttribute<TAttribute>(mem)
                     where attr != null
                     select Tuple.Create(mem, attr);
+            }
 
             return from mem in type.GetHieratichialMembers(bindingflags)
                 let attr = mem.GetCustomAttribute<TAttribute>()

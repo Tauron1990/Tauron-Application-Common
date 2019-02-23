@@ -266,10 +266,7 @@ namespace Tauron.Application
             ModuleHandlerRegistry.Progress(module);
         }
 
-        public virtual IValidator CreateValidator()
-        {
-            return null;
-        }
+        public virtual IValidator CreateValidator() => null;
 
         private void PerformStartup()
         {
