@@ -22,7 +22,7 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 
             if (!(rule is IRuleDescriptor descriptor))
                 throw new NotSupportedException("No Descriptor");
-
+            
             Type ruleType = rule.GetType();
             Type parameterType = descriptor.ParameterType;
             Type returnType = descriptor.ReturnType;
@@ -112,6 +112,7 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
         }
 
         public static Delegate CreateDelegate(this IRuleFactory factory, string name) => _delegates.GetOrAdd(name, key => CreateExpression(factory, key).CompileFast());
+
 
         [DebuggerStepThrough]
         private static bool NameFilter(MethodInfo info)

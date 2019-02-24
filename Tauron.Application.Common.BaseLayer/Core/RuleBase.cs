@@ -94,7 +94,9 @@ namespace Tauron.Application.Common.BaseLayer.Core
             foreach (var propertyInfo in target.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(pi => pi.IsDefined(typeof(InjectRepoAttribute)) && pi.GetMethod != null && pi.SetMethod != null))
             {
-                disposer.Add(Expression.Assign(Expression.Property(ruleParm, propertyInfo.Name), Expression.Constant(null, propertyInfo.PropertyType)));
+                var castRule = Expression.Convert(ruleParm, target);
+
+                disposer.Add(Expression.Assign(Expression.Property(castRule, propertyInfo.Name), Expression.Constant(null, propertyInfo.PropertyType)));
                 Type propertyType = propertyInfo.PropertyType;
 
                 if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Lazy<>))
@@ -103,7 +105,7 @@ namespace Tauron.Application.Common.BaseLayer.Core
                         "Constructor not Found"); //.Single(c => c.GetParameters().Length == 1 && c.GetParameters()[0].ParameterType.Name.StartsWith("Func"));
 
                     block.Add(Expression.Assign(
-                        Expression.Property(ruleParm, propertyInfo), 
+                        Expression.Property(castRule, propertyInfo), 
                         Expression.New(
                             constructor,
                             Expression.Lambda(
@@ -116,7 +118,7 @@ namespace Tauron.Application.Common.BaseLayer.Core
                 else
                 {
                     block.Add(Expression.Assign(
-                        Expression.Property(ruleParm, propertyInfo.Name),
+                        Expression.Property(castRule, propertyInfo.Name),
                         Expression.Call(facParm, nameof(RepositoryFactory.GetRepository), new[] {propertyType})));
                 }
             }

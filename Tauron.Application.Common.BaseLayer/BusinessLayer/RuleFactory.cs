@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
@@ -24,21 +25,15 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
         {
             if (_cache.TryGetValue(name, out var cRule)) return cRule;
 
-            var rule = _rules.Single(i => i.Metadata.Name == name).Resolve();
+            var rule = _rules.SingleOrDefault(i => i.Metadata.Name == name)?.Resolve();
 
-            _cache[name] = rule;
-
-            return rule;
-        }
-
-        public IRuleBase Create(string name)
-        {
-            var rule = GetOrCreate(name);
-
+            _cache[name] = rule ?? throw new InvalidOperationException("No Rule Found -- " + name);
             DatalayerHelper.InitializeRule(rule, _repositoryFactory);
 
             return rule;
         }
+
+        public IRuleBase Create(string name) => GetOrCreate(name);
 
         public IBusinessRule CreateBusinessRule(string name) => (IBusinessRule) Create(name);
 
@@ -71,6 +66,14 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 
             DatalayerHelper.InitializeRule(compositeule, _repositoryFactory);
             return compositeule;
+        }
+
+        public bool CheckReturnType(string name, Type returnType)
+        {
+            var rule = Create(name);
+            if (rule is IRuleDescriptor descriptor)
+                return returnType.IsAssignableFrom(descriptor.ReturnType);
+            return true;
         }
     }
 }

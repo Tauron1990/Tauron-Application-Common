@@ -92,11 +92,27 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
                         else
                             mattr |= MethodAttributes.Assembly;
 
+                        var del = ruleFactory.CreateDelegate(method.Name);
+
+                        var parmsDel = del.Method.GetParameters().Skip(1).ToArray();
+                        var parmsMeth = realMethod.GetParameters();
+
+                        if(parmsMeth.Length != parmsDel.Length)
+                            throw new InvalidOperationException("Bind Rule -- Parameter lenght Mismatch -- " + realMethod.Name);
+
+                        if (parmsDel.Where((t, i) => !t.ParameterType.IsAssignableFrom(parmsMeth[i].ParameterType)).Any())
+                            throw new InvalidOperationException("Bind Rule Parameter Type Mismatch -- " + realMethod.Name);
+
+                        if (realMethod.ReturnType != typeof(void))
+                        {
+                            if(!ruleFactory.CheckReturnType(method.Name, realMethod.ReturnType))
+                                throw new InvalidOperationException("Bind Rule -- Return Type Mismatch -- " + realMethod.Name);
+                        }
+
                         var methodBuilder = typeBuilder.DefineMethod(realMethod.Name, mattr, CallingConventions.HasThis, realMethod.ReturnType, 
                             realMethod.GetParameters().Select(p => p.ParameterType).ToArray());
-                        
-                        var del = ruleFactory.CreateDelegate(method.Name);
-                        
+                       
+
                         var fieldBuilder = typeBuilder.DefineField("_del_" + realMethod.Name + "_field", del.GetType(), FieldAttributes.Private | FieldAttributes.Static);
                         var il = methodBuilder.GetILGenerator();
                         
@@ -190,7 +206,9 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
                                 il.Emit(OpCodes.Ldloc, returnVar);
                                 il.Emit(OpCodes.Castclass, typeof(ObjectReturn));
                                 il.Emit(OpCodes.Callvirt, GetResult);
-                                il.Emit(realMethod.ReturnType.IsValueType ? OpCodes.Unbox : OpCodes.Isinst, realMethod.ReturnType);
+                                il.Emit(realMethod.ReturnType.IsValueType 
+                                    ? OpCodes.Unbox_Any 
+                                    : OpCodes.Isinst, realMethod.ReturnType);
                                 il.Emit(OpCodes.Ret);
                             }
                         }
