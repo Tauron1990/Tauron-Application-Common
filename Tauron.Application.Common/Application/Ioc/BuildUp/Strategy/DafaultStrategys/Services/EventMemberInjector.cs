@@ -33,7 +33,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                 if (eventInfo != null)
                 {
                     target.Expressions.Add(
-                        Expression.Call());
+                        Expression.Call(target.GetConst(_manager), _manager.GetType()));
 
                     target.AddCode(Operation.Invoke(Operation.Constant(_manager), nameof(_manager.AddPublisher), Operation.Constant(_metadata.ContractName),
                         Operation.Constant(eventInfo), Operation.Variable(_unit.TargetName), Operation.Null()));

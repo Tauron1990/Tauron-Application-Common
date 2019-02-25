@@ -100,6 +100,8 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
             return exp;
         }
 
+        public Expression GetConst(object obj) => GetConst(obj, obj.GetType());
+
         public ParameterExpression GetRandomVariable(Type type)
         {
             string name = VariableNamer.GetRandomVariable();
