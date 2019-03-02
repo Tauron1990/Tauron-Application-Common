@@ -87,7 +87,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
                     _delegate = new WeakDelegate(dDelegate);
                 }
                 
-                public HandlerEntry([NotNull] MethodBase methodInfo, [NotNull] object target)
+                public HandlerEntry([NotNull] MethodInfo methodInfo, [NotNull] object target)
                 {
                     _type = (InvokeType) Argument.NotNull(methodInfo, nameof(methodInfo)).GetParameters().Length;
                     _delegate = new WeakDelegate(methodInfo, Argument.NotNull(target, nameof(target)));

@@ -14,6 +14,6 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
         protected override Type MemberType => Member.FieldType;
 
-        protected override void Inject(object target, object value) => Member.SetValue(target, value);
+        protected override void Inject(object target, object value) => Member.SetFieldFast(target, value);
     }
 }

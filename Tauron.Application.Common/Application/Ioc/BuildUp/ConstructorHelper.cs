@@ -12,7 +12,6 @@ namespace Tauron.Application.Ioc.BuildUp
     [PublicAPI]
     public static class ConstructorHelper
     {
-
         public static IEnumerable<(Type Type, string Name, bool Optional)> MapParameters([NotNull] MethodBase info)
         {
             Argument.NotNull(info, nameof(info));
@@ -59,7 +58,7 @@ namespace Tauron.Application.Ioc.BuildUp
 
                 var policy = build.Policys.Get<InterceptionPolicy>();
 
-                return policy?.Interceptor == null ? constructor.Invoke(parameters.ToArray()) : policy.Interceptor(build, parameters.ToArray());
+                return policy?.Interceptor == null ? constructor.FastCreate(parameters.ToArray()) : policy.Interceptor(build, parameters.ToArray());
 
                 //build.ErrorTracer.Phase = "Creating Direct Proxy for " + build.Metadata;
 

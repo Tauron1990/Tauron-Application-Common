@@ -59,7 +59,7 @@ namespace Tauron.Application
                     _task.SetResult(null);
                 }
                 
-                public void Execute() => _info.Invoke(_dataContext);
+                public void Execute() => _info.InvokeFast(_dataContext);
 
                 private readonly object _dataContext;
 

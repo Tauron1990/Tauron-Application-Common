@@ -140,8 +140,8 @@ namespace Tauron.Application
                         else
                         {
                             var pifno = _member as PropertyInfo;
-                            if (pifno != null) _command = (ICommand) pifno.GetValue(context, null);
-                            else _command = (ICommand) ((FieldInfo) _member).GetValue(context);
+                            if (pifno != null) _command = (ICommand) pifno.GetValueFast(context);
+                            else _command = (ICommand) ((FieldInfo) _member).GetValueFast(context);
                         }
                     }
                     catch (InvalidCastException e)
@@ -181,7 +181,7 @@ namespace Tauron.Application
                     _sync = temp.Synchronize;
                     try
                     {
-                        _simpleConverter = temp.Converter != null ? Activator.CreateInstance(temp.Converter) as ISimpleConverter : null;
+                        _simpleConverter = temp.Converter != null ? temp.Converter.FastCreateInstance() as ISimpleConverter : null;
                     }
                     catch (Exception e)
                     {

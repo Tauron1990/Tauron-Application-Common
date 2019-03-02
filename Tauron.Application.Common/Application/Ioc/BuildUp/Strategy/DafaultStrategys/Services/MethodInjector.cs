@@ -70,7 +70,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
             foreach (var parameterInfo in parms.Select(p => new ParameterMemberInfo(p)))
                 new ParameterHelper(_metadataFactory, parameterInfo, args, _resolverExtensions).Inject(target, container, metadata, interceptor, errorTracer, parameters);
 
-            _method.Invoke(target, args.ToArray());
+            _method.InvokeFast(target, args.ToArray());
         }
         
         private class ParameterHelper : Injectorbase<ParameterMemberInfo>

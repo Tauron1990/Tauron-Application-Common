@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 namespace Tauron.Application
 {
     [PublicAPI]
+    [MarkupExtensionReturnType(typeof(string))]
     public class SimpleLocalize : MarkupExtension
     {
         public SimpleLocalize([NotNull] string name) => Name = name;

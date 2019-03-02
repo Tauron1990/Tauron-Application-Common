@@ -60,7 +60,7 @@ namespace Tauron.Application.Commands
                     break;
             }
 
-            _method.Invoke(Context, args);
+            _method.InvokeFast(Context, args);
         }
 
         private enum MethodType

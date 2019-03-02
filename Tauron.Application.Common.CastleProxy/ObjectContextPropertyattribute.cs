@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using JetBrains.Annotations;
-using Tauron.Application.Common.CastleProxy.Impl.LifeTime;
 using Tauron.Application.Ioc.LifeTime;
 
 namespace Tauron.Application.Common.CastleProxy

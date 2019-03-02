@@ -58,7 +58,7 @@ namespace Tauron.Application
                         Argument.NotNull(e, nameof(e));
 
                         var args = _isParameter ? new[] {e.Parameter} : new object[0];
-                        e.CanExecute = _isAsync ? _method.Invoke<Task<bool>>(_firstArg, args).Result : _method.Invoke<bool>(_firstArg, args);
+                        e.CanExecute = _isAsync ? _method.InvokeFast<Task<bool>>(_firstArg, args).Result : _method.InvokeFast<bool>(_firstArg, args);
                     }
 
                     public void Execute([NotNull] object sender, [NotNull] ExecutedRoutedEventArgs e)
@@ -66,7 +66,7 @@ namespace Tauron.Application
                         Argument.NotNull(sender, nameof(sender));
                         Argument.NotNull(e, nameof(e));
 
-                        _method.Invoke(_firstArg, _isParameter ? new[] { e.Parameter } : new object[0]);
+                        _method.InvokeFast(_firstArg, _isParameter ? new[] { e.Parameter } : new object[0]);
                     }
 
                 }

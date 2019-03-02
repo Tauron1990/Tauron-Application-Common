@@ -24,8 +24,8 @@ namespace Tauron.Application
         [CanBeNull]
         public object Invoke([NotNull] params object[] parms)
         {
-            var temp = CreateDelegate();
-            return temp?.DynamicInvoke(parms);
+            var temp = CreateDelegate(out var target);
+            return temp?.Invoke(target, parms);
         }
 
         public override bool Equals(object obj)
@@ -38,13 +38,16 @@ namespace Tauron.Application
         private readonly Type _delegateType;
         
         private readonly MethodInfo _method;
-        
+        private readonly Type[] _parames;
+
         public WeakAction([CanBeNull] object target, [NotNull] MethodInfo method, [CanBeNull] Type parameterType)
         {
             if (target != null)
                 TargetObject = new WeakReference(target);
 
             _method = Argument.NotNull(method, nameof(method));
+            _parames = new[] {parameterType};
+
             _delegateType = parameterType == null
                 ? typeof(Action)
                 : typeof(Action<>).MakeGenericType(parameterType);
@@ -54,17 +57,17 @@ namespace Tauron.Application
         
         public WeakAction([CanBeNull] object target, [NotNull] MethodInfo method)
         {
-            Argument.NotNull(method, nameof(method));
+            _method = Argument.NotNull(method, nameof(method));
             if (target != null)
                 TargetObject = new WeakReference(target);
 
-            var parames = method.GetParameters().OrderBy(parm => parm.Position).Select(parm => parm.ParameterType).ToArray();
+            _parames = method.GetParameters().OrderBy(parm => parm.Position).Select(parm => parm.ParameterType).ToArray();
             var returntype = method.ReturnType;
             _delegateType = returntype == typeof(void)
-                ? FactoryDelegateType("System.Action", parames.ToArray())
-                : FactoryDelegateType("System.Func", parames.Concat(new[] {returntype}).ToArray());
+                ? FactoryDelegateType("System.Action", _parames.ToArray())
+                : FactoryDelegateType("System.Func", _parames.Concat(new[] {returntype}).ToArray());
 
-            ParameterCount = parames.Length;
+            ParameterCount = _parames.Length;
         }
 
         public int ParameterCount { get; private set; }
@@ -76,11 +79,11 @@ namespace Tauron.Application
         public WeakReference TargetObject { get; }
         
         [CanBeNull]
-        internal Delegate CreateDelegate()
+        internal Func<object, object[], object> CreateDelegate(out object target)
         {
-            var target = TargetObject?.Target;
+            target = TargetObject?.Target;
             return target != null
-                ? Delegate.CreateDelegate(_delegateType, TargetObject.Target, _method)
+                ? _method.GetMethodInvoker(() => _parames)
                 : null;
         }
         
@@ -145,8 +148,12 @@ namespace Tauron.Application
         {
             lock (this)
             {
-                foreach (var action in _delegates.Select(weakAction => weakAction.CreateDelegate()))
-                    action?.DynamicInvoke(arg);
+                foreach (var action in _delegates)
+                {
+                    var del = action.CreateDelegate(out var target);
+                    if (target != null)
+                        del?.Invoke(target, new object[] {arg});
+                }
             }
         }
         

@@ -47,7 +47,7 @@ namespace Tauron.Application.Converter
 
             public virtual object Convert(object value, [NotNull] Type targetType, object parameter, [NotNull] CultureInfo culture)
             {
-                if (value is TDest && typeof(TSource) != typeof(TDest)) return value;
+                //if (value is TDest && typeof(TSource) != typeof(TDest)) return value;
                 if (!(value is TSource)) return null;
 
                 return Convert((TSource) value);

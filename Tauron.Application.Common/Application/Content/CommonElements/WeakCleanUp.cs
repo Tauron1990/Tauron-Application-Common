@@ -12,7 +12,7 @@ namespace Tauron.Application
     {
         public bool IsAlive => _reference == null || _reference.IsAlive;
         
-        private readonly MethodBase _method;
+        private readonly MethodInfo _method;
         
         private readonly WeakReference _reference;
         
@@ -25,7 +25,7 @@ namespace Tauron.Application
             if (!_method.IsStatic) _reference = new WeakReference(@delegate.Target);
         }
 
-        public WeakDelegate([NotNull] MethodBase methodInfo, [NotNull] object target)
+        public WeakDelegate([NotNull] MethodInfo methodInfo, [NotNull] object target)
         {
             _method = Argument.NotNull(methodInfo, nameof(methodInfo));
             _reference = new WeakReference(Argument.NotNull(target, nameof(target)));
@@ -77,10 +77,11 @@ namespace Tauron.Application
         [CanBeNull]
         public object Invoke([CanBeNull] params object[] parms)
         {
-            if (_method.IsStatic) return _method.Invoke(null, parms);
+            
+            if (_method.IsStatic) return _method.GetMethodInvoker(() => _method.GetParameterTypes()).Invoke(null, parms);
 
             var target = _reference.Target;
-            return target == null ? null : _method.Invoke(target, parms);
+            return target == null ? null : _method.GetMethodInvoker(() => _method.GetParameterTypes()).Invoke(target, parms);
         }
     }
     

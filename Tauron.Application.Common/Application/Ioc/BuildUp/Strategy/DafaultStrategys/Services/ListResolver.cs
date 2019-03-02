@@ -27,9 +27,9 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys
 
                     if (errorTracer.Exceptional) return null;
 
-                    var temp = Activator.CreateInstance(closed);
+                    var temp = closed.FastCreateInstance();
 
-                    foreach (var o in args) info.Invoke(temp, o);
+                    foreach (var o in args) info.InvokeFast(temp, o);
 
                     return temp;
                 }

@@ -56,10 +56,7 @@ namespace Tauron.Application.Common.BaseLayer.Core
 
         public abstract object GenericAction(object input);
 
-        protected internal void SetError([CanBeNull]params object[] errors)
-        {
-            SetError((IEnumerable<object>) errors);
-        }
+        protected internal void SetError([CanBeNull]params object[] errors) => SetError((IEnumerable<object>) errors);
 
         protected void SetError(IEnumerable<object> objects)
         {

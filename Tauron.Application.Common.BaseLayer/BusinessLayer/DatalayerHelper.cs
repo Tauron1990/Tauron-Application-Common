@@ -19,11 +19,7 @@ namespace Tauron.Application.Common.BaseLayer.BusinessLayer
 
             var info = GetOrCreate(rule.GetType(), rule.InitializeMethod);
 
-            info.MethodInfo.Invoke(rule, info.Type.Select(t =>
-            {
-                if (t == typeof(RepositoryFactory)) return factory;
-                return factory.GetRepository(t);
-            }).ToArray());
+            info.MethodInfo.InvokeFast(rule, info.Type.Select(t => t == typeof(RepositoryFactory) ? factory : factory.GetRepository(t)).ToArray());
         }
 
         private static InitInfo GetOrCreate(Type type, string name)
