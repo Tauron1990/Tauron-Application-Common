@@ -10,7 +10,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         void OnCreateInstance([NotNull] IBuildContext context);
 
-        void OnPerpare([NotNull] IBuildContext context);
+        void OnPrepare([NotNull] IBuildContext context);
 
         void OnPostBuild([NotNull] IBuildContext context);
     }

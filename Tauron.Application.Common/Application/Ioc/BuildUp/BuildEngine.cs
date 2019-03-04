@@ -50,7 +50,7 @@ namespace Tauron.Application.Ioc.BuildUp
                     var context = new DefaultBuildContext(export, BuildMode.Resolve, _container, contractName,
                         tracer, buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
                     var buildObject = new BuildObject(export.ImportMetadata, context.Metadata, buildParameters);
-                    Pipeline.Build(context);
+                    Pipeline.Build(context, false);
                     if (tracer.Exceptional) return null;
                     buildObject.Instance = context.Target;
                     if (!export.ExternalInfo.External && !export.ExternalInfo.HandlesLiftime)
@@ -84,7 +84,7 @@ namespace Tauron.Application.Ioc.BuildUp
                         _container,
                         toBuild.GetType().Name, errorTracer,
                         buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
-                    Pipeline.Build(context);
+                    Pipeline.Build(context, false);
                     return context.Target;
                 }
                 catch (Exception e)
@@ -111,7 +111,7 @@ namespace Tauron.Application.Ioc.BuildUp
                         _container,
                         type.Name, errorTracer,
                         buildParameters, _componentRegistry.GetAll<IResolverExtension>().ToArray());
-                    Pipeline.Build(context);
+                    Pipeline.Build(context, false);
                     return context.Target;
                 }
                 catch (Exception e)
@@ -129,7 +129,7 @@ namespace Tauron.Application.Ioc.BuildUp
             {
                 var context = new DefaultBuildContext(build, _container, errorTracer, buildParameters);
                 build.Instance = context.Target;
-                Pipeline.Build(context);
+                Pipeline.Build(context, true);
             }
         }
         

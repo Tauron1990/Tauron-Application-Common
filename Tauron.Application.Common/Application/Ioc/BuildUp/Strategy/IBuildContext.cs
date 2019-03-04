@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
+using Tauron.Application.Ioc.BuildUp.Strategy.DefaultStrategy;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy
 {
@@ -33,6 +34,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         [CanBeNull]
         BuildParameter[] Parameters { get; }
-        
+
+        FactoryCacheEntry CacheEntry { get; set; }
     }
 }

@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace Tauron.Application.Ioc.LifeTime
 {
-    [PublicAPI]
+    [PublicAPI, CacheCreationProcess(false)]
     public sealed class SharedLifetime : MarshalByRefObject, ILifetimeContext
     {
         private object _value;

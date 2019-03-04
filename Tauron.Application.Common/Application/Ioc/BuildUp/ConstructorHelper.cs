@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Strategy;
-using Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys;
+using Tauron.Application.Ioc.BuildUp.Strategy.DefaultStrategy;
 using Tauron.Application.Ioc.Components;
 
 namespace Tauron.Application.Ioc.BuildUp

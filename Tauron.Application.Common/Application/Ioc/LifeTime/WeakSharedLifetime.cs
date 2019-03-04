@@ -2,6 +2,7 @@
 
 namespace Tauron.Application.Ioc.LifeTime
 {
+    [CacheCreationProcess(true)]
     public sealed class WeakSharedLifetime : ILifetimeContext
     {
         private WeakReference _reference;

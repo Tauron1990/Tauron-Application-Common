@@ -1,6 +1,6 @@
 ﻿using Tauron.Application.Ioc.BuildUp;
 using Tauron.Application.Ioc.BuildUp.Strategy;
-using Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys;
+using Tauron.Application.Ioc.BuildUp.Strategy.DefaultStrategy;
 using Tauron.Application.Ioc.Components;
 
 namespace Tauron.Application.Common.MVVM.Dynamic.Impl
@@ -11,9 +11,9 @@ namespace Tauron.Application.Common.MVVM.Dynamic.Impl
 
         public override void Initialize(ComponentRegistry components) => _internalAssemblyBuilder = components.Get<InternalAssemblyBuilder>();
 
-        public override void OnPerpare(IBuildContext context)
+        public override void OnPrepare(IBuildContext context)
         {
-            if(context.Metadata.Metadata?.TryGetValue(MvvmDynamicExtension.MvvmDynamicMeta, out var meta) == false) return;
+            if(context.Metadata.Metadata?.TryGetValue(MvvmDynamicExtension.MvvmDynamicMeta, out _) == false) return;
 
             if(!_internalAssemblyBuilder.IsBuilded)
                 _internalAssemblyBuilder.Build(context.Container);

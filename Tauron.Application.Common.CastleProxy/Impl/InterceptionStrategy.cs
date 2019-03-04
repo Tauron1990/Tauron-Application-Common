@@ -5,7 +5,7 @@ using Castle.DynamicProxy;
 using Tauron.Application.Common.CastleProxy.Impl.LifeTime;
 using Tauron.Application.Ioc;
 using Tauron.Application.Ioc.BuildUp.Strategy;
-using Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys;
+using Tauron.Application.Ioc.BuildUp.Strategy.DefaultStrategy;
 using Tauron.Application.Ioc.LifeTime;
 
 namespace Tauron.Application.Common.CastleProxy.Impl
@@ -15,6 +15,8 @@ namespace Tauron.Application.Common.CastleProxy.Impl
         public override void OnPostBuild(IBuildContext context)
         {
             if(context.Target == null) return;
+
+            context.CacheEntry?.PostBuildAction.Add(OnPostBuild);
 
             context.ErrorTracer.Phase = "Setting up ObjectContext for " + context.Metadata;
 
@@ -54,12 +56,13 @@ namespace Tauron.Application.Common.CastleProxy.Impl
             foreach (var result in
                 memberInterceptor.Select(mem => mem.Attribute).Where(attr => attr != null))
                 result.Initialize(context.Target, objectContext, name);
-
         }
 
         public override void OnBuild(IBuildContext context)
         {
             if (!context.CanUseBuildUp()) return;
+
+            context.CacheEntry?.BuildActions.Add(OnBuild);
 
             var policy = context.Policys.Get<InterceptionPolicy>();
             if (policy == null || context.Target == null) return;
@@ -77,11 +80,14 @@ namespace Tauron.Application.Common.CastleProxy.Impl
             context.Target = ProxyGeneratorFactory.ProxyGenerator
                 .CreateClassProxyWithTarget(context.ExportType, context.Target, options, memberInterceptor.Select(mem => mem.Interceptor).ToArray());
 
+            context.CacheEntry = null;
         }
         
-        public override void OnPerpare(IBuildContext context)
+        public override void OnPrepare(IBuildContext context)
         {
             if (!context.CanUseBuildUp()) return;
+
+            context.CacheEntry?.PrepareActions.Add(OnPrepare);
 
             context.ErrorTracer.Phase = "Reciving Interception Informations for " + context.Metadata;
 

@@ -3,6 +3,7 @@ using System.Threading;
 
 namespace Tauron.Application.Ioc.LifeTime
 {
+    [CacheCreationProcess(true)]
     public sealed class ThreadSharedLifetime : ILifetimeContext
     {
         private readonly Dictionary<Thread, object> _objects = new Dictionary<Thread, object>();

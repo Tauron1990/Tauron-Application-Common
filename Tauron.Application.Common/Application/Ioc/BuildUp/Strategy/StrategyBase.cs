@@ -18,7 +18,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
         {
         }
 
-        public virtual void OnPerpare(IBuildContext context)
+        public virtual void OnPrepare(IBuildContext context)
         {
         }
 

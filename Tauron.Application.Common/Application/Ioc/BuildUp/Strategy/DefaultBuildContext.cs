@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Tauron.Application.Ioc.BuildUp.Exports;
+using Tauron.Application.Ioc.BuildUp.Strategy.DefaultStrategy;
 using Tauron.Application.Ioc.Components;
 
 namespace Tauron.Application.Ioc.BuildUp.Strategy
@@ -60,6 +61,7 @@ namespace Tauron.Application.Ioc.BuildUp.Strategy
 
         public ErrorTracer ErrorTracer { get; private set; }
         public BuildParameter[] Parameters { get; private set; }
+        public FactoryCacheEntry CacheEntry { get; set; }
         public IResolverExtension[] ResolverExtensions { get; set; }
     }
 }

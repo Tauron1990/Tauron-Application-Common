@@ -6,4 +6,7 @@
 	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=application_005Ccontent_005Cui/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=application_005Cioc_005Cbuildup_005Cstrategy_005Cdafaultstrategys_005Cpolicys/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=application_005Cioc_005Cbuildup_005Cstrategy_005Cdafaultstrategys_005Cservices/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=application_005Cioc_005Cbuildup_005Cstrategy_005Cdafaultstrategys_005Cstrategys/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
+	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=application_005Cioc_005Cbuildup_005Cstrategy_005Cdafaultstrategys_005Cstrategys/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=application_005Cioc_005Cbuildup_005Cstrategy_005Cdefaultstrategy_005Cpolicys/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=application_005Cioc_005Cbuildup_005Cstrategy_005Cdefaultstrategy_005Cservices/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=application_005Cioc_005Cbuildup_005Cstrategy_005Cdefaultstrategy_005Cstrategys/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

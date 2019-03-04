@@ -1,9 +1,8 @@
 ﻿using System;
-using System.ComponentModel;
 using Tauron.Application.Ioc.BuildUp.Exports;
 using Tauron.Application.Ioc.BuildUp.Exports.DefaultExports;
 using Tauron.Application.Ioc.BuildUp.Strategy;
-using Tauron.Application.Ioc.BuildUp.Strategy.DafaultStrategys;
+using Tauron.Application.Ioc.BuildUp.Strategy.DefaultStrategy;
 
 namespace Tauron.Application.Ioc.Components
 {

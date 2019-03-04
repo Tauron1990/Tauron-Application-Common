@@ -14,13 +14,13 @@ namespace Tauron.Application.Ioc
         public DefaultContainer()
         {
             _extensions = new List<IContainerExtension>();
-            _componetnts = new ComponentRegistry();
+            _components = new ComponentRegistry();
             _exports = new ExportRegistry();
             _exportproviders = new ExportProviderRegistry();
             _exportproviders.ExportsChanged += ExportsChanged;
             Register(new DefaultExtension());
-            _buildEngine = new Lazy<BuildEngine>(() =>  new BuildEngine(this, _exportproviders, _componetnts));
-            _exports.Register(((DefaultExportFactory)_componetnts.GetAll<IExportFactory>().Single()).CreateAnonymosWithTarget(typeof(IContainer), this), 0);
+            _buildEngine = new Lazy<BuildEngine>(() =>  new BuildEngine(this, _exportproviders, _components));
+            _exports.Register(((DefaultExportFactory)_components.GetAll<IExportFactory>().Single()).CreateAnonymosWithTarget(typeof(IContainer), this), 0);
         }
 
         private void ExportsChanged(object sender, ExportChangedEventArgs e)
@@ -48,7 +48,7 @@ namespace Tauron.Application.Ioc
 
         private readonly Lazy<BuildEngine> _buildEngine;
 
-        private readonly ComponentRegistry _componetnts;
+        private readonly ComponentRegistry _components;
 
         private readonly ExportProviderRegistry _exportproviders;
 
@@ -116,7 +116,7 @@ namespace Tauron.Application.Ioc
         
         public void Dispose()
         {
-            _componetnts.Dispose();
+            _components.Dispose();
             _exportproviders.Dispose();
         }
 
@@ -198,7 +198,7 @@ namespace Tauron.Application.Ioc
                 Publish(metadata.ToString());
         }
 
-        public void Register(ExportResolver exportResolver) => exportResolver.Fill(_componetnts, _exports, _exportproviders, AddComponent);
+        public void Register(ExportResolver exportResolver) => exportResolver.Fill(_components, _exports, _exportproviders, AddComponent);
 
         private void AddComponent(ExportMetadata meta) => Publish(meta.ToString());
 
@@ -206,7 +206,7 @@ namespace Tauron.Application.Ioc
         {
             Argument.NotNull(extension, nameof(extension));
 
-            extension.Initialize(_componetnts);
+            extension.Initialize(_components);
             _extensions.Add(extension);
         }
 
