@@ -95,7 +95,7 @@ namespace Tauron.Application
                 }
                 catch (Exception e)
                 {
-                    LogManager.GetCurrentClassLogger().Error(e);
+                    LogManager.GetLogger("TauronTaskScheduler").Error(e);
                     throw;
                 }
 

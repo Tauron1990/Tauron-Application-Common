@@ -7,7 +7,7 @@ namespace Tauron.Application.Converter
 {
     internal static class ImageSourceHelper
     {
-        private static Logger GetLogger() => LogManager.GetLogger(nameof(ImageSourceHelper), typeof(ImageSourceHelper));
+        private static Logger GetLogger() => LogManager.GetLogger(nameof(ImageSourceHelper));
 
         public static bool Enter([CanBeNull] string imageSource, [NotNull] IServiceProvider provider)
         {

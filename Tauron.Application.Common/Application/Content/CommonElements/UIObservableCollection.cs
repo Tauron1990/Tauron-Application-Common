@@ -93,7 +93,7 @@ namespace Tauron.Application
         {
             if (_isBlocked) return;
             if (InternalUISynchronize.CheckAccess) base.OnPropertyChanged(e);
-            InternalUISynchronize.Invoke(() => base.OnPropertyChanged(e));
+            else InternalUISynchronize.Invoke(() => base.OnPropertyChanged(e));
         }
     }
 }

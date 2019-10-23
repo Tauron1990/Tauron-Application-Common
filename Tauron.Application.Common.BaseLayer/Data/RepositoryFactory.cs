@@ -75,7 +75,7 @@ namespace Tauron.Application.Common.BaseLayer.Data
         public IDatabaseAccess Enter()
         {
             if (_compositeMode) return new NullDispose(this);
-            if (!Monitor.TryEnter(_sync, TimeSpan.FromMinutes(1))) throw new InvalidOperationException("Only One Database Acess Alowed");
+            if (!Monitor.TryEnter(_sync, TimeSpan.FromMinutes(160))) throw new InvalidOperationException("Only One Database Acess Alowed");
 
             _repositorys = new GroupDictionary<IDatabaseIdentifer, object>();
             _databaseDisposer = new DatabaseDisposer(_repositorys, Exit, this);

@@ -10,5 +10,7 @@ namespace Tauron.Application
 
         bool ContainsText();
         string GetText();
+
+        void SetValue(object value);
     }
 }

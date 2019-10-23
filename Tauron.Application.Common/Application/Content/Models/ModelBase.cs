@@ -145,9 +145,32 @@ namespace Tauron.Application.Models
 
         private const string AnonymosPrefix = "Anonymos---";
 
-        protected void SetProperty(object value, [CallerMemberName] string name = null) => _values[AnonymosPrefix + name] = value;
-        
+        protected bool SetProperty(object value, [CallerMemberName] string name = null)
+        {
+            string realName = AnonymosPrefix + name;
 
+            if (_values.TryGetValue(realName, out var tempValue) && Equals(tempValue, value)) return false;
+            _values[realName] = value;
+
+            OnPropertyChanged(new PropertyChangedEventArgs(name));
+            return true;
+        }
+
+        protected bool SetProperty(object value, Action changed, [CallerMemberName] string name = null)
+        {
+            if (!SetProperty(value, name)) return false;
+
+            changed();
+            return true;
+
+        }
+
+        protected TType GetProperty<TType>([CallerMemberName] string name = null)
+        {
+            if (_values.TryGetValue(AnonymosPrefix + name, out var value))
+                return value is TType propertyValue ? propertyValue : default;
+            return default;
+        }
 
         [CanBeNull]
         protected object GetValue([NotNull] ObservableProperty property) => GetValueCommon(property);

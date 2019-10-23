@@ -52,7 +52,7 @@ namespace Tauron.Application
         void FormatException([CanBeNull] IWindow owner, [NotNull] Exception exception);
 
 
-        [NotNull]
+        [CanBeNull]
         [PublicAPI]
         string GetText([CanBeNull] IWindow owner, [NotNull] string instruction, [CanBeNull] string content, [NotNull] string caption,
             bool allowCancel, [CanBeNull] string defaultValue);

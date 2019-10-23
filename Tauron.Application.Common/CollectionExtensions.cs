@@ -37,5 +37,8 @@ namespace Tauron
 
             return null;
         }
+
+        public static TValue TryGetOrDefault<TKey, TValue>([NotNull] this IDictionary<TKey, TValue> dic, TKey key) 
+            => dic.TryGetValue(key, out var value) ? value : default;
     }
 }

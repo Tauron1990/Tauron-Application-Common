@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FastExpressionCompiler;
 using JetBrains.Annotations;
+using NLog;
 using Tauron.Application.Common.BaseLayer.BusinessLayer;
 using Tauron.Application.Common.BaseLayer.Data;
 
@@ -44,6 +45,13 @@ namespace Tauron.Application.Common.BaseLayer.Core
         private static Dictionary<Type, (Action<RuleBase, RepositoryFactory> Init, Action<RuleBase> Dispose)> _enterActions 
             = new Dictionary<Type, (Action<RuleBase, RepositoryFactory>, Action<RuleBase>)>();
 
+        private Lazy<Logger> _logger;
+
+        private Logger LoggerFac()
+            => LogManager.GetLogger(GetType().Name);
+
+        protected Logger Logger => _logger.Value;
+
         [InjectRepositoryFactory]
         public RepositoryFactory RepositoryFactory { get; set; }
 
@@ -51,6 +59,9 @@ namespace Tauron.Application.Common.BaseLayer.Core
 
         public bool Error { get; private set; }
         public IEnumerable<object> Errors { get; private set; }
+
+        protected RuleBase()
+            => _logger = new Lazy<Logger>(LoggerFac);
 
         public virtual string InitializeMethod { get; }
 

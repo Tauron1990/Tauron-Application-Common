@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using NLog;
 
@@ -56,14 +57,14 @@ namespace Tauron.Application
         {
             _settings.Clear();
 
-            Log.Write("Delete Profile infos... " + Dictionary?.PathShorten(20), LogLevel.Info);
+            Log.Write($"{Application} -- Delete Profile infos... {Dictionary?.PathShorten(20)}", LogLevel.Info);
 
             Dictionary?.DeleteDirectory();
         }
         
         public virtual void Load([NotNull] string name)
         {
-            Argument.NotNull(name, nameof(name));
+            Argument.NotNull<object>(name, nameof(name));
             IlligalCharCheck(name);
 
             Name = name;
@@ -71,7 +72,7 @@ namespace Tauron.Application
             Dictionary.CreateDirectoryIfNotExis();
             FilePath = Dictionary.CombinePath("Settings.db");
 
-            Log.Write("Begin Load Profile infos... " + FilePath.PathShorten(20), LogLevel.Info);
+            Log.Write($"{Application} -- Begin Load Profile infos... {FilePath.PathShorten(20)}", LogLevel.Info);
 
             _settings.Clear();
             foreach (var vals in
@@ -87,23 +88,30 @@ namespace Tauron.Application
         
         public virtual void Save()
         {
-            Log.Write("Begin Save Profile infos...", LogLevel.Info);
+            Log.Write($"{Application} -- Begin Save Profile infos...", LogLevel.Info);
 
-            using (var writer = FilePath?.OpenTextWrite())
+            try
             {
-                if(writer == null) return;
-
-                foreach (var pair in _settings)
+                using (var writer = FilePath?.OpenTextWrite())
                 {
-                    writer.WriteLine("{0}={1}", pair.Key, pair.Value);
+                    if(writer == null) return;
 
-                    Log.Write(LogLevel.Info, "key: {0} | Value {1}", pair.Key, pair.Value);
+                    foreach (var pair in _settings)
+                    {
+                        writer.WriteLine("{0}={1}", pair.Key, pair.Value);
+
+                        Log.Write(LogLevel.Info, "key: {0} | Value {1}", pair.Key, pair.Value);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
             }
         }
         
         [CanBeNull]
-        public virtual string GetValue([NotNull] string key, [CanBeNull] string defaultValue)
+        public virtual string GetValue([CanBeNull] string defaultValue, [CallerMemberName] string key = null)
         {
             Argument.NotNull(key, nameof(key));
 
@@ -112,11 +120,13 @@ namespace Tauron.Application
             return !_settings.ContainsKey(key) ? defaultValue : _settings[key];
         }
 
-        [NotNull]
-        public virtual int GetValueInt([NotNull] string key, [NotNull] int defaultValue) 
-            => int.TryParse(GetValue(key, null), out var result) ? result : defaultValue;
+        public virtual int GetValue(int defaultValue, [CallerMemberName] string key = null) 
+            => int.TryParse(GetValue(null, key), out var result) ? result : defaultValue;
 
-        public virtual void SetVaue([NotNull] string key, [NotNull] object value)
+        public virtual bool GetValue(bool defaultValue, [CallerMemberName] string key = null)
+            => bool.TryParse(GetValue(null, key), out var result) ? result : defaultValue;
+
+        public virtual void SetVaue([NotNull] object value, [CallerMemberName] string key = null)
         {
             Argument.NotNull(key, nameof(key));
             Argument.NotNull(value, nameof(value));
@@ -127,5 +137,7 @@ namespace Tauron.Application
         }
 
         private void IlligalCharCheck([NotNull] string key) => Argument.Check(key.Contains('='), () => new ArgumentException($"The Key ({key}) Contains an Illigal Char: ="));
+
+        public void Clear() => _settings.Clear();
     }
 }

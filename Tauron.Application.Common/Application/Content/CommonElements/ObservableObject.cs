@@ -57,6 +57,10 @@ namespace Tauron.Application
             public void Error(Exception e, string messege) => Logger.Error(e, messege);
 
             public void Error(Exception e) => Logger.Error(e);
+
+            public void Info(string message) => Logger.Info(message);
+
+            public void Warn(Exception exception, string message) => Logger.Warn(exception, message);
         }
         
         private LogHelper _logHelper;
