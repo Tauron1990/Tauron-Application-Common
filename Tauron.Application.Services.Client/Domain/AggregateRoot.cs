@@ -55,9 +55,13 @@ namespace Tauron.Application.Services.Client.Domain
             return temp;
         }
 
-        internal Task LoadFromHistory(IEnumerable<IEvent> events)
+        internal async Task LoadFromHistory(IEnumerable<IEvent> events)
         {
-            IAsyncEnumerable<>
+            foreach (var @event in events)
+            {
+                if (this is IEventExecutor<TEvent> handler)
+                    await handler.Apply(@event);
+            }
         }
 
         void ISnapshotable.WriteTo(Utf8JsonWriter writer) 
