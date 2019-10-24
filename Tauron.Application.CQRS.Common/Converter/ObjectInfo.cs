@@ -2,9 +2,9 @@
 
 namespace Tauron.Application.CQRS.Common.Converter
 {
+    [JsonConverter(typeof(ObjectInfoConverter))]
     public sealed class ObjectInfo
     {
-        [JsonConverter(typeof(ObjectInfoConverter))]
         public object Element { get; set; }
     }
 }

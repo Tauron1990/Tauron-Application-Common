@@ -9,6 +9,6 @@ namespace Tauron.Application.Services.Client.Snapshotting
     {
         void WriteTo(Utf8JsonWriter writer);
 
-        void ReadFrom(Utf8JsonReader reader);
+        void ReadFrom(ref Utf8JsonReader reader);
     }
 }
