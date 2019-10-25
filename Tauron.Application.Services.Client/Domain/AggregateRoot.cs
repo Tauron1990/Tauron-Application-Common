@@ -13,6 +13,8 @@ namespace Tauron.Application.Services.Client.Domain
 {
     public abstract class AggregateRoot : ISnapshotable
     {
+        internal static 
+
         private ImmutableDictionary<string, ObjectInfo> _data = ImmutableDictionary<string, ObjectInfo>.Empty;
         private ImmutableList<IEvent> _events = ImmutableList<IEvent>.Empty;
 
