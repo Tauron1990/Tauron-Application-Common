@@ -13,8 +13,6 @@ namespace Tauron.Application.CQRS.Common.Configuration
 
         public string EventHubUrl { get; set; } = string.Empty;
 
-        public string EventServerApiUrl { get; set; } = string.Empty;
-
         public string PersistenceApiUrl { get; set; } = string.Empty;
 
         public string ApiKey { get; set; } = string.Empty;
@@ -54,7 +52,6 @@ namespace Tauron.Application.CQRS.Common.Configuration
             BaseUrl = baseUrl.ToString();
 
             EventHubUrl = new Uri(baseUrl, "EventBus").ToString();
-            EventServerApiUrl = new Uri(baseUrl, "Api/EventStore").ToString();
             PersistenceApiUrl = new Uri(baseUrl, "Api/Persistable").ToString();
 
             return this;

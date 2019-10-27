@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Text.Json;
-using Tauron.Application.CQRS.Common.Configuration;
 using Tauron.Application.CQRS.Common.Converter;
 
 namespace CQRSTestApp

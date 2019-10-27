@@ -1,24 +1,29 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Tauron.Application.CQRS.Common.Converter;
 using Tauron.Application.Services.Client.Events;
+using Tauron.Application.Services.Client.Events.Invoker;
 using Tauron.Application.Services.Client.Snapshotting;
 
 namespace Tauron.Application.Services.Client.Domain
 {
     public abstract class AggregateRoot : ISnapshotable
     {
-        internal static 
+        private static ImmutableDictionary<Type, ObjectFactory> _eventFactories = ImmutableDictionary<Type, ObjectFactory>.Empty;
+
+        internal static IServiceProvider ServiceProvider;
 
         private ImmutableDictionary<string, ObjectInfo> _data = ImmutableDictionary<string, ObjectInfo>.Empty;
         private ImmutableList<IEvent> _events = ImmutableList<IEvent>.Empty;
 
         public Guid Id { get; internal set; }
+
+        public long Version { get; internal set; }
 
         protected TType GetValue<TType>([CallerMemberName] string propertyName = null)
         {
@@ -54,6 +59,13 @@ namespace Tauron.Application.Services.Client.Domain
         {
             var temp = _events;
             _events = ImmutableList<IEvent>.Empty;
+
+            foreach (var @event in temp)
+            {
+                @event.Id = Id;
+                @event.Version = Version++;
+            }
+
             return temp;
         }
 
@@ -61,15 +73,55 @@ namespace Tauron.Application.Services.Client.Domain
         {
             foreach (var @event in events)
             {
-                if (this is IEventExecutor<TEvent> handler)
-                    await handler.Apply(@event);
+                var applayer = (IEventInvokerBase)GetFactory(@event.GetType())(ServiceProvider, new object[]{ this });
+                await applayer.Handle(@event);
+
+                Version = @event.Version;
             }
         }
 
-        void ISnapshotable.WriteTo(Utf8JsonWriter writer) 
-            => JsonSerializer.Serialize(writer, _data);
+        private static ObjectFactory GetFactory(Type eventType)
+        {
+            if (_eventFactories.ContainsKey(eventType))
+                return _eventFactories[eventType];
 
-        void ISnapshotable.ReadFrom(ref Utf8JsonReader reader) 
-            => _data = JsonSerializer.Deserialize< ImmutableDictionary <string, ObjectInfo>>(ref reader);
+            var fac = ActivatorUtilities.CreateFactory(typeof(IEventInvoker<>).MakeGenericType(eventType), new[] {typeof(IEventExecutor<>).MakeGenericType(eventType)});
+            ImmutableInterlocked.TryAdd(ref _eventFactories, eventType, fac);
+
+            return fac;
+        }
+
+        void ISnapshotable.WriteTo(Utf8JsonWriter writer) 
+            => JsonSerializer.Serialize(writer, new SnapshotData(_data, Id, Version));
+
+        void ISnapshotable.ReadFrom(ref Utf8JsonReader reader)
+        {
+            var data = JsonSerializer.Deserialize<SnapshotData>(ref reader);
+
+            Id = data.Id;
+            Version = data.Version;
+            _data = data.ObjectInfos;
+        }
+
+        private class SnapshotData
+        {
+            public ImmutableDictionary<string, ObjectInfo> ObjectInfos { get; set; }
+
+            public Guid Id { get; set; }
+
+            public long Version { get; set; }
+
+            public SnapshotData(ImmutableDictionary<string, ObjectInfo> objectInfos, Guid id, long version)
+            {
+                ObjectInfos = objectInfos;
+                Id = id;
+                Version = version;
+            }
+
+            public SnapshotData()
+            {
+                
+            }
+        }
     }
 }

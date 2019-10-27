@@ -6,12 +6,8 @@ namespace Tauron.Application.Services.Client.Events
     {
         public Guid Id { get; set; }
 
-        public int Version { get; set; }
+        public long Version { get; set; }
 
-        internal void SetIdAndVersion(Guid id, int version)
-        {
-            id = Id;
-            Version = version;
-        }
+        public DateTimeOffset TimeStamp { get; set; } = DateTimeOffset.UtcNow;
     }
 }

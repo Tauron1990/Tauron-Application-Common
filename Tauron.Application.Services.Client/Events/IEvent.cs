@@ -1,12 +1,14 @@
 ﻿using System;
-using Tauron.Application.Services.Client.Core;
+using Tauron.Application.Services.Client.Infrastructure;
 
 namespace Tauron.Application.Services.Client.Events
 {
-    public interface IEvent : IMessage
+    public interface IEvent : IAmbientEvent
     {
         Guid Id { get; set; }
 
-        int Version { get; set; }
+        long Version { get; set; }
+
+        DateTimeOffset TimeStamp { get; set; }
     }
 }
