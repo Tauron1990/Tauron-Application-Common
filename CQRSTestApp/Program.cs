@@ -1,32 +1,52 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Runtime.Serialization;
 using System.Text.Json;
+using FastExpressionCompiler;
+using Microsoft.Extensions.DependencyInjection;
 using Tauron.Application.CQRS.Common.Converter;
 
 namespace CQRSTestApp
 {
+    public class TestService<T>
+    {
+        public TestObject Obj { get; }
+        public string Param { get; }
+        public T Test { get; set; }
+
+        public TestService(TestObject obj, string param)
+        {
+            Obj = obj;
+            Param = param;
+        }
+    }
+
+    public class TestObject
+    {
+        public string Porp { get; set; }
+
+        public TestObject()
+        {
+            Porp = "Hallo";
+        }
+    }
+
     class Program
     {
 
 
         static void Main(string[] args)
         {
-            var info = new List<ObjectInfo>
-                       {
-                           new ObjectInfo(),
-                           new ObjectInfo
-                           {
-                               Element = new List<string>
-                                         {
-                                             "Hallo",
-                                             "Welt"
-                                         }
-                           },
-                           new ObjectInfo()
-                       };
+            var coll = new ServiceCollection();
+            coll.AddTransient<TestObject>();
+            coll.AddTransient(typeof(TestService<>));
 
-            var test = JsonSerializer.Serialize(info, new JsonSerializerOptions { WriteIndented = true});
+            var provider = coll.BuildServiceProvider();
+            
+            var fac = ActivatorUtilities.CreateFactory(typeof(TestService<>), new[] {typeof(string)});
 
-            info = JsonSerializer.Deserialize<List<ObjectInfo>>(test);
+            var result = fac(provider, new object[]{"Test"});
         }
     }
 }
