@@ -3,7 +3,7 @@ using Tauron.Application.CQRS.Client.Domain;
 
 namespace Tauron.Application.CQRS.Client.Core
 {
-    public interface IIternalSession : ISession
+    public interface IInternalSession : ISession
     {
         Task Commit();
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -94,6 +95,19 @@ namespace Tauron.Application.CQRS.Client
 
             using var scope = provider.CreateScope();
             await scope.ServiceProvider.GetRequiredService<IHandlerManager>().Init();
+        }
+
+        public static async Task StopCqrs(this IServiceProvider provider)
+        {
+            AggregateRoot.ServiceProvider = null;
+
+            using var scope = provider.CreateScope();
+            await scope.ServiceProvider.GetRequiredService<IDispatcherClient>().Stop();
+
+            foreach (var semaphoreSlim in AggregateRoot.AggregateLocks.Select(l => l.Value)) 
+                semaphoreSlim.Dispose();
+
+            AggregateRoot.AggregateLocks.Clear();
         }
     }
 }

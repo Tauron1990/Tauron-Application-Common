@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Tauron.Application.CQRS.Client.Commands;
+using Tauron.Application.CQRS.Client.Domain;
 using Tauron.Application.CQRS.Client.Events;
 using Tauron.Application.CQRS.Client.Infrastructure;
 using Tauron.Application.CQRS.Client.Querys;
@@ -86,13 +87,15 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
 
         private readonly InvokerBase _invoker;
         private readonly Func<object> _target;
+        private readonly ISession _session;
         private readonly ILogger<HandlerBase> _logger;
         private readonly IDispatcherClient _dispatcherClient;
         private object _realTarget;
 
-        public MessageHandler(ILogger<HandlerBase> logger, IDispatcherClient dispatcherClient, Func<object> target, Type handlerType, Type inter)
+        public MessageHandler(ILogger<HandlerBase> logger, IDispatcherClient dispatcherClient, ISession session, Func<object> target, Type handlerType, Type inter)
         {
             _target = target;
+            _session = session;
             _logger = logger;
             _dispatcherClient = dispatcherClient;
 
@@ -107,9 +110,13 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
         {
             Type queryResult = null;
 
+            _realTarget = _target();
+            var commandHandler = _realTarget as CommandHandlerBase; 
+            if(commandHandler != null)
+                commandHandler.Session = _session;
+
             try
             {
-                _realTarget = _target();
                 var invoker = _invoker;
                 switch (invoker)
                 {
@@ -155,6 +162,8 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
             finally
             {
                 _realTarget = null;
+                if (commandHandler != null)
+                    commandHandler.Session = null;
             }
         }
     }

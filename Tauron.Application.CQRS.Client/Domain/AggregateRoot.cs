@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Tauron.Application.CQRS.Client.Events;
@@ -17,6 +19,8 @@ namespace Tauron.Application.CQRS.Client.Domain
         private static ImmutableDictionary<Type, ObjectFactory> _eventFactories = ImmutableDictionary<Type, ObjectFactory>.Empty;
 
         internal static IServiceProvider ServiceProvider;
+
+        internal static readonly ConcurrentDictionary<Guid, ReaderWriterLockSlim> AggregateLocks = new ConcurrentDictionary<Guid, ReaderWriterLockSlim>();
 
         private ImmutableDictionary<string, ObjectInfo> _data = ImmutableDictionary<string, ObjectInfo>.Empty;
         private ImmutableList<IEvent> _events = ImmutableList<IEvent>.Empty;
