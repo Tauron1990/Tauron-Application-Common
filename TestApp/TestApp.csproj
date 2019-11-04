@@ -50,12 +50,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Tauron.Application.Common.BaseLayer\Tauron.Application.Common.BaseLayer.csproj">
-      <Project>{0a0ef8cb-669a-4364-af5d-ae5706489d05}</Project>
-      <Name>Tauron.Application.Common.BaseLayer</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="FastExpressionCompiler">
       <Version>2.0.0</Version>
     </PackageReference>
