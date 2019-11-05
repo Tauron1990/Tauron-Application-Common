@@ -13,17 +13,17 @@ namespace Tauron.Application.CQRS.Client.Core.Components
     public class SnapshotServerStore : ISnapshotStore
     {
         private readonly IOptions<ClientCofiguration> _confOptions;
-        private readonly IPersistApi _persistApi;
+        private readonly IDispatcherApi _dispatcherApi;
 
-        public SnapshotServerStore(IOptions<ClientCofiguration> confOptions, IPersistApi persistApi)
+        public SnapshotServerStore(IOptions<ClientCofiguration> confOptions, IDispatcherApi dispatcherApi)
         {
             _confOptions = confOptions;
-            _persistApi = persistApi;
+            _dispatcherApi = dispatcherApi;
         }
 
         public async Task Get(Guid id, ISnapshotable to)
         {
-            var stade = await _persistApi.Get(new ApiObjectId { Id = id.ToString(), ApiKey = _confOptions.Value.ApiKey });
+            var stade = await _dispatcherApi.Get(new ApiObjectId { Id = id.ToString(), ApiKey = _confOptions.Value.ApiKey });
             if (stade?.Data == null) return;
 
             Deserialize(stade.Data, to);
@@ -41,7 +41,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             Utf8JsonWriter writer = new Utf8JsonWriter(buffer);
             snapshot.WriteTo(writer);
 
-            await _persistApi.Put(new ApiObjectStade
+            await _dispatcherApi.Put(new ApiObjectStade
                                   {
                                       ApiKey = _confOptions.Value.ApiKey,
                                       ObjectStade = new ObjectStade

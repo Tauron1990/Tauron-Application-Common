@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Tauron.Application.CQRS.Dispatcher.Hubs;
 
 namespace Tauron.Application.CQRS.Dispatcher
 {
@@ -20,19 +22,15 @@ namespace Tauron.Application.CQRS.Dispatcher
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCQRS(c =>
+            services.Configure<ServerConfiguration>(c =>
             {
                 c.WithDatabase(_config.GetValue<string>("ConnectionString"));
                 c.Memory = _config.GetValue<bool>("Memory");
             });
 
-            services.AddHealth();
-
+            
             services.AddMvc(o => o.EnableEndpointRouting = false)
-                .AddNewtonsoftJson()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-                .AddHealthParts()
-                .AddCQRS();
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
             services.AddAuthentication(options =>
             {
@@ -48,17 +46,13 @@ namespace Tauron.Application.CQRS.Dispatcher
 
         [UsedImplicitly]
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggingBuilder loggerFactory)
         {
-            loggerFactory.AddFile("C:\\Dispatcher Logs\\Log-{Date}.txt", fileSizeLimitBytes: 100 * 1024 * 1024, retainedFileCountLimit: 5);
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.EnableCQRSDevelopmentApiKey();
             }
 
-            app.UseHealth();
             app.UseRouting();
 
             app.UseMvc(routes =>

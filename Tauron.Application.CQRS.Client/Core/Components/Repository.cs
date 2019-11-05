@@ -15,11 +15,11 @@ namespace Tauron.Application.CQRS.Client.Core.Components
     {
         private readonly IInternalRepository _repository;
 
-        public Repository(IMemoryCache memoryCache, IPersistApi persistApi, ISnapshotStrategy snapshotStrategy, 
+        public Repository(IMemoryCache memoryCache, IDispatcherApi dispatcherApi, ISnapshotStrategy snapshotStrategy, 
                           IServiceProvider serviceProvider, IOptions<ClientCofiguration> options, ISnapshotStore snapshotStore)
         {
             _repository = new CacheRepo(memoryCache,
-                new SnapshotRepo(persistApi, snapshotStrategy, serviceProvider, 
+                new SnapshotRepo(dispatcherApi, snapshotStrategy, serviceProvider, 
                                  options, snapshotStore));
         }
 
@@ -67,16 +67,16 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
         private class SnapshotRepo : IInternalRepository
         {
-            private readonly IPersistApi _persistApi;
+            private readonly IDispatcherApi _dispatcherApi;
             private readonly ISnapshotStrategy _snapshotStrategy;
             private readonly IServiceProvider _serviceProvider;
             private readonly IOptions<ClientCofiguration> _options;
             private readonly ISnapshotStore _snapshotStore;
 
-            public SnapshotRepo(IPersistApi persistApi, ISnapshotStrategy snapshotStrategy, IServiceProvider serviceProvider,
+            public SnapshotRepo(IDispatcherApi dispatcherApi, ISnapshotStrategy snapshotStrategy, IServiceProvider serviceProvider,
                                 IOptions<ClientCofiguration> options, ISnapshotStore snapshotStore)
             {
-                _persistApi = persistApi;
+                _dispatcherApi = dispatcherApi;
                 _snapshotStrategy = snapshotStrategy;
                 _serviceProvider = serviceProvider;
                 _options = options;
@@ -88,7 +88,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
                 var aggregate = AggregateFactory<T>.CreateAggregate(_serviceProvider);
                 var snapshotVersion = await TryRestoreAggregateFromSnapshot(aggregateId, aggregate).ConfigureAwait(false);
 
-                var events = (await _persistApi.GetEvents(new EventsRequest(_options.Value.ApiKey, aggregateId, snapshotVersion)).ConfigureAwait(false))
+                var events = (await _dispatcherApi.GetEvents(new EventsRequest(_options.Value.ApiKey, aggregateId, snapshotVersion)).ConfigureAwait(false))
                    .Select(dm => dm.ToRealMessage<IEvent>())
                    .Where(desc => desc.Version > snapshotVersion);
                 

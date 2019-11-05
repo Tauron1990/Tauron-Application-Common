@@ -75,7 +75,7 @@ namespace Tauron.Application.CQRS.Client
             serviceCollection.Configure(config);
             serviceCollection.TryAddTransient(typeof(IEventInvoker<>), typeof(EventInvokerImpl<>));
             serviceCollection.AddMemoryCache();
-            serviceCollection.TryAddSingleton(x => new RestClient(x.GetRequiredService<IOptions<ClientCofiguration>>().Value.PersistenceApiUrl).For<IPersistApi>());
+            serviceCollection.TryAddSingleton(x => new RestClient(x.GetRequiredService<IOptions<ClientCofiguration>>().Value.PersistenceApiUrl).For<IDispatcherApi>());
             serviceCollection.TryAddTransient<ISnapshotStore, SnapshotServerStore>();
             serviceCollection.TryAddScoped<ISession, Session>();
             serviceCollection.TryAddScoped<IRepository, Repository>();

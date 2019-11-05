@@ -6,7 +6,7 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core
 {
-    public interface IPersistApi
+    public interface IDispatcherApi
     {
         [Get("Events")]
         Task<DomainMessage[]> GetEvents([Body]EventsRequest request);

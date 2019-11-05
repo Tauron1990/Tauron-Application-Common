@@ -4,9 +4,13 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Nito.AsyncEx;
+using Tauron.Application.CQRS.Dispatcher.EventStore;
+using Tauron.Application.CQRS.Dispatcher.EventStore.Data;
 
 namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 {

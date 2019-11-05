@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Tauron.Application.CQRS.Dispatcher.Core;
 
 namespace Tauron.Application.CQRS.Dispatcher.Controllers
 {
