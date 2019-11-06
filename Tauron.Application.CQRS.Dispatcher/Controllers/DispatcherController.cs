@@ -14,15 +14,17 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
 {
     [ApiController]
     [Route("Api/[controller]")]
-    public class PersistableController : ControllerBase
+    public class DispatcherController : ControllerBase
     {
         private readonly IApiKeyStore _apiKeyStore;
         private readonly DispatcherDatabaseContext _context;
+        private readonly IConnectionManager _connectionManager;
 
-        public PersistableController(IApiKeyStore apiKeyStore, DispatcherDatabaseContext context)
+        public DispatcherController(IApiKeyStore apiKeyStore, DispatcherDatabaseContext context, IConnectionManager connectionManager)
         {
             _apiKeyStore = apiKeyStore;
             _context = context;
+            _connectionManager = connectionManager;
         }
 
         [HttpGet]
@@ -90,6 +92,18 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
                     Version = ee.Version,
                     TypeName = ee.OriginType
                 }).ToList();
+        }
+
+        [Route("Hub")]
+        [HttpPut]
+        public async Task<IActionResult> Validate([FromBody] ValidateConnection validateConnection)
+        {
+            var (ok, serviceName) = await _apiKeyStore.Validate(validateConnection.ApiKey);
+            if (!ok)
+                return Forbid();
+
+            await _connectionManager.Validated(validateConnection.NewId, serviceName, validateConnection.OldId);
+            return Ok();
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Tauron.CQRS.Common
+namespace Tauron.Application.CQRS.Common
 {
     public sealed class MessageQueue<TMessage> : IDisposable
     {

@@ -31,7 +31,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
         public async Task Init()
         {
             await _client.Connect();
-            var handlerList = new List<(string, Func<IMessage, DomainMessage, Task>)>();
+            var handlerList = new List<(string, MessageHandler)>();
 
             foreach (var (key, value) in _configuration.Value.GetHandlers())
             {

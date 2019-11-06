@@ -29,6 +29,9 @@ namespace Tauron.Application.CQRS.Client
             where TType : class
             => JsonSerializer.Deserialize(message.EventData, Type.GetType(message.TypeName)) as TType;
 
+        public static IMessage ToRealMessage(this DomainMessage message)
+            => JsonSerializer.Deserialize(message.EventData, Type.GetType(message.TypeName)) as IMessage;
+
         public static DomainMessage ToDomainMessage(this IMessage message)
         {
             var type = message.GetType();
@@ -68,10 +71,8 @@ namespace Tauron.Application.CQRS.Client
         }
 
 
-        public static void AddCqrs(this IServiceCollection serviceCollection, Action<ClientCofiguration> config = null)
+        public static void AddCqrs(this IServiceCollection serviceCollection, Action<ClientCofiguration> config)
         {
-            //TODO AddDispatcher
-            
             serviceCollection.Configure(config);
             serviceCollection.TryAddTransient(typeof(IEventInvoker<>), typeof(EventInvokerImpl<>));
             serviceCollection.AddMemoryCache();
@@ -86,6 +87,7 @@ namespace Tauron.Application.CQRS.Client
             serviceCollection.TryAddSingleton<IDispatcherClient, DispatcherClient>();
             serviceCollection.TryAddSingleton(typeof(GlobalEventHandler<>));
             serviceCollection.TryAddSingleton(typeof(QueryAwaiter<>));
+            serviceCollection.TryAddSingleton<IErrorManager, ErrorManager>();
 
         }
 

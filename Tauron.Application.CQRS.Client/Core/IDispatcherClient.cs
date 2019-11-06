@@ -9,13 +9,15 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core
 {
+    public delegate Task MessageHandler(IMessage message, DomainMessage domainMessage);
+
     public interface IDispatcherClient
     {
         Task Connect();
 
         Task Stop();
 
-        Task Subscribe(IEnumerable<(string Name, Func<IMessage, DomainMessage, Task> Handler)> intrests);
+        Task Subscribe(IEnumerable<(string Name, MessageHandler)> intrests);
 
         Task<OperationResult> SendCommand(ICommand command);
 
@@ -29,5 +31,7 @@ namespace Tauron.Application.CQRS.Client.Core
         Task SendToClient(string client, IMessage serverDomainMessage);
 
         Task SendToClient(string client, OperationResult serverDomainMessage);
+
+        Task Start();
     }
 }

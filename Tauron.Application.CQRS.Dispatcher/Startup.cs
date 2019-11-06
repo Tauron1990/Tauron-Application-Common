@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Tauron.Application.CQRS.Dispatcher.Core;
+using Tauron.Application.CQRS.Dispatcher.Core.Impl;
 using Tauron.Application.CQRS.Dispatcher.Hubs;
 
 namespace Tauron.Application.CQRS.Dispatcher
@@ -22,6 +24,11 @@ namespace Tauron.Application.CQRS.Dispatcher
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            //API GateWay Ocelot
+
+            services.AddSingleton<IConnectionManager, ConnectionManager>();
+
+            services.AddSignalR();
             services.Configure<ServerConfiguration>(c =>
             {
                 c.WithDatabase(_config.GetValue<string>("ConnectionString"));

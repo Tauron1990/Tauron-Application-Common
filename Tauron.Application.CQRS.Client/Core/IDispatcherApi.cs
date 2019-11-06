@@ -8,6 +8,9 @@ namespace Tauron.Application.CQRS.Client.Core
 {
     public interface IDispatcherApi
     {
+        [Put("Hub")]
+        Task Validate([Body] ValidateConnection validateConnection);
+
         [Get("Events")]
         Task<DomainMessage[]> GetEvents([Body]EventsRequest request);
 

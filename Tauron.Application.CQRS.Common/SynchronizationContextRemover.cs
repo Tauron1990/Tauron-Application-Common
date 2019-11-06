@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace Tauron.CQRS.Common
+namespace Tauron.Application.CQRS.Common
 {
     public struct SynchronizationContextRemover : INotifyCompletion
     {

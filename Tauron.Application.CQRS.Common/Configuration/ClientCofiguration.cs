@@ -52,7 +52,7 @@ namespace Tauron.Application.CQRS.Common.Configuration
             BaseUrl = baseUrl.ToString();
 
             EventHubUrl = new Uri(baseUrl, "EventBus").ToString();
-            PersistenceApiUrl = new Uri(baseUrl, "Api/Persistable").ToString();
+            PersistenceApiUrl = new Uri(baseUrl, "Api/Dispatcher").ToString();
 
             return this;
         }

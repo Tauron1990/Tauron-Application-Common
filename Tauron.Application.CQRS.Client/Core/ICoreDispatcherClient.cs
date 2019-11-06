@@ -7,6 +7,6 @@ namespace Tauron.Application.CQRS.Client.Core
 {
     public interface ICoreDispatcherClient : IDispatcherClient
     {
-        void AddHandler(string name, Func<IMessage, DomainMessage, Task> handler);
+        void AddHandler(string name, MessageHandler handler);
     }
 }
