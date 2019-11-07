@@ -152,7 +152,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                 switch (msg)
                 {
                     case ICommand _:
-                        await _dispatcherClient.SendToClient(rawMessage.Sender, OperationResult.Failed(OperationError.Error(-1, $"{e.GetType()} -- {e.Message}")), rawMessage.OperationId^);
+                        await _dispatcherClient.SendToClient(rawMessage.Sender, OperationResult.Failed(OperationError.Error(-1, $"{e.GetType()} -- {e.Message}")), rawMessage.OperationId);
                         break;
                     case IQuery _:
                         await _dispatcherClient.SendToClient(rawMessage.Sender, FastCall.GetCreator(queryResult)() as IMessage);

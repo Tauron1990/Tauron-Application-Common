@@ -81,17 +81,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
             if (!(await _apiKeyStore.Validate(eventId.ApiKey)).Ok) return Forbid();
 
             return _context.EventEntities.Where(ee => ee.Id == eventId.Guid).Where(ee => ee.Version > eventId.Version)
-                .Select(ee => new DomainMessage
-                {
-                    EventData = ee.Data,
-                    EventName = ee.EventName,
-                    EventType = ee.EventType,
-                    OperationId = ee.SequenceNumber,
-                    Id = ee.Id.Value,
-                    TimeStamp = ee.TimeStamp,
-                    Version = ee.Version,
-                    TypeName = ee.OriginType
-                }).ToList();
+                .Select(ee => ee.ToDomainMessage()).ToList();
         }
 
         [Route("Hub")]

@@ -19,8 +19,39 @@ namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
 
         public string OriginType { get; set; }
 
-        public int Version { get; set; }
+        public long? Version { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }
+
+        public EventEntity()
+        {
+            
+        }
+
+        public EventEntity(DomainMessage domainMessage)
+        {
+            Id = domainMessage.Id;
+            EventType = domainMessage.EventType;
+            Data = domainMessage.EventData;
+            EventName = domainMessage.EventName;
+            OriginType = domainMessage.TypeName;
+            Version = domainMessage.Version;
+            TimeStamp = domainMessage.TimeStamp;
+        }
+
+        public DomainMessage ToDomainMessage()
+        {
+            return new DomainMessage
+            {
+                OperationId = SequenceNumber,
+                Id = Id,
+                EventType = EventType,
+                EventData = Data,
+                EventName = EventName,
+                TypeName = OriginType,
+                Version = Version,
+                TimeStamp = TimeStamp
+            };
+        }
     }
 }

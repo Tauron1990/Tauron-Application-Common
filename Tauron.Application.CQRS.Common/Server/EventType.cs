@@ -2,11 +2,10 @@
 {
     public enum EventType
     {
-        Unkowen,
+        AmbientEvent,
         CommandResult,
         AmbientCommand,
         Event,
-        AmbientEvent,
         Query,
         QueryResult
     }

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Tauron.Application.CQRS.Dispatcher.Core;
 using Tauron.Application.CQRS.Dispatcher.Core.Impl;
+using Tauron.Application.CQRS.Dispatcher.EventStore;
 using Tauron.Application.CQRS.Dispatcher.Hubs;
 
 namespace Tauron.Application.CQRS.Dispatcher
@@ -26,7 +27,9 @@ namespace Tauron.Application.CQRS.Dispatcher
         {
             //API GateWay Ocelot
 
+            services.AddScoped<DispatcherDatabaseContext>();
             services.AddSingleton<IConnectionManager, ConnectionManager>();
+            services.AddSingleton<IEventManager, EventManager>();
 
             services.AddSignalR();
             services.Configure<ServerConfiguration>(c =>

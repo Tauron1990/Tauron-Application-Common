@@ -1,9 +1,12 @@
 ﻿using System.Threading.Tasks;
+using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Dispatcher.Core
 {
     public interface IConnectionManager
     {
+        Task SendEvent(DomainMessage domainMessage);
+
         Task Validated(string id, string serviceName, string oldId);
 
         Task Disconected(string id);

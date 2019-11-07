@@ -11,9 +11,13 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
     public sealed class EventHub : Hub
     {
         private readonly IConnectionManager _manager;
+        private readonly IEventManager _eventManager;
 
-        public EventHub(IConnectionManager manager) 
-            => _manager = manager;
+        public EventHub(IConnectionManager manager, IEventManager eventManager)
+        {
+            _manager = manager;
+            _eventManager = eventManager;
+        }
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
@@ -29,21 +33,15 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
             => await _manager.SendingOk(id, Context.ConnectionId);
 
         [HubMethodName(HubMethodNames.PublishEvent), UsedImplicitly]
-        public async Task PublishEvent(DomainMessage domainMessage)
-        {
-
-        }
+        public async Task PublishEvent(DomainMessage domainMessage) 
+            => await _eventManager.DeliverEvent(domainMessage);
 
         [HubMethodName(HubMethodNames.PublishEventGroup), UsedImplicitly]
-        public async Task StoreEvents(DomainMessage[] events)
-        {
-
-        }
+        public async Task StoreEvents(DomainMessage[] events) 
+            => await _eventManager.StoreEvents(events);
 
         [HubMethodName(HubMethodNames.PublishEventToClient), UsedImplicitly]
-        public async Task PublishEventToVlient(DomainMessage message, string client)
-        {
-
-        }
+        public async Task PublishEventToVlient(DomainMessage message, string client) 
+            => await Clients.Client(client).SendAsync(HubMethodNames.PropagateEvent, message);
     }
 }

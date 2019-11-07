@@ -10,11 +10,11 @@ namespace Tauron.Application.CQRS.Common.Server
 
         public string EventData { get; set; } = string.Empty;
 
-        public EventType? EventType { get; set; }
+        public EventType EventType { get; set; }
         
         public long? Version { get; set; }
 
-        public DateTimeOffset? TimeStamp { get; set; }
+        public DateTimeOffset TimeStamp { get; set; }
 
         public Guid? Id { get; set; }
 
