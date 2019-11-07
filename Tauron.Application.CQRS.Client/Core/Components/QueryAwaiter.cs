@@ -30,7 +30,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             return Task.CompletedTask;
         }
 
-        public async Task<TRespond> SendQuery(IQueryHelper<TRespond> query, CancellationToken cancellationToken, Func<IQueryHelper<TRespond>, Task> sender)
+        public async Task<TRespond> SendQuery(IQueryHelper<TRespond> query, Func<IQueryHelper<TRespond>, Task> sender)
         {
             _asyncManualReset.Reset();
 
@@ -40,6 +40,10 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             return _respond;
         }
 
-        public void Dispose() => _disposable.Dispose();
+        public void Dispose()
+        {
+            _disposable.Dispose();
+            _asyncManualReset.Dispose();
+        }
     }
 }

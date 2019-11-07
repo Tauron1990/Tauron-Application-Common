@@ -4,7 +4,7 @@ namespace Tauron.Application.CQRS.Common.Server
 {
     public class DomainMessage
     {
-        public long? SequenceNumber { get; set; }
+        public long OperationId { get; set; }
 
         public string EventName { get; set; } = string.Empty;
 

@@ -2,8 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tauron.Application.CQRS.Client.Commands;
@@ -18,6 +21,28 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 {
     public sealed class DispatcherClient : ICoreDispatcherClient, IDisposable
     {
+        private class OperationWaiter : IDisposable
+        {
+            private ManualResetEventSlim _manualResetEvent;
+            private OperationResult _result;
+
+            public OperationWaiter() 
+                => _manualResetEvent = new ManualResetEventSlim(false);
+
+            public OperationResult Wait() 
+                => _manualResetEvent.Wait(TimeSpan.FromSeconds(30)) 
+                    ? _result 
+                    : OperationResult.Failed(OperationError.Error(-1, "Zeitüberschreitung der Anforderung. Der Server Antworted nicht."));
+
+            public void Push(OperationResult result)
+            {
+                _result = result;
+                _manualResetEvent.Set();
+            }
+
+            public void Dispose() => _manualResetEvent.Dispose();
+        }
+
         private class MessageDelivery
         {
             private readonly DomainMessage _message;
@@ -49,17 +74,31 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             }
         }
 
+        private readonly IServiceScopeFactory _scopeFactory;
+
+        private readonly ConcurrentDictionary<long, OperationWaiter> _operationWaiters = new ConcurrentDictionary<long, OperationWaiter>();
         private readonly ConcurrentDictionary<string, EventRegistration> _eventRegistrations = new ConcurrentDictionary<string, EventRegistration>();
+
         private readonly MessageQueue<MessageDelivery> _messageQueue;
         private readonly SignalRConnectionManager _connectionManager;
 
-        public DispatcherClient(IOptions<ClientCofiguration> configuration, ILogger<ICoreDispatcherClient> logger, IDispatcherApi api, IErrorManager errorManager)
+        public DispatcherClient(IOptions<ClientCofiguration> configuration, ILogger<ICoreDispatcherClient> logger, IDispatcherApi api, IErrorManager errorManager,
+            IServiceScopeFactory scopeFactory)
         {
+            _scopeFactory = scopeFactory;
             _connectionManager = new SignalRConnectionManager(configuration, logger, errorManager, api);
             _connectionManager.MessageRecived += message =>
             {
-                if (_eventRegistrations.TryGetValue(message.EventName, out var eventRegistration)) 
-                    _messageQueue.Enqueue(new MessageDelivery(message, eventRegistration));
+                if (message.EventType == EventType.CommandResult)
+                {
+                    if(_operationWaiters.TryGetValue(message.OperationId, out var waiter))
+                        waiter.Push(message.ToRealMessage<OperationResult>());
+                }
+                else
+                {
+                    if (_eventRegistrations.TryGetValue(message.EventName, out var eventRegistration))
+                        _messageQueue.Enqueue(new MessageDelivery(message, eventRegistration));
+                }
             };
 
             _messageQueue = new MessageQueue<MessageDelivery>();
@@ -81,23 +120,52 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             foreach (var intrest in temp) 
                 _eventRegistrations[intrest.Key] = new EventRegistration(intrest.Select(g => g.Item2));
 
-            await _connectionManager.Call(HubMethodNames.Subscribe, new object[] { temp.Select(g => g.Key).ToArray() });
+            await _connectionManager.Call(HubMethodNames.Subscribe, (Array)temp.Select(g => g.Key).ToArray());
         }
 
         public async Task<OperationResult> SendCommand(ICommand command)
         {
-            
+            var msg = command.ToDomainMessage();
+            using var waiter = new OperationWaiter();
+
+            try
+            {
+                _operationWaiters[msg.OperationId] = waiter;
+                await _connectionManager.Call(HubMethodNames.PublishEvent, msg);
+
+                return waiter.Wait();
+            }
+            finally
+            {
+                _operationWaiters.TryRemove(msg.OperationId, out _);
+            }
         }
 
-        public async Task SendEvent(IAmbientEvent ambientEvent) => throw new NotImplementedException();
+        public Task SendEvent(IAmbientEvent ambientEvent) 
+            => _connectionManager.Call(HubMethodNames.PublishEvent, ambientEvent);
 
-        public async Task StoreEvents(IEnumerable<IEvent> events) => throw new NotImplementedException();
+        public Task StoreEvents(IEnumerable<IEvent> events) 
+            => _connectionManager.Call(HubMethodNames.PublishEventGroup, (Array) events.Select(e => e.ToDomainMessage()).ToArray());
 
-        public async Task<TResponse> Query<TQuery, TResponse>(IQueryHelper<TResponse> query) where TResponse : IQueryResult => throw new NotImplementedException();
+        public async Task<TResponse> Query<TQuery, TResponse>(IQueryHelper<TResponse> query) where TResponse : IQueryResult
+        {
+            using var scope = _scopeFactory.CreateScope();
+            using var awaiter = scope.ServiceProvider.GetRequiredService<QueryAwaiter<TResponse>>();
 
-        public async Task SendToClient(string client, IMessage serverDomainMessage) => throw new NotImplementedException();
+            await _connectionManager.Call(HubMethodNames.PublishEvent, query.ToDomainMessage());
+            return await awaiter.SendQuery(query, msg => _connectionManager.Call(HubMethodNames.PublishEvent, msg.ToDomainMessage()));
+        }
 
-        public async Task SendToClient(string client, OperationResult serverDomainMessage) => throw new NotImplementedException();
+        public async Task SendToClient(string client, IMessage message) 
+            => await _connectionManager.Call(HubMethodNames.PublishEventToClient, message.ToDomainMessage(), client);
+
+        public async Task SendToClient(string client, OperationResult operationResult, long operationId)
+        {
+            var msg = operationResult.ToDomainMessage();
+            msg.OperationId = operationId;
+
+            await _connectionManager.Call(HubMethodNames.PublishEventToClient, msg, client);
+        }
 
         public Task Start() 
             => _messageQueue.Start();

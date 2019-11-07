@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Tauron.Application.CQRS.Client.Infrastructure
 {
-    public sealed class OperationResult
+    public sealed class OperationResult : IMessage
     {
         public static OperationResult Success 
             => new OperationResult(false, ImmutableArray<OperationError>.Empty);
@@ -25,12 +25,12 @@ namespace Tauron.Application.CQRS.Client.Infrastructure
 
         public bool Error { get; set; }
 
-        public IEnumerable<OperationError> Errors { get; set; }
+        public List<OperationError> Errors { get; set; }
 
         private OperationResult(bool error, IEnumerable<OperationError> errors)
         {
             Error = error;
-            Errors = errors;
+            Errors = errors.ToList();
         }
 
         public OperationResult()

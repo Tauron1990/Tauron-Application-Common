@@ -3,7 +3,7 @@
     public enum EventType
     {
         Unkowen,
-        Command,
+        CommandResult,
         AmbientCommand,
         Event,
         AmbientEvent,

@@ -86,7 +86,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
                     EventData = ee.Data,
                     EventName = ee.EventName,
                     EventType = ee.EventType,
-                    SequenceNumber = ee.SequenceNumber,
+                    OperationId = ee.SequenceNumber,
                     Id = ee.Id.Value,
                     TimeStamp = ee.TimeStamp,
                     Version = ee.Version,

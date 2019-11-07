@@ -28,9 +28,9 @@ namespace Tauron.Application.CQRS.Client.Core
         Task<TResponse> Query<TQuery, TResponse>(IQueryHelper<TResponse> query) 
             where TResponse : IQueryResult;
 
-        Task SendToClient(string client, IMessage serverDomainMessage);
+        Task SendToClient(string client, IMessage message);
 
-        Task SendToClient(string client, OperationResult serverDomainMessage);
+        Task SendToClient(string client, OperationResult operationResult, long operationId);
 
         Task Start();
     }

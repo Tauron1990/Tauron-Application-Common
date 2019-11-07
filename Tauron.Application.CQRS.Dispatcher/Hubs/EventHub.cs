@@ -33,5 +33,17 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
         {
 
         }
+
+        [HubMethodName(HubMethodNames.PublishEventGroup), UsedImplicitly]
+        public async Task StoreEvents(DomainMessage[] events)
+        {
+
+        }
+
+        [HubMethodName(HubMethodNames.PublishEventToClient), UsedImplicitly]
+        public async Task PublishEventToVlient(DomainMessage message, string client)
+        {
+
+        }
     }
 }

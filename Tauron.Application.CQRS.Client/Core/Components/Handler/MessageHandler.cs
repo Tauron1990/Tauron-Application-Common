@@ -133,13 +133,13 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                                 var result = await specification.IsSatisfiedBy(msg);
                                 if (result.Error)
                                 {
-                                    await _dispatcherClient.SendToClient(rawMessage.Sender, result);
+                                    await _dispatcherClient.SendToClient(rawMessage.Sender, result, rawMessage.OperationId);
                                     return;
                                 }
                             }
                         }
 
-                        await _dispatcherClient.SendToClient(rawMessage.Sender, (OperationResult) (await command.Invoke(msg)));
+                        await _dispatcherClient.SendToClient(rawMessage.Sender, (OperationResult) (await command.Invoke(msg)), rawMessage.OperationId);
                         break;
                     case Event @event:
                         await @event.Invoke(msg);
@@ -152,7 +152,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                 switch (msg)
                 {
                     case ICommand _:
-                        await _dispatcherClient.SendToClient(rawMessage.Sender, OperationResult.Failed(OperationError.Error(-1, $"{e.GetType()} -- {e.Message}")));
+                        await _dispatcherClient.SendToClient(rawMessage.Sender, OperationResult.Failed(OperationError.Error(-1, $"{e.GetType()} -- {e.Message}")), rawMessage.OperationId^);
                         break;
                     case IQuery _:
                         await _dispatcherClient.SendToClient(rawMessage.Sender, FastCall.GetCreator(queryResult)() as IMessage);

@@ -41,8 +41,8 @@ namespace Tauron.Application.CQRS.Client
                           EventData = JsonSerializer.Serialize(message),
                           TypeName = type.AssemblyQualifiedName,
                           EventName = type.Name,
-                          EventType = EventType.Command,
-                          SequenceNumber = DateTime.UtcNow.Ticks + Random.Next()
+                          EventType = EventType.CommandResult,
+                          OperationId = DateTime.UtcNow.Ticks + Random.Next()
                       };
 
             switch (message)

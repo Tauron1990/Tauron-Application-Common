@@ -39,7 +39,14 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         private async Task EventRecived(DomainMessage msg, int id)
         {
             await new SynchronizationContextRemover();
-            MessageRecived?.Invoke(msg);
+            try
+            {
+                MessageRecived?.Invoke(msg);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error on Processing Message");
+            }
             await _connection.SendAsync(HubMethodNames.SendingSuccseded, id);
         }
 
@@ -67,6 +74,9 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
         public Task Call(string name, params object[] args) 
             => _connection.SendCoreAsync(name, args);
+
+        public Task Call(string name, Array arg)
+            => _connection.SendAsync(name, arg);
 
         public async Task Disconnect() 
             => await _connection.StopAsync();
