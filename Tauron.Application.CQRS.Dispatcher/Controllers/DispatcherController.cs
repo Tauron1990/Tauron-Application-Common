@@ -33,7 +33,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
             if (!(await _apiKeyStore.Validate(id.ApiKey)).Ok)
                 return base.Forbid();
 
-            string realId = id.Id;
+            string realId = id.Id ?? string.Empty;
 
             var entity = await _context.ObjectStades.AsNoTracking().FirstOrDefaultAsync(o => o.Identifer == realId);
 
@@ -53,20 +53,28 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
             if (!(await _apiKeyStore.Validate(stade.ApiKey)).Ok)
                 return base.Forbid();
 
-            string id = stade.ObjectStade.Identifer;
+            string? id = stade.ObjectStade?.Identifer;
+            if (string.IsNullOrEmpty(id))
+                return ValidationProblem("No Id");
 
             var entity = await _context.ObjectStades.FirstOrDefaultAsync(o => o.Identifer == id);
 
             if (entity != null)
-                entity.Data = stade.ObjectStade.Data;
+            {
+                var data = stade.ObjectStade?.Data;
+                if(data != null)
+                    entity.Data = data;
+            }
             else
             {
-                _context.ObjectStades.Add(new ObjectStadeEntity
-                                          {
-                                              Data = stade.ObjectStade.Data.ToString(),
-                                              Identifer = stade.ObjectStade.Identifer,
-                                              //OriginType = stade.ObjectStade.OriginalType
-                                          });
+                var data = stade.ObjectStade?.Data;
+                if (data != null)
+                    _context.ObjectStades.Add(new ObjectStadeEntity
+                    {
+                        Data = data,
+                        Identifer = id,
+                        //OriginType = stade.ObjectStade.OriginalType
+                    });
             }
 
             await _context.SaveChangesAsync();
@@ -92,7 +100,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
             if (!ok)
                 return Forbid();
 
-            await _connectionManager.Validated(validateConnection.NewId, serviceName, validateConnection.OldId);
+            await _connectionManager.Validated(id: validateConnection.NewId ?? string.Empty, serviceName, validateConnection.OldId ?? string.Empty);
             return Ok();
         }
     }

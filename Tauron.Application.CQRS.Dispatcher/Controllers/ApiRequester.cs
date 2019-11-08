@@ -24,7 +24,11 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
         {
             if (!_configuration.GetValue<bool>("FreeAcess")) return Forbid();
 
-            return await _keyStore.Register(serviceName);
+            var key = await _keyStore.Register(serviceName);
+
+            if (key == null) return Conflict("Service Name already exis");
+
+            return key;
         }
 
         [Route(nameof(RemoveApiKey))]
