@@ -12,11 +12,11 @@ namespace Tauron.Application.CQRS.Common
         private readonly BlockingCollection<TMessage> _incomming;
         private readonly BlockingCollection<Task> _processorQueue;
 
-        public event Func<Exception, Task> OnError;
+        public event Func<Exception, Task>? OnError;
 
-        public event Func<TMessage, Task> OnWork;
+        public event Func<TMessage, Task>? OnWork;
 
-        private Task _dispatcher;
+        private readonly Task _dispatcher;
         private bool _stop;
 
         public MessageQueue(int maxParallel = int.MaxValue, bool skipExceptions = true)
@@ -25,18 +25,8 @@ namespace Tauron.Application.CQRS.Common
 
             _incomming = new BlockingCollection<TMessage>();
             _processorQueue = new BlockingCollection<Task>(maxParallel);
-        }
 
-        public void Enqueue(TMessage msg) => _incomming.Add(msg);
-
-        public async Task Start()
-        {
-            if(_stop) 
-                throw new InvalidOperationException("Message Queue Stoped");
-            if (_dispatcher != null)
-                throw new InvalidOperationException("Message Queue started");
-
-            _dispatcher = Task.Run(async () =>
+            _dispatcher = new Task(async () =>
             {
                 foreach (var message in _incomming.GetConsumingEnumerable())
                 {
@@ -57,6 +47,18 @@ namespace Tauron.Application.CQRS.Common
                     }
                 }
             }).ContinueWith(t => _processorQueue.CompleteAdding());
+        }
+
+        public void Enqueue(TMessage msg) => _incomming.Add(msg);
+
+        public async Task Start()
+        {
+            if(_stop) 
+                throw new InvalidOperationException("Message Queue Stoped");
+            if (_dispatcher.Status == TaskStatus.Running)
+                throw new InvalidOperationException("Message Queue started");
+
+            _dispatcher.Start();
 
             foreach (var task in _processorQueue.GetConsumingEnumerable())
             {

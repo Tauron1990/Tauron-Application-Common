@@ -2,10 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Client;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -19,22 +18,24 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core.Components
 {
+    [UsedImplicitly]
     public sealed class DispatcherClient : ICoreDispatcherClient, IDisposable
     {
         private class OperationWaiter : IDisposable
         {
-            private ManualResetEventSlim _manualResetEvent;
-            private OperationResult _result;
+            private readonly ManualResetEventSlim _manualResetEvent;
+            private OperationResult? _result;
 
             public OperationWaiter() 
                 => _manualResetEvent = new ManualResetEventSlim(false);
 
-            public OperationResult Wait() 
-                => _manualResetEvent.Wait(TimeSpan.FromSeconds(30)) 
-                    ? _result 
-                    : OperationResult.Failed(OperationError.Error(-1, "Zeitüberschreitung der Anforderung. Der Server Antworted nicht."));
+            public OperationResult Wait()
+            {
+                _manualResetEvent.Wait(TimeSpan.FromSeconds(30));
+                return _result ?? OperationResult.Failed(OperationError.Error(-1, "Zeitüberschreitung der Anforderung. Der Server Antortet nicht oder es wurde Keine antwort geschiekt."));
+            }
 
-            public void Push(OperationResult result)
+            public void Push(OperationResult? result)
             {
                 _result = result;
                 _manualResetEvent.Set();
@@ -96,7 +97,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
                 }
                 else
                 {
-                    if (_eventRegistrations.TryGetValue(message.EventName, out var eventRegistration))
+                    if (_eventRegistrations.TryGetValue(message.EventName ?? string.Empty, out var eventRegistration))
                         _messageQueue.Enqueue(new MessageDelivery(message, eventRegistration));
                 }
             };
@@ -147,7 +148,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         public Task StoreEvents(IEnumerable<IEvent> events) 
             => _connectionManager.Call(HubMethodNames.PublishEventGroup, (Array) events.Select(e => e.ToDomainMessage()).ToArray());
 
-        public async Task<TResponse> Query<TQuery, TResponse>(IQueryHelper<TResponse> query) where TResponse : IQueryResult
+        public async Task<TResponse?> Query<TQuery, TResponse>(IQueryHelper<TResponse> query) where TResponse : class, IQueryResult
         {
             using var scope = _scopeFactory.CreateScope();
             using var awaiter = scope.ServiceProvider.GetRequiredService<QueryAwaiter<TResponse>>();

@@ -25,11 +25,11 @@ namespace Tauron.Application.CQRS.Client
     {
         private static readonly Random Random = new Random();
 
-        public static TType ToRealMessage<TType>(this DomainMessage message)
+        public static TType? ToRealMessage<TType>(this DomainMessage message)
             where TType : class
             => JsonSerializer.Deserialize(message.EventData, Type.GetType(message.TypeName)) as TType;
 
-        public static IMessage ToRealMessage(this DomainMessage message)
+        public static IMessage? ToRealMessage(this DomainMessage message)
             => JsonSerializer.Deserialize(message.EventData, Type.GetType(message.TypeName)) as IMessage;
 
         public static DomainMessage ToDomainMessage(this IMessage message)

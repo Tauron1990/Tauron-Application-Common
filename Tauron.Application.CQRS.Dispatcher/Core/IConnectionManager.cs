@@ -5,6 +5,8 @@ namespace Tauron.Application.CQRS.Dispatcher.Core
 {
     public interface IConnectionManager
     {
+        Task CheckId(string id);
+
         Task SendEvent(DomainMessage domainMessage);
 
         Task Validated(string id, string serviceName, string oldId);

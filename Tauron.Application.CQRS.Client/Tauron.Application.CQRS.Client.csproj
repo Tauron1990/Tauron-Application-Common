@@ -4,6 +4,8 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Tauron.Application.CQRS.Client</AssemblyName>
     <RootNamespace>Tauron.Application.CQRS.Client</RootNamespace>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

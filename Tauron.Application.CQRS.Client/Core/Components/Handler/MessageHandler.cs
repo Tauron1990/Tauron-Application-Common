@@ -9,6 +9,7 @@ using Tauron.Application.CQRS.Client.Infrastructure;
 using Tauron.Application.CQRS.Client.Querys;
 using Tauron.Application.CQRS.Client.Specifications;
 using Tauron.Application.CQRS.Client.Specifications.Fluent;
+using Tauron.Application.CQRS.Common;
 using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core.Components.Handler
@@ -17,13 +18,13 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
     {
         private abstract class InvokerBase
         {
-            public abstract Task<object> Invoke(IMessage msg);
+            public abstract Task<object?> Invoke(IMessage msg);
         }
         private abstract class InvokerHelper : InvokerBase
         {
             private readonly Type _targetType;
             private readonly Type _targetInterface;
-            private FastInvokeHandler _methodInfo;
+            private FastInvokeHandler? _methodInfo;
 
             protected InvokerHelper(Type targetType, Type targetInterface)
             {
@@ -49,7 +50,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
             public Command(Func<object> handler, Type targetType, Type targetInterface)
                 : base(targetType, targetInterface) => _handler = handler;
 
-            public override async Task<object> Invoke(IMessage msg) 
+            public override async Task<object?> Invoke(IMessage msg) 
                 => await (Task<OperationResult>)GetMethod()(_handler(), msg);
         }
         private class Event : InvokerHelper
@@ -58,7 +59,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
 
             public Event(Func<object> handler, Type targetType, Type targetInterface) : base(targetType, targetInterface) => _handler = handler;
 
-            public override async Task<object> Invoke(IMessage msg)
+            public override async Task<object?> Invoke(IMessage msg)
             {
                 await (Task)GetMethod()(_handler(), msg);
                 return null;
@@ -77,7 +78,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                 QueryResult = targetInterface.GetGenericArguments()[1];
             }
 
-            public override async Task<object> Invoke(IMessage msg)
+            public override async Task<object?> Invoke(IMessage msg)
             {
                 var task = (Task)GetMethod()(_handler(), msg);
                 await task;
@@ -85,12 +86,12 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
             }
         }
 
-        private readonly InvokerBase _invoker;
+        private readonly InvokerBase? _invoker;
         private readonly Func<object> _target;
         private readonly ISession _session;
         private readonly ILogger<HandlerBase> _logger;
         private readonly IDispatcherClient _dispatcherClient;
-        private object _realTarget;
+        private object? _realTarget;
 
         public MessageHandler(ILogger<HandlerBase> logger, IDispatcherClient dispatcherClient, ISession session, Func<object> target, Type handlerType, Type inter)
         {
@@ -101,14 +102,14 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
 
                 var targetType = inter.GetGenericTypeDefinition();
 
-                if (targetType == typeof(ICommandHandler<>)) _invoker = new Command(() => _realTarget, handlerType, inter);
-                else if (targetType == typeof(IEventHandler<>)) _invoker = new Event(() => _realTarget, handlerType, inter);
-                else if (targetType == typeof(IReadModel<,>)) _invoker = new ReadModel(() => _realTarget, handlerType, inter);
+                if (targetType == typeof(ICommandHandler<>)) _invoker = new Command(() => Guard.CheckNull(_realTarget), handlerType, inter);
+                else if (targetType == typeof(IEventHandler<>)) _invoker = new Event(() => Guard.CheckNull(_realTarget), handlerType, inter);
+                else if (targetType == typeof(IReadModel<,>)) _invoker = new ReadModel(() => Guard.CheckNull(_realTarget), handlerType, inter);
         }
 
         protected override async Task HandleInternal(TMessage msg, DomainMessage rawMessage)
         {
-            Type queryResult = null;
+            Type? queryResult = null;
 
             _realTarget = _target();
             var commandHandler = _realTarget as CommandHandlerBase; 
@@ -122,7 +123,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                 {
                     case ReadModel readModel:
                         queryResult = readModel.QueryResult;
-                        await _dispatcherClient.SendToClient(rawMessage.Sender, (IMessage) (await invoker.Invoke(msg)));
+                        await _dispatcherClient.SendToClient(GetSender(rawMessage), Guard.CheckNull(await invoker.Invoke(msg) as IMessage));
                         break;
                     case Command command:
                         if (_realTarget is ISpecProvider<TMessage> specProvider)
@@ -133,13 +134,13 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                                 var result = await specification.IsSatisfiedBy(msg);
                                 if (result.Error)
                                 {
-                                    await _dispatcherClient.SendToClient(rawMessage.Sender, result, rawMessage.OperationId);
+                                    await _dispatcherClient.SendToClient(GetSender(rawMessage), result, rawMessage.OperationId);
                                     return;
                                 }
                             }
                         }
 
-                        await _dispatcherClient.SendToClient(rawMessage.Sender, (OperationResult) (await command.Invoke(msg)), rawMessage.OperationId);
+                        await _dispatcherClient.SendToClient(GetSender(rawMessage), Guard.CheckNull(await command.Invoke(msg) as OperationResult), rawMessage.OperationId);
                         break;
                     case Event @event:
                         await @event.Invoke(msg);
@@ -152,10 +153,13 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                 switch (msg)
                 {
                     case ICommand _:
-                        await _dispatcherClient.SendToClient(rawMessage.Sender, OperationResult.Failed(OperationError.Error(-1, $"{e.GetType()} -- {e.Message}")), rawMessage.OperationId);
+                        await _dispatcherClient.SendToClient(GetSender(rawMessage), OperationResult.Failed(OperationError.Error(-1, $"{e.GetType()} -- {e.Message}")), rawMessage.OperationId);
                         break;
                     case IQuery _:
-                        await _dispatcherClient.SendToClient(rawMessage.Sender, FastCall.GetCreator(queryResult)() as IMessage);
+                        await _dispatcherClient.SendToClient(GetSender(rawMessage), 
+                            Guard.CheckNull(
+                            FastCall.GetCreator(
+                                Guard.CheckNull(queryResult))() as IMessage));
                         break;
                 }
             }
@@ -163,8 +167,16 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
             {
                 _realTarget = null;
                 if (commandHandler != null)
-                    commandHandler.Session = null;
+                    commandHandler.Session = null!;
             }
+        }
+
+        private static string GetSender(DomainMessage message)
+        {
+            if(message.Sender == null)
+                throw new InvalidOperationException("No Sender returnd from Server  ");
+
+            return message.Sender;
         }
     }
 }

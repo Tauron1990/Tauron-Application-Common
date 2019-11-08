@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Tauron.Application.CQRS.Client.Domain;
 using Tauron.Application.CQRS.Client.Events;
 using Tauron.Application.CQRS.Client.Snapshotting;
+using Tauron.Application.CQRS.Common;
 using Tauron.Application.CQRS.Common.Configuration;
 using Tauron.Application.CQRS.Common.Dto.Persistable;
 
@@ -89,7 +90,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
                 var snapshotVersion = await TryRestoreAggregateFromSnapshot(aggregateId, aggregate).ConfigureAwait(false);
 
                 var events = (await _dispatcherApi.GetEvents(new EventsRequest(_options.Value.ApiKey, aggregateId, snapshotVersion)).ConfigureAwait(false))
-                   .Select(dm => dm.ToRealMessage<IEvent>())
+                   .Select(dm => Guard.CheckNull(dm.ToRealMessage<IEvent>()))
                    .Where(desc => desc.Version > snapshotVersion);
                 
                 await aggregate.LoadFromHistory(events);

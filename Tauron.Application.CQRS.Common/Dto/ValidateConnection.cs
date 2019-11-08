@@ -2,11 +2,11 @@
 {
     public class ValidateConnection
     {
-        public string NewId { get; set; }
+        public string? NewId { get; set; }
 
-        public string OldId { get; set; }
+        public string? OldId { get; set; }
 
-        public string ApiKey { get; set; }
+        public string? ApiKey { get; set; }
 
         public ValidateConnection()
         {

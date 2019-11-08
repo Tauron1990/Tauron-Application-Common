@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
@@ -18,7 +19,7 @@ namespace Tauron.Application.CQRS.Client.Domain
     {
         private static ImmutableDictionary<Type, ObjectFactory> _eventFactories = ImmutableDictionary<Type, ObjectFactory>.Empty;
 
-        internal static IServiceProvider ServiceProvider;
+        internal static IServiceProvider? ServiceProvider;
 
         internal static readonly ConcurrentDictionary<Guid, ReaderWriterLockSlim> AggregateLocks = new ConcurrentDictionary<Guid, ReaderWriterLockSlim>();
 
@@ -29,17 +30,18 @@ namespace Tauron.Application.CQRS.Client.Domain
 
         public long Version { get; internal set; }
 
-        protected TType GetValue<TType>([CallerMemberName] string propertyName = null)
+        protected TType GetValue<TType>([CallerMemberName] string? propertyName = null)
+            where TType : new()
         {
-            if (string.IsNullOrWhiteSpace(propertyName)) return default;
+            if (string.IsNullOrWhiteSpace(propertyName)) return default!;
 
             if (_data.TryGetValue(propertyName, out var objectInfo) && objectInfo.Element is TType content)
                 return content;
 
-            return default;
+            return default!;
         }
 
-        protected void SetValue<TType>(TType content, [CallerMemberName] string propetyName = null)
+        protected void SetValue<TType>(TType content, [CallerMemberName] string? propetyName = null)
         {
             if(string.IsNullOrWhiteSpace(propetyName)) return;
 
@@ -124,7 +126,7 @@ namespace Tauron.Application.CQRS.Client.Domain
 
             public SnapshotData()
             {
-                
+                ObjectInfos = ImmutableDictionary<string, ObjectInfo>.Empty;
             }
         }
     }

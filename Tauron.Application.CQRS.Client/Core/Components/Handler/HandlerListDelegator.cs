@@ -18,8 +18,10 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
             _serviceScopeFactory = serviceScopeFactory;
         }
 
-        public async Task Handle(IMessage msg, DomainMessage rawMessage)
+        public async Task Handle(IMessage? msg, DomainMessage rawMessage)
         {
+            if(msg == null) return;
+
             using var scope = _serviceScopeFactory.CreateScope();
 
             if (rawMessage.EventType == EventType.QueryResult)

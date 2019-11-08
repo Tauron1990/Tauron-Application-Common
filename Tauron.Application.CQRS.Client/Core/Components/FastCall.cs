@@ -15,9 +15,15 @@ namespace Tauron.Application.CQRS.Client.Core.Components
     {
         private static readonly ConcurrentDictionary<object, object> Cache = new ConcurrentDictionary<object, object>();
 
-        private static TValue GetOrAdd<TKey, TValue>(TKey key, Func<TKey, TValue> value)
+        private static TValue GetOrAdd<TKey, TValue>(TKey key, Func<TKey, TValue?> value)
+            where TValue : class
         {
-            return (TValue) Cache.GetOrAdd(key, k => value((TKey)k));
+            if(key == null)
+                throw new ArgumentNullException(nameof(key));
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
+            return (TValue) Cache.GetOrAdd(key, k => value.Invoke((TKey)k)!);
         }
 
         [PublicAPI]
@@ -66,13 +72,12 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
             Cache.Remove(key, out _);
             throw new InvalidOperationException($"{instance.GetType().Name} : {interfaceType.Name} -- {methodName} was Not Found");
-
         }
 
         public static FastInvokeHandler GetMethodInvoker(MethodInfo methodInfo)
             => GetOrAdd(methodInfo, GetMethodInvokerNoChache);
 
-        private static FastInvokeHandler GetMethodInvokerNoChache(MethodInfo methodInfo)
+        private static FastInvokeHandler? GetMethodInvokerNoChache(MethodInfo methodInfo)
         {
             if (methodInfo.DeclaringType == null) return null;
 
@@ -180,10 +185,9 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             }
         }
 
-        public static Func<object> GetCreator(Type target)
+        public static Func<object?> GetCreator(Type target)
         {
-            if (target == null) return () => null;
-            return GetOrAdd(new CreatorKey(target), ck => GetCreatorNoCache(ck.TargetType));
+            return target == null ? () => null : GetOrAdd(new CreatorKey(target), ck => GetCreatorNoCache(ck.TargetType));
         }
 
         private static Func<object> GetCreatorNoCache(Type type)

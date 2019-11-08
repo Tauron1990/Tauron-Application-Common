@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Tauron.Application.CQRS.Client.Events;
 using Tauron.Application.CQRS.Client.Infrastructure;
+using Tauron.Application.CQRS.Common;
 
 namespace Tauron.Application.CQRS.Client.Core.Components
 {
@@ -24,7 +25,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
             private sealed class WeakActionInstance : WeakAction<T>
             {
-                private readonly WeakReference _weakRef;
+                private readonly WeakReference? _weakRef;
 
                 private WeakActionInstance(MethodInfo method)
                     : base(method)
@@ -39,13 +40,13 @@ namespace Tauron.Application.CQRS.Client.Core.Components
                     _weakRef = new WeakReference(instance);
                 }
 
-                private bool HasBeenCollected => !_weakRef.IsAlive;
+                private bool HasBeenCollected => !_weakRef?.IsAlive ?? true;
 
-                protected override T GetMethod()
+                protected override T? GetMethod()
                 {
                     if (HasBeenCollected) { return null; }
 
-                    var localTarget = _weakRef.Target;
+                    var localTarget = _weakRef?.Target;
                     if (localTarget == null) { return null; }
 
                     return System.Delegate.CreateDelegate(typeof(T), localTarget, _method.Name) as T;
@@ -56,19 +57,16 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
             public static WeakAction<T> Create(object instance, Expression expression) => new WeakActionInstance(instance, GetMethodInfo(expression));
 
-            protected abstract T GetMethod();
+            protected abstract T? GetMethod();
 
-            public T Delegate => GetMethod();
+            public T? Delegate => GetMethod();
 
             private static MethodInfo GetMethodInfo(Expression expression)
             {
-                var lambda = expression as LambdaExpression;
-                if (lambda == null)
+                if (!(expression is LambdaExpression lambda))
                     throw new ArgumentException("expression is not LambdaExpression");
 
-                var outermostExpression = lambda.Body as MethodCallExpression;
-
-                if (outermostExpression == null)
+                if (!(lambda.Body is MethodCallExpression outermostExpression))
                     throw new ArgumentException("Invalid Expression. Expression should consist of a Method call only.");
 
                 return outermostExpression.Method;
@@ -92,7 +90,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         private readonly Dictionary<object, WeakAction<Func<TMessage, Task>>> _handlerRegistry = new Dictionary<object, WeakAction<Func<TMessage, Task>>>();
 
         public GlobalEventHandler(IDispatcherClient client) 
-            => ((ICoreDispatcherClient)client).AddHandler(typeof(TMessage).FullName, (message, domainMessage) => Handle(message));
+            => ((ICoreDispatcherClient)client).AddHandler(typeof(TMessage).FullName, (message, domainMessage) => Handle(Guard.CheckNull(message)));
 
         //public IDisposable Register(Func<TMessage, Task> awaiter)
         //{
@@ -117,7 +115,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             foreach (var task in _handlerRegistry.Values
                 .Select(handlerRegistryValue => handlerRegistryValue.Delegate?.Invoke(message))
                 .Where(t => t != null)) 
-                await task;
+                await task!;
         }
 
         public override Task Handle(IMessage message) => Handle((TMessage) message);

@@ -26,22 +26,38 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
         }
 
         [HubMethodName(HubMethodNames.Subscribe), UsedImplicitly]
-        public async Task Subscribe(string[] events) => await _manager.AddSubscription(Context.ConnectionId, events);
+        public async Task Subscribe(string[] events)
+        {
+            await _manager.CheckId(Context.ConnectionId);
+            await _manager.AddSubscription(Context.ConnectionId, events);
+        }
 
         [HubMethodName(HubMethodNames.SendingSuccseded), UsedImplicitly]
-        public async Task SendingSuccseded(int id) 
-            => await _manager.SendingOk(id, Context.ConnectionId);
+        public async Task SendingSuccseded(int id)
+        {
+            await _manager.CheckId(Context.ConnectionId);
+            await _manager.SendingOk(id, Context.ConnectionId);
+        }
 
         [HubMethodName(HubMethodNames.PublishEvent), UsedImplicitly]
-        public async Task PublishEvent(DomainMessage domainMessage) 
-            => await _eventManager.DeliverEvent(domainMessage);
+        public async Task PublishEvent(DomainMessage domainMessage)
+        {
+            await _manager.CheckId(Context.ConnectionId);
+            await _eventManager.DeliverEvent(domainMessage);
+        }
 
         [HubMethodName(HubMethodNames.PublishEventGroup), UsedImplicitly]
-        public async Task StoreEvents(DomainMessage[] events) 
-            => await _eventManager.StoreEvents(events);
+        public async Task StoreEvents(DomainMessage[] events)
+        {
+            await _manager.CheckId(Context.ConnectionId);
+            await _eventManager.StoreEvents(events);
+        }
 
         [HubMethodName(HubMethodNames.PublishEventToClient), UsedImplicitly]
-        public async Task PublishEventToVlient(DomainMessage message, string client) 
-            => await Clients.Client(client).SendAsync(HubMethodNames.PropagateEvent, message);
+        public async Task PublishEventToVlient(DomainMessage message, string client)
+        {
+            await _manager.CheckId(Context.ConnectionId);
+            await Clients.Client(client).SendAsync(HubMethodNames.PropagateEvent, message);
+        }
     }
 }

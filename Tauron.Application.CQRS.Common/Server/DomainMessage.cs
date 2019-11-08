@@ -6,9 +6,9 @@ namespace Tauron.Application.CQRS.Common.Server
     {
         public long OperationId { get; set; }
 
-        public string EventName { get; set; } = string.Empty;
+        public string? EventName { get; set; }
 
-        public string EventData { get; set; } = string.Empty;
+        public string? EventData { get; set; }
 
         public EventType EventType { get; set; }
         
@@ -18,8 +18,8 @@ namespace Tauron.Application.CQRS.Common.Server
 
         public Guid? Id { get; set; }
 
-        public string TypeName { get; set; } = string.Empty;
+        public string? TypeName { get; set; }
 
-        public string Sender { get; set; }
+        public string? Sender { get; set; }
     }
 }

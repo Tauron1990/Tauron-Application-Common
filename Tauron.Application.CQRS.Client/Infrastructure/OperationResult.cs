@@ -35,7 +35,7 @@ namespace Tauron.Application.CQRS.Client.Infrastructure
 
         public OperationResult()
         {
-            
+            Errors = new List<OperationError>();
         }
     }
 }

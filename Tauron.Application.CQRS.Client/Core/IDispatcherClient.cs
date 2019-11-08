@@ -9,7 +9,7 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core
 {
-    public delegate Task MessageHandler(IMessage message, DomainMessage domainMessage);
+    public delegate Task MessageHandler(IMessage? message, DomainMessage domainMessage);
 
     public interface IDispatcherClient
     {
@@ -25,8 +25,8 @@ namespace Tauron.Application.CQRS.Client.Core
 
         Task StoreEvents(IEnumerable<IEvent> events);
 
-        Task<TResponse> Query<TQuery, TResponse>(IQueryHelper<TResponse> query) 
-            where TResponse : IQueryResult;
+        Task<TResponse?> Query<TQuery, TResponse>(IQueryHelper<TResponse> query) 
+            where TResponse : class, IQueryResult;
 
         Task SendToClient(string client, IMessage message);
 

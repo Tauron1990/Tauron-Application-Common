@@ -4,7 +4,7 @@ namespace Tauron.Application.CQRS.Common.Dto.Persistable
 {
     public class EventsRequest
     {
-        public string ApiKey { get; set; }
+        public string? ApiKey { get; set; }
 
         public Guid Guid { get; set; }
 

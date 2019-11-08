@@ -13,7 +13,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 {
     public sealed class SignalRConnectionManager
     {
-        public event Action<DomainMessage> MessageRecived;
+        public event Action<DomainMessage>? MessageRecived;
 
         private readonly IOptions<ClientCofiguration> _configuration;
         private readonly ILogger<IDispatcherClient> _logger;
