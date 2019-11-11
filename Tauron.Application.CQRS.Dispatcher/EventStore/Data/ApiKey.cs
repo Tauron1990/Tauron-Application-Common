@@ -7,8 +7,8 @@ namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
         [Key]
         public int Id { get; set; }
 
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        public string Key { get; set; }
+        public string? Key { get; set; }
     }
 }

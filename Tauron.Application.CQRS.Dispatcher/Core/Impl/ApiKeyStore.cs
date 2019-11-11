@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
+using Tauron.Application.CQRS.Common;
 using Tauron.Application.CQRS.Dispatcher.EventStore;
 using Tauron.Application.CQRS.Dispatcher.EventStore.Data;
 
@@ -16,7 +17,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 {
     public class ApiKeyStore : IApiKeyStore
     {
-        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly IObjectFactory _objectFactory;
         private readonly ILogger<ApiKeyStore> _logger;
         private readonly IConfiguration _configuration;
 
@@ -27,9 +28,9 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
         private readonly AsyncLock _asyncLock = new AsyncLock();
         private bool _isInit;
 
-        public ApiKeyStore(IServiceScopeFactory serviceScopeFactory, ILogger<ApiKeyStore> logger, IConfiguration configuration)
+        public ApiKeyStore(IObjectFactory objectFactory, ILogger<ApiKeyStore> logger, IConfiguration configuration)
         {
-            _serviceScopeFactory = serviceScopeFactory;
+            _objectFactory = objectFactory;
             _logger = logger;
             _configuration = configuration;
         }
@@ -51,7 +52,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
             var ent = _keys.FirstOrDefault(ak => ak.Key == apiKey);
 
-            return ent == null ? _configuration.GetValue<bool>("DevelopKey") ? (true, "Develop") : (false, string.Empty) : (true, ent.Name);
+            return ent == null ? _configuration.GetValue<bool>("DevelopKey") ? (true, "Develop") : (false, string.Empty) : (true, Guard.CheckNull(ent.Name));
         }
 
         public async Task<string?> Register(string name)
@@ -66,8 +67,8 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
                 try
                 {
-                    using var scope = _serviceScopeFactory.CreateScope();
-                    await using var context = scope.ServiceProvider.GetRequiredService<DispatcherDatabaseContext>();
+                    using var scope = _objectFactory.CreateDatabase();
+                    await using var context = scope.Target;
                     var key = Convert.ToBase64String(_hashAlgorithm.Value.ComputeHash(Encoding.UTF8.GetBytes(DateTime.Now + name)));
                     var ent = new ApiKey
                     {
@@ -103,8 +104,8 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
                 if (ent == null) return false;
                 _keys.Remove(ent);
 
-                using var scope = _serviceScopeFactory.CreateScope();
-                await using var context = scope.ServiceProvider.GetRequiredService<DispatcherDatabaseContext>();
+                using var scope = _objectFactory.CreateDatabase();
+                await using var context = scope.Target;
 
                 ent = await context.ApiKeys.FirstOrDefaultAsync(k => k.Name == serviceName);
                 if (ent == null) return false;
@@ -122,9 +123,9 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
             _logger.LogInformation("Init Api Key Storage");
 
-            using (var scope = _serviceScopeFactory.CreateScope())
+            using (var scope = _objectFactory.CreateDatabase())
             {
-                await using var context = scope.ServiceProvider.GetRequiredService<DispatcherDatabaseContext>();
+                await using var context = scope.Target;
                 _keys.AddRange(context.ApiKeys.AsNoTracking());
             }
 

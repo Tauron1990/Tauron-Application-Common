@@ -27,6 +27,7 @@ namespace Tauron.Application.CQRS.Dispatcher
         {
             //API GateWay Ocelot
 
+            services.AddTransient<IObjectFactory, InternalObjectFactory>();
             services.AddScoped<DispatcherDatabaseContext>();
             services.AddSingleton<IConnectionManager, ConnectionManager>();
             services.AddSingleton<IEventManager, EventManager>();

@@ -12,11 +12,13 @@ namespace Tauron.Application.CQRS.Dispatcher.EventStore
 
         private readonly IOptions<ServerConfiguration> _serverOptions;
 
-        public DbSet<EventEntity> EventEntities { get; set; }
+        public DbSet<EventEntity> EventEntities => Set<EventEntity>();
 
-        public DbSet<ApiKey> ApiKeys { get; set; }
+        public DbSet<PendingMessageEntity> PendingMessages => Set<PendingMessageEntity>();
 
-        public DbSet<ObjectStadeEntity> ObjectStades { get; set; }
+        public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+
+        public DbSet<ObjectStadeEntity> ObjectStades => Set<ObjectStadeEntity>();
 
         public DispatcherDatabaseContext(IOptions<ServerConfiguration> serverOptions) 
             => _serverOptions = serverOptions;

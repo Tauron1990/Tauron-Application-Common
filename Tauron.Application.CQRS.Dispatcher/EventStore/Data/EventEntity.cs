@@ -4,6 +4,21 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
 {
+    public class PendingMessageEntity : EventEntity
+    {
+        public string? ServicaName { get; set; }
+
+        public PendingMessageEntity()
+        {
+            
+        }
+
+        public PendingMessageEntity(DomainMessage msg, string servicaName)
+        {
+            ServicaName = servicaName;
+        }
+    }
+
     public class EventEntity
     {
         [Key]
@@ -13,11 +28,11 @@ namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
 
         public EventType EventType { get; set; }
 
-        public string Data { get; set; }
+        public string? Data { get; set; }
 
-        public string EventName { get; set; }
+        public string? EventName { get; set; }
 
-        public string OriginType { get; set; }
+        public string? OriginType { get; set; }
 
         public long? Version { get; set; }
 
