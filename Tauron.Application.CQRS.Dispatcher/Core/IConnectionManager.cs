@@ -16,5 +16,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core
         Task AddSubscription(string id, string[] events);
 
         Task SendingOk(int eventId, string connectionId);
+
+        Task UpdateAllConnection();
     }
 }
