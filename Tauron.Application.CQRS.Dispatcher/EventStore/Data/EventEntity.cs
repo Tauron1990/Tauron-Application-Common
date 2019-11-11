@@ -6,16 +6,17 @@ namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
 {
     public class PendingMessageEntity : EventEntity
     {
-        public string? ServicaName { get; set; }
+        public string? ServiceName { get; set; }
 
         public PendingMessageEntity()
         {
             
         }
 
-        public PendingMessageEntity(DomainMessage msg, string servicaName)
+        public PendingMessageEntity(DomainMessage msg, string serviceName)
+            : base(msg)
         {
-            ServicaName = servicaName;
+            ServiceName = serviceName;
         }
     }
 
@@ -38,6 +39,8 @@ namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
 
         public DateTimeOffset TimeStamp { get; set; }
 
+        public long OperationId { get; set; }
+
         public EventEntity()
         {
             
@@ -52,20 +55,21 @@ namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
             OriginType = domainMessage.TypeName;
             Version = domainMessage.Version;
             TimeStamp = domainMessage.TimeStamp;
+            OperationId = domainMessage.OperationId;
         }
 
         public DomainMessage ToDomainMessage()
         {
             return new DomainMessage
             {
-                OperationId = SequenceNumber,
+                OperationId = OperationId,
                 Id = Id,
                 EventType = EventType,
                 EventData = Data,
                 EventName = EventName,
                 TypeName = OriginType,
                 Version = Version,
-                TimeStamp = TimeStamp
+                TimeStamp = TimeStamp,
             };
         }
     }
