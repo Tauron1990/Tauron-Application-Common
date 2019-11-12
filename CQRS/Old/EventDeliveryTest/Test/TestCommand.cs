@@ -1,4 +1,4 @@
-﻿using CQRSlite.Commands;
+﻿using Tauron.Application.CQRS.Client.Commands;
 
 namespace EventDeliveryTest.Test
 {

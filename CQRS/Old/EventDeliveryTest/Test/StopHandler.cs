@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using CQRSlite.Commands;
-using CQRSlite.Events;
-using ServiceManager.CQRS;
-using Tauron.CQRS.Services.Extensions;
+using Tauron.Application.CQRS.Client;
+using Tauron.Application.CQRS.Client.Commands;
+using Tauron.Application.CQRS.Client.Events;
+using Tauron.Application.CQRS.Client.Infrastructure;
+using Tauron.Application.CQRS.Extensions.ServiceControl;
 
 namespace EventDeliveryTest.Test
 {
@@ -15,7 +16,7 @@ namespace EventDeliveryTest.Test
 
         public StopHandler(IEventPublisher publisher) => _publisher = publisher;
 
-        public async Task Handle(StopServiceCommand message)
+        public async Task<OperationResult> Handle(StopServiceCommand message)
         {
             await _publisher.Publish(new ServiceStoppedEvent("Temp"));
 
@@ -24,6 +25,8 @@ namespace EventDeliveryTest.Test
             await Task.Delay(1_000);
 
             Process.GetCurrentProcess().Kill();
+
+            return OperationResult.Success;
         }
     }
 }

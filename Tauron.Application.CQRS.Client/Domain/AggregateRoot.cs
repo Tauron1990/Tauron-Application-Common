@@ -31,7 +31,6 @@ namespace Tauron.Application.CQRS.Client.Domain
         public long Version { get; internal set; }
 
         protected TType GetValue<TType>([CallerMemberName] string? propertyName = null)
-            where TType : new()
         {
             if (string.IsNullOrWhiteSpace(propertyName)) return default!;
 

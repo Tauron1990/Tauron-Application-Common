@@ -24,7 +24,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
 
             using var scope = _serviceScopeFactory.CreateScope();
 
-            if (rawMessage.EventType == EventType.QueryResult)
+            if (rawMessage.EventType == EventType.QueryResult || _handlers.Count == 0)
             {
                 var handler = (GlobalEventHandlerBase)scope.ServiceProvider.GetRequiredService(typeof(GlobalEventHandler<>).MakeGenericType(msg.GetType()));
 

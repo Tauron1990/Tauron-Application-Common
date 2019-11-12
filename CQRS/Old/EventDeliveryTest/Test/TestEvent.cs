@@ -1,14 +1,13 @@
 ﻿using System;
-using CQRSlite.Events;
-using Tauron.CQRS.Common.ServerHubs;
+using Tauron.Application.CQRS.Client.Events;
 
 namespace EventDeliveryTest.Test
 {
-    public class TestEvent : CQRSEvent
+    public class TestEvent : EventBase
     {
         public string Result { get; set; }
 
-        public TestEvent(Guid id, int version, string result) : base(id, version)
+        public TestEvent(Guid id, long version, string result) : base(id, version)
         {
             Result = result;
         }

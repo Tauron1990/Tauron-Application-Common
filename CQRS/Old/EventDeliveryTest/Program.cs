@@ -2,23 +2,21 @@
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.NetworkInformation;
-using System.Runtime.Serialization;
 using System.Threading.Tasks;
-using CQRSlite.Queries;
 using EventDeliveryTest.Test;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
-using Tauron.CQRS.Common.Configuration;
-using Tauron.CQRS.Services;
-using Tauron.CQRS.Services.Extensions;
+using Tauron.Application.CQRS.Client;
+using Tauron.Application.CQRS.Client.Commands;
+using Tauron.Application.CQRS.Client.Core.Components;
+using Tauron.Application.CQRS.Client.Querys;
+using Tauron.Application.CQRS.Common.Configuration;
 using Tauron.ServiceBootstrapper;
 
 namespace EventDeliveryTest
 {
-    class TestFailed : Exception
+    internal class TestFailed : Exception
     {
         public TestFailed(string msg)
         : base(msg)
@@ -27,11 +25,9 @@ namespace EventDeliveryTest
         }
     }
 
-    static class Program
+    internal static class Program
     {
         private const string Msg = "Hallo-Welt";
-
-        private static IConfiguration _configuration;
 
         private static async Task Main(string[] args)
         {
@@ -102,7 +98,7 @@ namespace EventDeliveryTest
             using var scope = serviceProvider.CreateScope();
             var queryProcessor = scope.ServiceProvider.GetRequiredService<IQueryProcessor>();
 
-            var result = await queryProcessor.Query(new TestQueryData());
+            var result = await queryProcessor.Query<TestQueryData, TestData>(new TestQueryData());
 
             if(result == null)
                 throw new TestFailed("Query Result was Null");
@@ -118,13 +114,13 @@ namespace EventDeliveryTest
 
             using var scope = serviceProvider.CreateScope();
 
-            var awaiter = scope.ServiceProvider.GetRequiredService<AwaiterBase<TestCommand, TestEvent>>();
+            var awaiter = scope.ServiceProvider.GetRequiredService<SimpleAwaiter<TestEvent>>();
+            var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
 
+            var result = await sender.Send(new TestCommand {Parameter = Msg});
+            var testEvent = await awaiter.Wait();
 
-
-            var (ok, testEvent) = await awaiter.SendAndAwait(new TestCommand { Parameter = Msg });
-
-            if (!ok || Msg != testEvent.Result) throw new TestFailed($"No Correct repond. Timeout: {!ok}");
+            if (result.Error || testEvent == null || Msg != testEvent.Result) throw new TestFailed($"No Correct repond. Timeout: {testEvent == null}");
 
             Console.WriteLine(" Success");
         }

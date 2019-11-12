@@ -1,8 +1,8 @@
-﻿using CQRSlite.Queries;
+﻿using Tauron.Application.CQRS.Client.Querys;
 
 namespace EventDeliveryTest.Test
 {
-    public class TestQueryData : IQuery<TestData>
+    public class TestQueryData : IQueryHelper<TestData>
     {
         
     }

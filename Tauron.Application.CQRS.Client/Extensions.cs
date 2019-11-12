@@ -87,6 +87,7 @@ namespace Tauron.Application.CQRS.Client
             serviceCollection.TryAddSingleton<IDispatcherClient, DispatcherClient>();
             serviceCollection.TryAddSingleton(typeof(GlobalEventHandler<>));
             serviceCollection.TryAddSingleton(typeof(QueryAwaiter<>));
+            serviceCollection.TryAddSingleton(typeof(SimpleAwaiter<>));
             serviceCollection.TryAddSingleton<IErrorManager, ErrorManager>();
 
         }
@@ -170,6 +171,12 @@ namespace Tauron.Application.CQRS.Client
 
                 config.AddType(type);
             }
+        }
+
+        public static void AddAwaiter<T>(this  ClientCofiguration config)
+            where T : IMessage
+        {
+            config.RegisterHandler(typeof(T).Name, null);
         }
     }
 }

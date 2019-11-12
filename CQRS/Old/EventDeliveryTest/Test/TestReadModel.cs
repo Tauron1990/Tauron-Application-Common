@@ -1,20 +1,21 @@
 ﻿using System.Threading.Tasks;
-using CQRSlite.Domain;
-using Tauron.CQRS.Services;
-using Tauron.CQRS.Services.Extensions;
+using Tauron.Application.CQRS.Client;
+using Tauron.Application.CQRS.Client.Domain;
+using Tauron.Application.CQRS.Client.Querys;
 
 namespace EventDeliveryTest.Test
 {
     [CQRSHandler]
-    public class TestReadModel : ReadModelBase<TestData, TestQueryData>
+    public class TestReadModel : IReadModel<TestQueryData, TestData>
     {
         private readonly ISession _session;
 
-        public TestReadModel(ISession session, IDispatcherClient client) : base(client) => _session = session;
+        public TestReadModel(ISession session) 
+            => _session = session;
 
-        protected override async Task<TestData> Query(TestQueryData query)
+        public async Task<TestData> Query(TestQueryData query)
         {
-            var aggregate = await _session.Get<TestAggregate>(TestAggregate.IdField);
+            var aggregate = await _session.GetAggregate<TestAggregate>(TestAggregate.IdField);
 
             return new TestData(aggregate.LastValue);
         }

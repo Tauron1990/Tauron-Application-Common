@@ -34,10 +34,15 @@ namespace Tauron.Application.CQRS.Common.Configuration
         
         public bool Memory { get; set; }
 
-        private void AddHandler(string name, Type type)
+        private void AddHandler(string name, Type? type)
         {
-            if (_handlerRegistry.TryGetValue(name, out var list)) list.Add(type);
-            else _handlerRegistry = _handlerRegistry.Add(name, new HashSet<Type> {type});
+            if (_handlerRegistry.TryGetValue(name, out var list))
+            {
+                if (type != null)
+                    list.Add(type);
+            }
+            else
+                _handlerRegistry = _handlerRegistry.Add(name, type == null ? new HashSet<Type>() : new HashSet<Type> {type});
         }
 
         public bool IsHandlerRegistrated<TCommand, THandler>() =>
@@ -57,7 +62,7 @@ namespace Tauron.Application.CQRS.Common.Configuration
             return this;
         }
 
-        public void RegisterHandler(string name, Type type)
+        public void RegisterHandler(string name, Type? type)
             => AddHandler(name, type);
     }
 }
