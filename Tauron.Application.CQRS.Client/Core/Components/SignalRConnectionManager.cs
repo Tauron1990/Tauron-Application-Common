@@ -34,6 +34,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             _connection.Closed += ConnectionOnClosed;
 
             _connection.On(HubMethodNames.PropagateEvent, new Func<DomainMessage, int, Task>(EventRecived));
+            _connection.On(HubMethodNames.HeartbeatNames.Heartbeat, async () => await _connection.SendAsync(HubMethodNames.HeartbeatNames.StillConnected));
         }
 
         private async Task EventRecived(DomainMessage msg, int id)

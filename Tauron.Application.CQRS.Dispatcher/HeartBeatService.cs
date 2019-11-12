@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Tauron.Application.CQRS.Common;
 using Tauron.Application.CQRS.Dispatcher.Core;
 using Tauron.Application.CQRS.Dispatcher.Hubs;
 
@@ -32,7 +33,7 @@ namespace Tauron.CQRS.Server
                     while (!stoppingToken.IsCancellationRequested)
                     {
                         //_logger.LogInformation("Heartbeat");
-                        await _hubContext.Clients.All.SendAsync(HubEventNames.HeartbeatNames.Heartbeat, DateTime.Now, stoppingToken);
+                        await _hubContext.Clients.All.SendAsync(HubMethodNames.HeartbeatNames.Heartbeat, DateTime.Now, stoppingToken);
                         await _connectionManager.UpdateAllConnection();
                         await Task.Delay(30000, stoppingToken);
                     }

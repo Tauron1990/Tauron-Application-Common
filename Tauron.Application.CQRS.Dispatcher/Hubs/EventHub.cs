@@ -59,5 +59,9 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
             await _manager.CheckId(Context.ConnectionId);
             await Clients.Client(client).SendAsync(HubMethodNames.PropagateEvent, message);
         }
+
+        [HubMethodName(HubMethodNames.HeartbeatNames.StillConnected), UsedImplicitlyAttribute]
+        public async Task StillConnected()
+            => await _manager.StillConnected(Context.ConnectionId);
     }
 }

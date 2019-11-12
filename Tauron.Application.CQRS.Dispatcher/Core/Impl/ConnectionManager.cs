@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -28,7 +27,9 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
             public string[] EventSubscriptions { get; set; } = new string[0];
 
-            public Stopwatch LastHeartBeat { get; set; }
+            public bool Disconnected { get; set; }
+
+            public Stopwatch LastHeartBeat { get; }
 
             public Registration(string id)
             {
@@ -264,6 +265,28 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
             {
                 _databaseLock.ReleaseReaderLock();
             }
+
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAllConnection()
+        {
+            foreach (var registration in _registrations.Select(r => r.Value))
+            {
+                if (registration.LastHeartBeat.Elapsed.Seconds > 60)
+                    registration.Disconnected = true;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task StillConnected(string id)
+        {
+            var reg = _registrations.FirstOrDefault(r => r.Value.Id == id).Value;
+            if (reg == null) return Task.CompletedTask;
+
+            reg.Disconnected = false;
+            reg.LastHeartBeat.Restart();
 
             return Task.CompletedTask;
         }

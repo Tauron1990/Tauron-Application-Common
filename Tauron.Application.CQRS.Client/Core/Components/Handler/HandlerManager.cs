@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Tauron.Application.CQRS.Client.Commands;
 using Tauron.Application.CQRS.Client.Events;
-using Tauron.Application.CQRS.Client.Infrastructure;
 using Tauron.Application.CQRS.Client.Querys;
 using Tauron.Application.CQRS.Common.Configuration;
-using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core.Components.Handler
 {
+    [UsedImplicitly]
     public class HandlerManager : IHandlerManager, IDisposable
     {
         private readonly IOptions<ClientCofiguration> _configuration;

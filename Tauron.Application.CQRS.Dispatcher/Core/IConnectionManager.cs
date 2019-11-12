@@ -18,5 +18,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core
         Task SendingOk(int eventId, string connectionId);
 
         Task UpdateAllConnection();
+
+        Task StillConnected(string id);
     }
 }

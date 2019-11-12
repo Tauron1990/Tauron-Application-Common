@@ -9,5 +9,16 @@ namespace Tauron.Application.CQRS.Client.Events
         public long Version { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; } = DateTimeOffset.UtcNow;
+
+        protected EventBase()
+        {
+            
+        }
+
+        protected EventBase(Guid id, long version)
+        {
+            Id = id;
+            Version = version;
+        }
     }
 }

@@ -126,6 +126,8 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                         await _dispatcherClient.SendToClient(GetSender(rawMessage), Guard.CheckNull(await invoker.Invoke(msg) as IMessage));
                         break;
                     case Command command:
+                        var ambient = msg is IAmbientCommand;
+
                         if (_realTarget is ISpecProvider<TMessage> specProvider)
                         {
                             var specification = specProvider.Get(new GenericSpecification<TMessage>());
@@ -134,13 +136,15 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                                 var result = await specification.IsSatisfiedBy(msg);
                                 if (result.Error)
                                 {
-                                    await _dispatcherClient.SendToClient(GetSender(rawMessage), result, rawMessage.OperationId);
+                                    if(!ambient)
+                                        await _dispatcherClient.SendToClient(GetSender(rawMessage), result, rawMessage.OperationId);
                                     return;
                                 }
                             }
                         }
 
-                        await _dispatcherClient.SendToClient(GetSender(rawMessage), Guard.CheckNull(await command.Invoke(msg) as OperationResult), rawMessage.OperationId);
+                        if(!ambient)
+                            await _dispatcherClient.SendToClient(GetSender(rawMessage), Guard.CheckNull(await command.Invoke(msg) as OperationResult), rawMessage.OperationId);
                         break;
                     case Event @event:
                         await @event.Invoke(msg);

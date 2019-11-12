@@ -111,5 +111,65 @@ namespace Tauron.Application.CQRS.Client
 
             AggregateRoot.AggregateLocks.Clear();
         }
+
+
+        public static ClientCofiguration AddReadModel<TModel, TRespond, TQuery>(this ClientCofiguration configuration) 
+            where TRespond : IQueryHelper<TQuery>
+            where TQuery : IQueryResult
+        {
+            AddReadModel(configuration, typeof(TModel), typeof(IReadModel<TRespond, TQuery>));
+
+            return configuration;
+        }
+
+        public static void AddFrom<TType>(this IServiceCollection serviceCollection, ClientCofiguration config)
+            => ScanFrom(config, typeof(TType));
+
+        public static ClientCofiguration AddFrom<TType>(this ClientCofiguration config)
+        {
+            ScanFrom(config, typeof(TType));
+            return config;
+        }
+
+        public static ClientCofiguration AddType(this ClientCofiguration config, Type type)
+        {
+            foreach (var @interface in type.GetInterfaces())
+            {
+                if (!@interface.IsGenericType) continue;
+
+                var genericDefinition = @interface.GetGenericTypeDefinition();
+
+                if (genericDefinition == typeof(IReadModel<,>))
+                {
+                    AddReadModel(config, type, @interface);
+                    continue;
+                }
+
+                if (genericDefinition != typeof(ICommandHandler<>) && genericDefinition != typeof(IEventHandler<>))
+                    continue;
+
+                var name = @interface.GetGenericArguments()[0].Name;
+
+                config.RegisterHandler(name, type);
+            }
+
+            return config;
+        }
+
+
+        public static void AddReadModel(ClientCofiguration configuration, Type readModel, Type @interface)
+            => configuration.RegisterHandler(@interface.GetGenericArguments()[0].FullName, readModel);
+
+        private static void ScanFrom(ClientCofiguration config, Type targetType)
+        {
+            var asm = targetType.Assembly;
+
+            foreach (var type in asm.GetTypes())
+            {
+                if (!type.IsDefined(typeof(CQRSHandlerAttribute), false)) continue;
+
+                config.AddType(type);
+            }
+        }
     }
 }
