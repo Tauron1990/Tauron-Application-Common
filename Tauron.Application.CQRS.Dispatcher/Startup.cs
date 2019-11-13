@@ -12,6 +12,7 @@ using Tauron.Application.CQRS.Dispatcher.Core;
 using Tauron.Application.CQRS.Dispatcher.Core.Impl;
 using Tauron.Application.CQRS.Dispatcher.EventStore;
 using Tauron.Application.CQRS.Dispatcher.Hubs;
+using Tauron.CQRS.Server;
 
 namespace Tauron.Application.CQRS.Dispatcher
 {
@@ -27,11 +28,13 @@ namespace Tauron.Application.CQRS.Dispatcher
         {
             //API GateWay Ocelot
 
+            services.AddSingleton<IApiKeyStore, ApiKeyStore>();
             services.AddTransient<IObjectFactory, InternalObjectFactory>();
             services.AddScoped<DispatcherDatabaseContext>();
             services.AddSingleton<IConnectionManager, ConnectionManager>();
             services.AddSingleton<IEventManager, EventManager>();
 
+            services.AddLogging();
             services.AddSignalR();
             services.Configure<ServerConfiguration>(c =>
             {
@@ -39,7 +42,10 @@ namespace Tauron.Application.CQRS.Dispatcher
                 c.Memory = _config.GetValue<bool>("Memory");
             });
 
-            
+
+            services.AddHostedService<DispatcherService>();
+            services.AddHostedService<HeartBeatService>();
+
             services.AddMvc(o => o.EnableEndpointRouting = false)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
@@ -57,7 +63,7 @@ namespace Tauron.Application.CQRS.Dispatcher
 
         [UsedImplicitly]
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggingBuilder loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -65,7 +71,7 @@ namespace Tauron.Application.CQRS.Dispatcher
             }
 
             app.UseRouting();
-
+            
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

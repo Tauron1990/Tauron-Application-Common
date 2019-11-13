@@ -41,12 +41,15 @@ namespace Tauron.Application.CQRS.Client
                           EventData = JsonSerializer.Serialize(message),
                           TypeName = type.AssemblyQualifiedName,
                           EventName = type.Name,
-                          EventType = EventType.CommandResult,
+                          EventType = EventType.Command,
                           OperationId = DateTime.UtcNow.Ticks + Random.Next()
                       };
 
             switch (message)
             {
+                case OperationResult _:
+                    msg.EventType = EventType.CommandResult;
+                    break;
                 case IQueryResult _:
                     msg.EventType = EventType.QueryResult;
                     break;
@@ -85,6 +88,7 @@ namespace Tauron.Application.CQRS.Client
             serviceCollection.TryAddSingleton<IQueryProcessor, QueryProcessor>();
             serviceCollection.TryAddSingleton<IHandlerManager, HandlerManager>();
             serviceCollection.TryAddSingleton<IDispatcherClient, DispatcherClient>();
+            serviceCollection.TryAddSingleton<ICommandSender, CommandSender>();
             serviceCollection.TryAddSingleton(typeof(GlobalEventHandler<>));
             serviceCollection.TryAddSingleton(typeof(QueryAwaiter<>));
             serviceCollection.TryAddSingleton(typeof(SimpleAwaiter<>));
@@ -159,7 +163,7 @@ namespace Tauron.Application.CQRS.Client
 
 
         public static void AddReadModel(ClientCofiguration configuration, Type readModel, Type @interface)
-            => configuration.RegisterHandler(@interface.GetGenericArguments()[0].FullName, readModel);
+            => configuration.RegisterHandler(@interface.GetGenericArguments()[0].Name, readModel);
 
         private static void ScanFrom(ClientCofiguration config, Type targetType)
         {

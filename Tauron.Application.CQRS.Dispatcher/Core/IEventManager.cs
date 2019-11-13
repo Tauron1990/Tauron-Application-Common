@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Dispatcher.Core
@@ -8,5 +9,8 @@ namespace Tauron.Application.CQRS.Dispatcher.Core
         Task StoreEvents(DomainMessage[] domainMessages);
 
         Task DeliverEvent(DomainMessage message);
+
+        Task StartMessageQueue();
+        void StopMessageQueue();
     }
 }

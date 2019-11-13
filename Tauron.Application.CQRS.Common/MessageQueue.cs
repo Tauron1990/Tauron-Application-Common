@@ -46,7 +46,9 @@ namespace Tauron.Application.CQRS.Common
                         throw;
                     }
                 }
-            }).ContinueWith(t => _processorQueue.CompleteAdding());
+            });
+
+            _dispatcher.ContinueWith(t => _processorQueue.CompleteAdding());
         }
 
         public void Enqueue(TMessage msg) => _incomming.Add(msg);
@@ -57,7 +59,7 @@ namespace Tauron.Application.CQRS.Common
                 throw new InvalidOperationException("Message Queue Stoped");
             if (_dispatcher.Status == TaskStatus.Running)
                 throw new InvalidOperationException("Message Queue started");
-
+            
             _dispatcher.Start();
 
             foreach (var task in _processorQueue.GetConsumingEnumerable())

@@ -111,7 +111,13 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             _messageQueue.OnWork += delivery => delivery.Execute();
         }
 
-        public async Task Connect() => await _connectionManager.Connect();
+        public async Task Connect()
+        {
+            if (!await _connectionManager.Connect())
+            {
+                throw new InvalidOperationException("Error on Connect Server");
+            }
+        }
 
         public async Task Stop() => await _connectionManager.Disconnect();
 

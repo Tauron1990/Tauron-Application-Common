@@ -1,9 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Client;
+﻿using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Threading.Tasks;
 using Tauron.Application.CQRS.Common;
 using Tauron.Application.CQRS.Common.Configuration;
 using Tauron.Application.CQRS.Common.Dto;
@@ -33,11 +33,11 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             _connection = new HubConnectionBuilder().WithUrl(configuration.Value.EventHubUrl).AddJsonProtocol().Build();
             _connection.Closed += ConnectionOnClosed;
 
-            _connection.On(HubMethodNames.PropagateEvent, new Func<DomainMessage, int, Task>(EventRecived));
+            _connection.On(HubMethodNames.PropagateEvent, new Func<DomainMessage, long, Task>(EventRecived));
             _connection.On(HubMethodNames.HeartbeatNames.Heartbeat, async () => await _connection.SendAsync(HubMethodNames.HeartbeatNames.StillConnected));
         }
 
-        private async Task EventRecived(DomainMessage msg, int id)
+        private async Task EventRecived(DomainMessage msg, long id)
         {
             await new SynchronizationContextRemover();
             try
@@ -59,17 +59,21 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             await Connect();
         }
 
-        public async Task Connect()
+        public async Task<bool> Connect()
         {
             try
             {
                 await _connection.StartAsync();
                 await Validate();
+
+                return true;
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Error on Connect to Server");
                 await _errorManager.ConnectionFailed(e.Message);
+
+                return false;
             }
         }
 
@@ -84,7 +88,8 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
         private async Task Validate()
         {
-            await _dispatcherApi.Validate(new ValidateConnection(_connection.ConnectionId, _oldId, _configuration.Value.ApiKey));
+            if(!await _dispatcherApi.Validate(new ValidateConnection(_connection.ConnectionId, _oldId, _configuration.Value.ApiKey)))
+                throw new InvalidOperationException("Validation Failed");
             _oldId = _connection.ConnectionId;
         }
     }

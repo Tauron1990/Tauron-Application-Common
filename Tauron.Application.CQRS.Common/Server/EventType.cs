@@ -5,6 +5,7 @@
         AmbientEvent,
         CommandResult,
         AmbientCommand,
+        Command,
         Event,
         Query,
         QueryResult

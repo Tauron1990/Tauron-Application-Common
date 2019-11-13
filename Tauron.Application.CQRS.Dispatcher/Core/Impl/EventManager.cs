@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Tauron.Application.CQRS.Common;
@@ -40,5 +41,11 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
             _messageQueue.Enqueue(message);
             return Task.CompletedTask;
         }
+
+        public async Task StartMessageQueue() 
+            => await _messageQueue.Start();
+
+        public void StopMessageQueue() 
+            => _messageQueue.Stop();
     }
 }

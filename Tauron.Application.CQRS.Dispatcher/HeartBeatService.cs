@@ -15,7 +15,7 @@ namespace Tauron.CQRS.Server
         private readonly IHubContext<EventHub> _hubContext;
         private readonly IConnectionManager _connectionManager;
         private readonly ILogger<HeartBeatService> _logger;
-        private Task _runningTask;
+        private Task? _runningTask;
 
         public HeartBeatService(IHubContext<EventHub> hubContext, IConnectionManager connectionManager, ILogger<HeartBeatService> logger)
         {
@@ -50,7 +50,7 @@ namespace Tauron.CQRS.Server
         public override void Dispose()
         {
             base.Dispose();
-            _runningTask.Dispose();
+            _runningTask?.Dispose();
         }
     }
 }

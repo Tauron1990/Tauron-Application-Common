@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
@@ -53,6 +54,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
         private readonly ConcurrentDictionary<string, List<PendingMessage>> _pendingMessages = new ConcurrentDictionary<string, List<PendingMessage>>();
         private readonly ConcurrentDictionary<string, Registration> _registrations = new ConcurrentDictionary<string, Registration>();
+        private readonly ConcurrentDictionary<string, CirculationList> _circulationLists = new ConcurrentDictionary<string, CirculationList>();
 
         private readonly ConcurrentBag<PendingMessage> _added = new ConcurrentBag<PendingMessage>();
         private readonly ConcurrentBag<PendingMessage> _removed = new ConcurrentBag<PendingMessage>();
@@ -65,16 +67,16 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
         private readonly IHubContext<EventHub> _hubContext;
         private readonly ILogger<IConnectionManager> _logger;
 
-        public ConnectionManager(IObjectFactory objectFactory, HubLifetimeManager<EventHub> lifetimeManager, IHubContext<EventHub> hubContext,
-            DispatcherDatabaseContext context, ILogger<IConnectionManager> logger)
+        public ConnectionManager(IObjectFactory objectFactory, HubLifetimeManager<EventHub> lifetimeManager, IHubContext<EventHub> hubContext, ILogger<IConnectionManager> logger)
         {
             _objectFactory = objectFactory;
             _lifetimeManager = lifetimeManager;
             _hubContext = hubContext;
             _logger = logger;
             _messageTimer = new Timer(CheckMessages);
+            using var context = objectFactory.CreateDatabase();
 
-            foreach (var pendingMessage in context.PendingMessages.GroupBy(pm => pm.ServiceName))
+            foreach (var pendingMessage in context.Target.PendingMessages.ToArray().GroupBy(pm => pm.ServiceName))
             {
                 _pendingMessages.AddOrUpdate(pendingMessage.Key,
                     s => new List<PendingMessage>(pendingMessage.Select(m => new PendingMessage(s, m.ToDomainMessage()))),
@@ -97,7 +99,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
             {
                 using var scope = _objectFactory.CreateDatabase();
                 await using var context = scope.Target;
-                var dbmessages = context.PendingMessages.GroupBy(pm => pm.ServiceName).ToArray();
+                var dbmessages = context.PendingMessages.ToArray().GroupBy(pm => pm.ServiceName).ToArray();
 
                 var dbDic = new Dictionary<string, List<PendingMessageEntity>>();
 
@@ -157,6 +159,12 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
         }
 
+        public int GetCurrentClients() 
+            => _registrations.Count;
+
+        public int GetPendingMessages() 
+            => _pendingMessages.Count;
+
         public Task CheckId(string id)
         {
             if (_registrations.TryGetValue(id, out var registration) && registration.Validated) return Task.CompletedTask;
@@ -186,7 +194,26 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
                         });
                 }
 
-                await _hubContext.Clients.Groups(domainMessage.EventName).SendAsync(HubMethodNames.PropagateEvent, domainMessage, domainMessage.OperationId);
+                IClientProxy toSend;
+
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (domainMessage.EventType)
+                {
+                    case EventType.Command:
+                    case EventType.Query:
+                        var list = _circulationLists.GetOrAdd(Guard.CheckNull(domainMessage.EventName), s => new CirculationList(GetSubscripedClients(s)));
+                        var nextId = list.GetNext();
+                        if (string.IsNullOrEmpty(nextId)) return;
+
+                        toSend = _hubContext.Clients.Client(nextId);
+
+                        break;
+                    default:
+                        toSend = _hubContext.Clients.Groups(domainMessage.EventName);
+                        break;
+                }
+
+                await toSend.SendAsync(HubMethodNames.PropagateEvent, domainMessage, domainMessage.OperationId);
             }
             catch (Exception e)
             {
@@ -200,16 +227,20 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
         public Task Validated(string id, string serviceName, string oldId)
         {
-            _registrations.AddOrUpdate(
-                serviceName,
-                s => new Registration(id) { Validated = true },
-                (s, registration) =>
-                {
-                    registration.Id = id;
-                    registration.Validated = true;
+            if (_registrations.TryGetValue(oldId, out var registration))
+            {
+                _registrations[id] = registration;
+                _registrations.TryRemove(oldId, out _);
 
-                    return registration;
-                });
+                foreach (var (eventName, list) in _circulationLists) 
+                    list.Replace(GetSubscripedClients(eventName));
+            }
+            else
+                _registrations[id] = new Registration(id)
+                {
+                    Validated = true, 
+                    ServiceName = serviceName
+                };
 
             return Task.CompletedTask;
         }
@@ -229,8 +260,13 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
                 if (_registrations.TryGetValue(_registrations.First(p => p.Value.Id == id).Key, out var registration)) 
                     registration.EventSubscriptions = events;
 
-                foreach (var @event in events) 
+                foreach (var @event in events)
+                {
                     await _lifetimeManager.AddToGroupAsync(id, @event);
+                    if(_circulationLists.TryGetValue(@event, out var  list))
+                        list.Replace(GetSubscripedClients(@event));
+
+                }
             }
             catch (Exception e)
             {
@@ -238,7 +274,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
             }
         }
 
-        public Task SendingOk(int eventId, string connectionId)
+        public Task SendingOk(long eventId, string connectionId)
         {
             _databaseLock.AcquireReaderLock(TimeSpan.FromSeconds(30));
 
@@ -293,5 +329,8 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
         public void Dispose() 
             => _messageTimer.Dispose();
+
+        private IEnumerable<string> GetSubscripedClients(string eventName) 
+            => _registrations.Select(r => r.Value).Where(r => r.EventSubscriptions.Contains(eventName)).Select(r => r.Id);
     }
 }

@@ -93,15 +93,15 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
         }
 
         [Route("Hub")]
-        [HttpPut]
-        public async Task<IActionResult> Validate([FromBody] ValidateConnection validateConnection)
+        [HttpGet]
+        public async Task<ActionResult<bool>> Validate([FromBody] ValidateConnection validateConnection)
         {
             var (ok, serviceName) = await _apiKeyStore.Validate(validateConnection.ApiKey);
             if (!ok)
-                return Forbid();
+                return false;
 
-            await _connectionManager.Validated(id: validateConnection.NewId ?? string.Empty, serviceName, validateConnection.OldId ?? string.Empty);
-            return Ok();
+            await _connectionManager.Validated(validateConnection.NewId ?? string.Empty, serviceName, validateConnection.OldId ?? string.Empty);
+            return true;
         }
     }
 }

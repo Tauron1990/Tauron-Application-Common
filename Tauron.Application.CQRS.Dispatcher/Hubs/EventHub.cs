@@ -33,7 +33,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
         }
 
         [HubMethodName(HubMethodNames.SendingSuccseded), UsedImplicitly]
-        public async Task SendingSuccseded(int id)
+        public async Task SendingSuccseded(long id)
         {
             await _manager.CheckId(Context.ConnectionId);
             await _manager.SendingOk(id, Context.ConnectionId);
@@ -54,7 +54,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
         }
 
         [HubMethodName(HubMethodNames.PublishEventToClient), UsedImplicitly]
-        public async Task PublishEventToVlient(DomainMessage message, string client)
+        public async Task PublishEventToClient(DomainMessage message, string client)
         {
             await _manager.CheckId(Context.ConnectionId);
             await Clients.Client(client).SendAsync(HubMethodNames.PropagateEvent, message);

@@ -5,6 +5,10 @@ namespace Tauron.Application.CQRS.Dispatcher.Core
 {
     public interface IConnectionManager
     {
+        int GetCurrentClients();
+
+        int GetPendingMessages();
+
         Task CheckId(string id);
 
         Task SendEvent(DomainMessage domainMessage);
@@ -15,7 +19,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core
 
         Task AddSubscription(string id, string[] events);
 
-        Task SendingOk(int eventId, string connectionId);
+        Task SendingOk(long eventId, string connectionId);
 
         Task UpdateAllConnection();
 
