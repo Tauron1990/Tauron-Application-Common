@@ -11,7 +11,7 @@ namespace EventDeliveryTest.Test
         async Task<OperationResult> ICommandHandler<TestCommand>.Handle(TestCommand command)
         {
             var aggregate = await Session.GetAggregate<TestAggregate>(TestAggregate.IdField);
-            await aggregate.SetLastValue(command.Parameter);
+            await aggregate.SetLastValue(command.Message);
 
             return OperationResult.Success;
         }

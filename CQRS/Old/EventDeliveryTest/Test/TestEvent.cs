@@ -11,5 +11,10 @@ namespace EventDeliveryTest.Test
         {
             Result = result;
         }
+
+        public TestEvent()
+        {
+            
+        }
     }
 }

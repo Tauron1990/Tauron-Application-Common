@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,37 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
     [UsedImplicitly]
     public class HandlerManager : IHandlerManager, IDisposable
     {
+        private class HandlerFactory
+        {
+            private readonly IServiceProvider _serviceProvider;
+            private readonly Type _interfaceType;
+            private readonly Type _targetType;
+            private readonly Type _messageType;
+
+            public HandlerFactory(IServiceProvider serviceProvider, Type interfaceType, Type targetType)
+            {
+                _serviceProvider = serviceProvider;
+                _interfaceType = interfaceType;
+                _targetType = targetType;
+                _messageType = interfaceType.GetGenericArguments()[0];
+            }
+
+            public HandlerBase Create()
+            {
+                return (HandlerBase) ActivatorUtilities.CreateInstance(_serviceProvider, typeof(MessageHandler<>).MakeGenericType(_messageType),
+                    InstanceCreator(_targetType), _targetType, _interfaceType);
+            }
+
+            private Func<object> InstanceCreator(Type targetType)
+            {
+                return () =>
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    return ActivatorUtilities.GetServiceOrCreateInstance(scope.ServiceProvider, targetType);
+                };
+            }
+        }
+
         private readonly IOptions<ClientCofiguration> _configuration;
         private readonly IDispatcherClient _client;
         private readonly IServiceProvider _serviceProvider;
@@ -39,8 +71,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                                 from @interface in targetType.GetInterfaces().Where(i => i.IsGenericType) 
                                 let typeDef = @interface.GetGenericTypeDefinition() 
                                 where typeDef == typeof(ICommandHandler<>) || typeDef == typeof(IEventHandler<>) || typeDef == typeof(IReadModel<,>) 
-                                select (HandlerBase) ActivatorUtilities.CreateInstance(_serviceProvider, typeof(MessageHandler<>).MakeGenericType(@interface.GenericTypeArguments[0]), 
-                                                                                       InstanceCreator(targetType), targetType, @interface))
+                                select new Func<HandlerBase>(new HandlerFactory(_serviceProvider, @interface, targetType).Create))
                    .ToList();
 
 
@@ -50,15 +81,6 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
             }
 
             await _client.Subscribe(handlerList);
-        }
-
-        private Func<object> InstanceCreator(Type targetType)
-        {
-            return () =>
-                   {
-                       using var scope = _serviceProvider.CreateScope();
-                       return ActivatorUtilities.GetServiceOrCreateInstance(scope.ServiceProvider, targetType);
-                   };
         }
 
         public void Dispose()

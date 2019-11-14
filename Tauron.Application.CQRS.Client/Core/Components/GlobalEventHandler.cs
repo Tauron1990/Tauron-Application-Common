@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Tauron.Application.CQRS.Client.Events;
 using Tauron.Application.CQRS.Client.Infrastructure;
 using Tauron.Application.CQRS.Common;
 
@@ -17,7 +16,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
     }
 
     [UsedImplicitly(ImplicitUseKindFlags.InstantiatedWithFixedConstructorSignature)]
-    public sealed class GlobalEventHandler<TMessage> : GlobalEventHandlerBase, IEventHandler<TMessage> where TMessage : IAmbientEvent
+    public sealed class GlobalEventHandler<TMessage> : GlobalEventHandlerBase where TMessage : IMessage
     {
         private abstract class WeakAction<T> where T : class
         {
@@ -90,7 +89,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         private readonly Dictionary<object, WeakAction<Func<TMessage, Task>>> _handlerRegistry = new Dictionary<object, WeakAction<Func<TMessage, Task>>>();
 
         public GlobalEventHandler(IDispatcherClient client) 
-            => ((ICoreDispatcherClient)client).AddHandler(typeof(TMessage).FullName, (message, domainMessage) => Handle(Guard.CheckNull(message)));
+            => ((ICoreDispatcherClient)client).AddHandler(typeof(TMessage).Name, (message, domainMessage) => Handle(Guard.CheckNull(message)));
 
         //public IDisposable Register(Func<TMessage, Task> awaiter)
         //{

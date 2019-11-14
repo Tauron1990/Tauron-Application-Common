@@ -38,7 +38,7 @@ namespace Tauron.Application.CQRS.Client
 
             var msg = new DomainMessage
                       {
-                          EventData = JsonSerializer.Serialize(message),
+                          EventData = JsonSerializer.Serialize(message, message.GetType()),
                           TypeName = type.AssemblyQualifiedName,
                           EventName = type.Name,
                           EventType = EventType.Command,
@@ -101,7 +101,15 @@ namespace Tauron.Application.CQRS.Client
             AggregateRoot.ServiceProvider = provider;
 
             using var scope = provider.CreateScope();
+            StartDispatcher(scope.ServiceProvider);
             await scope.ServiceProvider.GetRequiredService<IHandlerManager>().Init();
+        }
+
+        private static void StartDispatcher(IServiceProvider scope)
+        {
+            var client = scope.GetRequiredService<IDispatcherClient>();
+
+            Task.Run(async () => await client.Start());
         }
 
         public static async Task StopCqrs(this IServiceProvider provider)
@@ -110,9 +118,6 @@ namespace Tauron.Application.CQRS.Client
 
             using var scope = provider.CreateScope();
             await scope.ServiceProvider.GetRequiredService<IDispatcherClient>().Stop();
-
-            foreach (var semaphoreSlim in AggregateRoot.AggregateLocks.Select(l => l.Value)) 
-                semaphoreSlim.Dispose();
 
             AggregateRoot.AggregateLocks.Clear();
         }

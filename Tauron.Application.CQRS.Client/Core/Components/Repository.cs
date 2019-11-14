@@ -24,9 +24,14 @@ namespace Tauron.Application.CQRS.Client.Core.Components
                                  options, snapshotStore));
         }
 
-        public Task<T> Get<T>(Guid aggregateId) 
-            where T : AggregateRoot =>
-            _repository.Get<T>(aggregateId);
+        public async Task<T> Get<T>(Guid aggregateId) 
+            where T : AggregateRoot
+        {
+            var agg = await _repository.Get<T>(aggregateId);
+            agg.Id = aggregateId;
+
+            return agg;
+        }
 
         public void Resfresh(AggregateRoot root) 
             => _repository.Resfresh(root);

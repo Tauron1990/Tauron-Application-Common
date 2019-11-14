@@ -70,7 +70,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
             public async Task Execute(DomainMessage domainMessage)
             {
-                foreach (var messageHandler in _handlers) 
+                foreach (var messageHandler in _handlers.ToArray()) 
                     await messageHandler(domainMessage.ToRealMessage(), domainMessage);
             }
         }
@@ -119,7 +119,11 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             }
         }
 
-        public async Task Stop() => await _connectionManager.Disconnect();
+        public async Task Stop()
+        {
+            await _connectionManager.Disconnect();
+            _messageQueue.Stop();
+        }
 
         public async Task Subscribe(IEnumerable<(string Name, MessageHandler)> intrests)
         {

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Text.Json;
 using System.Threading.Tasks;
 using EventDeliveryTest.Test;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,7 +28,7 @@ namespace EventDeliveryTest
 
     internal static class Program
     {
-        private const string Msg = "Hallo-Welt";
+        private const string Msg = "HalloWelt";
 
         private static async Task Main(string[] args)
         {
@@ -117,7 +118,7 @@ namespace EventDeliveryTest
             var awaiter = scope.ServiceProvider.GetRequiredService<SimpleAwaiter<TestEvent>>();
             var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
 
-            var result = await sender.Send(new TestCommand {Parameter = Msg});
+            var result = await sender.Send(new TestCommand {Message = Msg});
             var testEvent = await awaiter.Wait();
 
             if (result.Error || testEvent == null || Msg != testEvent.Result) throw new TestFailed($"No Correct repond. Timeout: {testEvent == null}");

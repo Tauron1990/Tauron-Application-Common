@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Nito.AsyncEx;
 using Tauron.Application.CQRS.Client.Events;
 using Tauron.Application.CQRS.Client.Events.Invoker;
 using Tauron.Application.CQRS.Client.Snapshotting;
@@ -21,7 +22,7 @@ namespace Tauron.Application.CQRS.Client.Domain
 
         internal static IServiceProvider? ServiceProvider;
 
-        internal static readonly ConcurrentDictionary<Guid, ReaderWriterLockSlim> AggregateLocks = new ConcurrentDictionary<Guid, ReaderWriterLockSlim>();
+        internal static readonly ConcurrentDictionary<Guid, AsyncReaderWriterLock> AggregateLocks = new ConcurrentDictionary<Guid, AsyncReaderWriterLock>();
 
         private ImmutableDictionary<string, ObjectInfo> _data = ImmutableDictionary<string, ObjectInfo>.Empty;
         private ImmutableList<IEvent> _events = ImmutableList<IEvent>.Empty;

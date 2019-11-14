@@ -43,6 +43,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
         public async Task PublishEvent(DomainMessage domainMessage)
         {
             await _manager.CheckId(Context.ConnectionId);
+            domainMessage.Sender = Context.ConnectionId;
             await _eventManager.DeliverEvent(domainMessage);
         }
 
@@ -50,6 +51,8 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
         public async Task StoreEvents(DomainMessage[] events)
         {
             await _manager.CheckId(Context.ConnectionId);
+            foreach (var domainMessage in events) 
+                domainMessage.Sender = Context.ConnectionId;
             await _eventManager.StoreEvents(events);
         }
 

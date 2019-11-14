@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Nito.AsyncEx;
 using Tauron.Application.CQRS.Client.Domain;
 using Tauron.Application.CQRS.Client.Events;
 using Tauron.Application.CQRS.Client.Snapshotting;
@@ -29,12 +30,17 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
         public async Task<TType> GetAggregate<TType>(Guid id) where TType : AggregateRoot
         {
-            AggregateRoot.AggregateLocks.GetOrAdd(id, i => new ReaderWriterLockSlim()).EnterUpgradeableReadLock();
+            var dis = await AggregateRoot.AggregateLocks.GetOrAdd(id, i => new AsyncReaderWriterLock()).ReaderLockAsync();
 
             if (_trackedAggregates.TryGetValue(id, out var descriptor))
             {
                 if (descriptor.Aggregate is TType agg)
+                {
+                    descriptor.Locked = dis;
                     return agg;
+                }
+
+                dis.Dispose();
                 throw new InvalidOperationException("An Cached Aggregate was null");
             }
 
@@ -42,6 +48,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             var aggregate = await _repository.Get<TType>(id);
             descriptor.Aggregate = aggregate;
             descriptor.Version = aggregate.Version;
+            descriptor.Locked = dis;
 
             _trackedAggregates[id] = descriptor;
 
@@ -62,8 +69,9 @@ namespace Tauron.Application.CQRS.Client.Core.Components
                     if (aggregate.GetEvents().IsEmpty)
                         continue;
 
-                    AggregateRoot.AggregateLocks[aggregate.Id].EnterWriteLock();
-                    aggregateDescriptor.WriteLocked = true;
+                    var locker = AggregateRoot.AggregateLocks[aggregate.Id];
+                    aggregateDescriptor.Locked?.Dispose();
+                    aggregateDescriptor.Locked = locker.WriterLock();
 
                     await _snapshotStore.Save(aggregate);
 
@@ -75,14 +83,10 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             }
             finally
             {
-                foreach (var (key, aggregateDescriptor) in _trackedAggregates)
+                foreach (var (_, aggregateDescriptor) in _trackedAggregates)
                 {
-                    if (aggregateDescriptor.WriteLocked)
-                    {
-                        AggregateRoot.AggregateLocks[key].ExitWriteLock();
-                        aggregateDescriptor.WriteLocked = false;
-                    }
-                    AggregateRoot.AggregateLocks[key].ExitUpgradeableReadLock();
+                    aggregateDescriptor.Locked?.Dispose();
+                    aggregateDescriptor.Locked = null;
                 }
 
                 _trackedAggregates.Clear();
@@ -95,7 +99,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
             public long Version { get; set; }
 
-            public bool WriteLocked { get; set; }
+            public IDisposable? Locked { get; set; }
         }
     }
 }

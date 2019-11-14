@@ -143,8 +143,12 @@ namespace Tauron.Application.CQRS.Client.Core.Components.Handler
                             }
                         }
 
-                        if(!ambient)
-                            await _dispatcherClient.SendToClient(GetSender(rawMessage), Guard.CheckNull(await command.Invoke(msg) as OperationResult), rawMessage.OperationId);
+                        var commandResult = await command.Invoke(msg) as OperationResult;
+                        if (_session is IInternalSession internalSession)
+                            await internalSession.Commit();
+
+                        if (!ambient) 
+                            await _dispatcherClient.SendToClient(GetSender(rawMessage), Guard.CheckNull(commandResult), rawMessage.OperationId);
                         break;
                     case Event @event:
                         await @event.Invoke(msg);

@@ -14,7 +14,7 @@ namespace Tauron.Application.CQRS.Common.Server
         
         public long? Version { get; set; }
 
-        public DateTimeOffset TimeStamp { get; set; }
+        public DateTimeOffset TimeStamp { get; set; } = DateTimeOffset.Now;
 
         public Guid? Id { get; set; }
 
