@@ -10,14 +10,14 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         where TRespond : class, IEvent
     {
         private readonly IDisposable _disposable;
-        private readonly ManualResetEvent _asyncManualReset;
+        private readonly ManualResetEventSlim _asyncManualReset;
 
         private TRespond? _respond;
 
         public SimpleAwaiter(GlobalEventHandler<TRespond> globalEventHandler)
         {
             _disposable = globalEventHandler.Register(this, t => Handle(t));
-            _asyncManualReset = new ManualResetEvent(false);
+            _asyncManualReset = new ManualResetEventSlim(false);
         }
 
 
@@ -34,7 +34,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         {
             _asyncManualReset.Reset();
 
-            _asyncManualReset.WaitOne(30_000);
+            _asyncManualReset.Wait(30_000);
 
             return Task.FromResult(_respond);
         }

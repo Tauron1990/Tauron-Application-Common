@@ -60,7 +60,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Hubs
         public async Task PublishEventToClient(DomainMessage message, string client)
         {
             await _manager.CheckId(Context.ConnectionId);
-            await Clients.Client(client).SendAsync(HubMethodNames.PropagateEvent, message);
+            await Clients.Client(client).SendAsync(HubMethodNames.PropagateEvent, message, message.OperationId);
         }
 
         [HubMethodName(HubMethodNames.HeartbeatNames.StillConnected), UsedImplicitlyAttribute]

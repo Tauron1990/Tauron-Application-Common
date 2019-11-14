@@ -163,7 +163,6 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             using var scope = _scopeFactory.CreateScope();
             using var awaiter = scope.ServiceProvider.GetRequiredService<QueryAwaiter<TResponse>>();
 
-            await _connectionManager.Call(HubMethodNames.PublishEvent, query.ToDomainMessage());
             return await awaiter.SendQuery(query, msg => _connectionManager.Call(HubMethodNames.PublishEvent, msg.ToDomainMessage()));
         }
 
