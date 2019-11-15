@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tauron.Application.CQRS.Client.Commands;
+using Tauron.Application.CQRS.Client.Core.Components.Handler;
 using Tauron.Application.CQRS.Client.Events;
 using Tauron.Application.CQRS.Client.Infrastructure;
 using Tauron.Application.CQRS.Client.Querys;
@@ -165,6 +166,11 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         {
             using var scope = _scopeFactory.CreateScope();
             using var awaiter = scope.ServiceProvider.GetRequiredService<QueryAwaiter<TResponse>>();
+
+            string eventName = typeof(TResponse).Name;
+
+            if (!_eventRegistrations.ContainsKey(eventName)) 
+                _eventRegistrations[eventName] = new EventRegistration(new MessageHandler[] {new HandlerListDelegator(new List<Func<HandlerBase>>(), _scopeFactory).Handle});
 
             return await awaiter.SendQuery(query, msg => _connectionManager.Call(HubMethodNames.PublishEvent, msg.ToDomainMessage()));
         }
