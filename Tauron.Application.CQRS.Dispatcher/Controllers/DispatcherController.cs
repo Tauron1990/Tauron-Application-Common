@@ -12,6 +12,8 @@ using Tauron.Application.CQRS.Dispatcher.EventStore.Data;
 
 namespace Tauron.Application.CQRS.Dispatcher.Controllers
 {
+    //TODO Uninstall Service From Persisten Store
+
     [ApiController]
     [Route("Api/[controller]")]
     public class DispatcherController : ControllerBase

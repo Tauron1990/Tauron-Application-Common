@@ -18,6 +18,9 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core.Components
 {
+    //TODO AutoReconnection with teimer
+    //TODO Make Conntent State Visible
+
     [UsedImplicitly]
     public sealed class DispatcherClient : ICoreDispatcherClient, IDisposable
     {

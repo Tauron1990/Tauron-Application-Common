@@ -16,6 +16,10 @@ using Tauron.Application.CQRS.Dispatcher.Hubs;
 
 namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 {
+    //TODO Implent Persisten Store For Registration Of Services
+    //TODO Auto Discard Outdated Messages
+    //TODO Reject Command for nonconnect Services
+
     public class ConnectionManager : IConnectionManager, IDisposable
     {
         private class Registration
