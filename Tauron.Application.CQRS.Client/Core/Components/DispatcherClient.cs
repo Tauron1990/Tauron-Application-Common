@@ -167,7 +167,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             using var scope = _scopeFactory.CreateScope();
             using var awaiter = scope.ServiceProvider.GetRequiredService<QueryAwaiter<TResponse>>();
 
-            string eventName = typeof(TResponse).Name;
+            var eventName = typeof(TResponse).Name;
 
             if (!_eventRegistrations.ContainsKey(eventName)) 
                 _eventRegistrations[eventName] = new EventRegistration(new MessageHandler[] {new HandlerListDelegator(new List<Func<HandlerBase>>(), _scopeFactory).Handle});
