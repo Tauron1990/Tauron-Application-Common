@@ -92,7 +92,7 @@ namespace Tauron.Application.CQRS.Client
             serviceCollection.TryAddSingleton(typeof(GlobalEventHandler<>));
             serviceCollection.TryAddSingleton(typeof(QueryAwaiter<>));
             serviceCollection.TryAddSingleton(typeof(SimpleAwaiter<>));
-            serviceCollection.TryAddSingleton<IErrorManager, ErrorManager>();
+            serviceCollection.TryAddSingleton<IConnectionStadeManager, ConnectionStadeManager>();
 
         }
 

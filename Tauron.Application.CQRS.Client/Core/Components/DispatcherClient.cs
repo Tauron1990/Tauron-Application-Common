@@ -19,9 +19,6 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core.Components
 {
-    //TODO AutoReconnection with teimer
-    //TODO Make Conntent State Visible
-
     [UsedImplicitly]
     public sealed class DispatcherClient : ICoreDispatcherClient, IDisposable
     {
@@ -87,11 +84,11 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         private readonly MessageQueue<MessageDelivery> _messageQueue;
         private readonly SignalRConnectionManager _connectionManager;
 
-        public DispatcherClient(IOptions<ClientCofiguration> configuration, ILogger<ICoreDispatcherClient> logger, IDispatcherApi api, IErrorManager errorManager,
+        public DispatcherClient(IOptions<ClientCofiguration> configuration, ILogger<ICoreDispatcherClient> logger, IDispatcherApi api, IConnectionStadeManager connectionStadeManager,
             IServiceScopeFactory scopeFactory)
         {
             _scopeFactory = scopeFactory;
-            _connectionManager = new SignalRConnectionManager(configuration, logger, errorManager, api);
+            _connectionManager = new SignalRConnectionManager(configuration, logger, connectionStadeManager, api);
             _connectionManager.MessageRecived += message =>
             {
                 if (message.EventType == EventType.CommandResult)

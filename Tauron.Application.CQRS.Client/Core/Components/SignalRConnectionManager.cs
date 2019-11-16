@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Tauron.Application.CQRS.Common;
 using Tauron.Application.CQRS.Common.Configuration;
@@ -11,24 +12,29 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core.Components
 {
+    //TODO AutoReconnection with teimer
+    //TODO Make Conntent State Visible
+
+
     public sealed class SignalRConnectionManager
     {
         public event Action<DomainMessage>? MessageRecived;
 
         private readonly IOptions<ClientCofiguration> _configuration;
         private readonly ILogger<IDispatcherClient> _logger;
-        private readonly IErrorManager _errorManager;
+        private readonly IConnectionStadeManager _connectionStadeManager;
         private readonly IDispatcherApi _dispatcherApi;
         private readonly HubConnection _connection;
 
+        private int _stopOk;
         private string _oldId = string.Empty;
 
-        public SignalRConnectionManager(IOptions<ClientCofiguration> configuration, ILogger<IDispatcherClient> logger, IErrorManager errorManager,
+        public SignalRConnectionManager(IOptions<ClientCofiguration> configuration, ILogger<IDispatcherClient> logger, IConnectionStadeManager connectionStadeManager,
             IDispatcherApi dispatcherApi)
         {
             _configuration = configuration;
             _logger = logger;
-            _errorManager = errorManager;
+            _connectionStadeManager = connectionStadeManager;
             _dispatcherApi = dispatcherApi;
             _connection = new HubConnectionBuilder().WithUrl(configuration.Value.EventHubUrl).AddJsonProtocol().Build();
             _connection.Closed += ConnectionOnClosed;
@@ -53,8 +59,9 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
         private async Task ConnectionOnClosed(Exception arg)
         {
-            if (arg == null) return;
+            if (_stopOk == 1) return;
 
+            _connectionStadeManager.HubConnectionState = _connection.State;
             await Task.Delay(3000);
             await Connect();
         }
@@ -63,6 +70,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         {
             try
             {
+                Interlocked.Exchange(ref _stopOk, 0);
                 await _connection.StartAsync();
                 await Validate();
 
@@ -71,9 +79,13 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             catch (Exception e)
             {
                 _logger.LogError(e, "Error on Connect to Server");
-                await _errorManager.ConnectionFailed(e.Message);
+                await _connectionStadeManager.ConnectionFailed(e.Message);
 
                 return false;
+            }
+            finally
+            {
+                _connectionStadeManager.HubConnectionState = _connection.State;
             }
         }
 
@@ -83,8 +95,11 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         public Task Call(string name, Array arg)
             => _connection.SendAsync(name, arg);
 
-        public async Task Disconnect() 
-            => await _connection.StopAsync();
+        public async Task Disconnect()
+        {
+            Interlocked.Exchange(ref _stopOk, 1);
+            await _connection.StopAsync();
+        }
 
         private async Task Validate()
         {
