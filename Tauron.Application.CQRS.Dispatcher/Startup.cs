@@ -30,8 +30,8 @@ namespace Tauron.Application.CQRS.Dispatcher
 
             switch (_config.GetValue<string>("ServiceStore").ToLower())
             {
-                case "xml":
-                    services.AddSingleton<IServiceRegistrationStore, XmlServiceRegistratonStore>();
+                case "json":
+                    services.AddSingleton<IServiceRegistrationStore, JsonServiceRegistratonStore>();
                     break;
                 default:
                     services.AddSingleton<IServiceRegistrationStore, InMemoryServiceRegistratonStore>();
