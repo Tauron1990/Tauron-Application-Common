@@ -3,23 +3,20 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Tauron.Application.CQRS.Common;
+using Tauron.Application.CQRS.Common.Dto;
 using Tauron.Application.CQRS.Common.Server;
-using Tauron.Application.CQRS.Dispatcher.EventStore;
 using Tauron.Application.CQRS.Dispatcher.EventStore.Data;
 using Tauron.Application.CQRS.Dispatcher.Hubs;
 
 namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 {
-    //TODO Implent Persisten Store For Registration Of Services
-    //TODO Auto Discard Outdated Messages
-    //TODO Reject Command for nonconnect Services
-
     public class ConnectionManager : IConnectionManager, IDisposable
     {
         private class Registration
@@ -30,16 +27,19 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
             public bool Validated { get; set; }
 
-            public string[] EventSubscriptions { get; set; } = new string[0];
+            public string[] EventSubscriptions { get; set; }
 
             public bool Disconnected { get; set; }
 
             public Stopwatch LastHeartBeat { get; }
 
-            public Registration(string id)
+            public Registration(string id, KnowenService service)
             {
                 LastHeartBeat = Stopwatch.StartNew();
                 Id = id;
+
+                ServiceName = service.Name;
+                EventSubscriptions = service.Subscriptions;
             }
         }
 
@@ -49,10 +49,13 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
             public DomainMessage DomainMessage { get; }
 
-            public PendingMessage(string serviceName, DomainMessage domainMessage)
+            public DateTimeOffset Timeout { get; }
+
+            public PendingMessage(string serviceName, DomainMessage domainMessage, DateTimeOffset timeout)
             {
                 ServiceName = serviceName;
                 DomainMessage = domainMessage;
+                Timeout = timeout;
             }
         }
 
@@ -65,33 +68,51 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
         private readonly ReaderWriterLock _databaseLock = new ReaderWriterLock();
         private readonly Timer _messageTimer;
+        private readonly TimeSpan _messageTimeout;
 
         private readonly IObjectFactory _objectFactory;
         private readonly HubLifetimeManager<EventHub> _lifetimeManager;
         private readonly IHubContext<EventHub> _hubContext;
         private readonly ILogger<IConnectionManager> _logger;
 
-        public ConnectionManager(IObjectFactory objectFactory, HubLifetimeManager<EventHub> lifetimeManager, IHubContext<EventHub> hubContext, ILogger<IConnectionManager> logger)
+        private readonly IServiceRegistrationStore _store;
+
+        public ConnectionManager(IObjectFactory objectFactory, HubLifetimeManager<EventHub> lifetimeManager, IHubContext<EventHub> hubContext, ILogger<IConnectionManager> logger, 
+            IConfiguration configuration, IServiceRegistrationStore store)
         {
+            try
+            {
+                var timeout = configuration.GetValue<int>("MessageTimeout");
+                _messageTimeout = TimeSpan.FromSeconds(timeout);
+            }
+            catch 
+            {
+                _messageTimeout = TimeSpan.FromSeconds(30);
+            }
+
             _objectFactory = objectFactory;
             _lifetimeManager = lifetimeManager;
             _hubContext = hubContext;
             _logger = logger;
+            _store = store;
             _messageTimer = new Timer(CheckMessages);
             using var context = objectFactory.CreateDatabase();
 
             foreach (var pendingMessage in context.Target.PendingMessages.ToArray().GroupBy(pm => pm.ServiceName))
             {
                 _pendingMessages.AddOrUpdate(pendingMessage.Key,
-                    s => new List<PendingMessage>(pendingMessage.Select(m => new PendingMessage(s, m.ToDomainMessage()))),
+                    s => new List<PendingMessage>(pendingMessage.Select(m => new PendingMessage(s, m.ToDomainMessage(), m.Timeout))),
                     (s, list) =>
                     {
                         lock (list) 
-                            list.AddRange(pendingMessage.Select(m => new PendingMessage(s, m.ToDomainMessage())));
+                            list.AddRange(pendingMessage.Select(m => new PendingMessage(s, m.ToDomainMessage(), m.Timeout)));
 
                         return list;
                     });
             }
+
+            foreach (var knowenService in _store.GetAllServices()) 
+                _registrations[knowenService.Name] = new Registration(string.Empty, knowenService) {Disconnected = true};
 
             _messageTimer.Change(TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
         }
@@ -114,6 +135,20 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
                 try
                 {
+                    var currentTime = DateTimeOffset.Now;
+
+                    foreach (var (_, pendingMessages) in _pendingMessages)
+                    {
+                        lock (pendingMessages)
+                        {
+                            foreach (var pendingMessage in pendingMessages.Where(pendingMessage => currentTime > pendingMessage.Timeout))
+                            {
+                                _removed.Add(pendingMessage);
+                                pendingMessages.Remove(pendingMessage);
+                            }
+                        }
+                    }
+
                     var removeGroups = _removed.GroupBy(m => m.ServiceName).ToArray();
                     var addedGroups = _added.GroupBy(m => m.ServiceName).ToArray();
 
@@ -188,11 +223,12 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
                 {
                     _pendingMessages.AddOrUpdate(
                         Guard.CheckNull(registration.ServiceName),
-                        s => new List<PendingMessage>(new[] {new PendingMessage(s, domainMessage),}),
+                        // ReSharper disable once InconsistentlySynchronizedField
+                        s => new List<PendingMessage>(new[] {new PendingMessage(s, domainMessage, DateTimeOffset.Now + _messageTimeout)}),
                         (s, list) =>
                         {
                             lock (list)
-                                list.Add(new PendingMessage(s, domainMessage));
+                                list.Add(new PendingMessage(s, domainMessage, DateTimeOffset.Now + _messageTimeout));
 
                             return list;
                         });
@@ -205,9 +241,39 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
                 {
                     case EventType.Command:
                     case EventType.Query:
-                        var list = _circulationLists.GetOrAdd(Guard.CheckNull(domainMessage.EventName), s => new CirculationList(GetSubscripedClients(s)));
+                        var list = _circulationLists.AddOrUpdate(Guard.CheckNull(domainMessage.EventName), s => new CirculationList(GetSubscripedClients(s)), 
+                            (s, circulationList) => circulationList.Replace(GetSubscripedClients(s)));
+
                         var nextId = list.GetNext();
-                        if (string.IsNullOrEmpty(nextId)) return;
+                        var firstId = nextId;
+                        if (nextId == null) return;
+
+                        while (true)
+                        {
+                            if (_registrations.TryGetValue(Guard.CheckNull(nextId), out var registration) && !registration.Disconnected)
+                                break;
+
+                            var tempId = list.GetNext();
+
+                            if (tempId == nextId || firstId == tempId)
+                            {
+                                var msg = new DomainMessage
+                                {
+                                    EventData = JsonSerializer.Serialize(OperationResult.Failed(OperationError.Error(-111, "Service Offline")), typeof(OperationResult)),
+                                    TypeName = typeof(OperationResult).AssemblyQualifiedName,
+                                    EventName = typeof(OperationResult).Name,
+                                    EventType = EventType.Command,
+                                    OperationId = domainMessage.OperationId
+                                };
+
+                                if (domainMessage.EventType == EventType.Command)
+                                    await _hubContext.Clients.Client(domainMessage.Sender).SendAsync(HubMethodNames.PropagateEvent, msg, msg.OperationId);
+
+                                return;
+                            }
+                            else
+                                nextId = tempId;
+                        }
 
                         toSend = _hubContext.Clients.Client(nextId);
 
@@ -229,10 +295,13 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
             }
         }
 
-        public Task Validated(string id, string serviceName, string oldId)
+        public async Task Validated(string id, string serviceName, string oldId)
         {
             if (_registrations.TryGetValue(oldId, out var registration))
             {
+                registration.Disconnected = false;
+                registration.Id = id;
+
                 _registrations[id] = registration;
                 _registrations.TryRemove(oldId, out _);
 
@@ -240,19 +309,17 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
                     list.Replace(GetSubscripedClients(eventName));
             }
             else
-                _registrations[id] = new Registration(id)
+                _registrations[id] = new Registration(id, await _store.Get(serviceName))
                 {
                     Validated = true, 
                     ServiceName = serviceName
                 };
-
-            return Task.CompletedTask;
         }
 
         public Task Disconected(string id)
         {
-            foreach (var registration in _registrations.Where(r => r.Value.Id == id)) 
-                _registrations.Remove(registration.Key, out _);
+            foreach (var registration in _registrations.Where(r => r.Value.Id == id))
+                registration.Value.Disconnected = false;
 
             return Task.CompletedTask;
         }
@@ -261,8 +328,12 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
         {
             try
             {
-                if (_registrations.TryGetValue(_registrations.First(p => p.Value.Id == id).Key, out var registration)) 
+                if (_registrations.TryGetValue(_registrations.First(p => p.Value.Id == id).Key, out var registration))
+                {
                     registration.EventSubscriptions = events;
+                    if(registration.ServiceName != null)
+                        await _store.UpdateSubscriptions(registration.ServiceName, events);
+                }
 
                 foreach (var @event in events)
                 {
@@ -335,6 +406,6 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
             => _messageTimer.Dispose();
 
         private IEnumerable<string> GetSubscripedClients(string eventName) 
-            => _registrations.Select(r => r.Value).Where(r => r.EventSubscriptions.Contains(eventName)).Select(r => r.Id);
+            => _registrations.Select(r => r.Value).Where(r => r.EventSubscriptions.Contains(eventName) && !r.Disconnected).Select(r => r.Id);
     }
 }

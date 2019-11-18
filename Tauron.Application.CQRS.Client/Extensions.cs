@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,16 +12,17 @@ using Tauron.Application.CQRS.Client.Core.Components.Handler;
 using Tauron.Application.CQRS.Client.Domain;
 using Tauron.Application.CQRS.Client.Events;
 using Tauron.Application.CQRS.Client.Events.Invoker;
-using Tauron.Application.CQRS.Client.Infrastructure;
 using Tauron.Application.CQRS.Client.Querys;
 using Tauron.Application.CQRS.Client.Snapshotting;
 using Tauron.Application.CQRS.Common.Configuration;
+using Tauron.Application.CQRS.Common.Dto;
 using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client
 {
     public static class Extensions
     {
+
         private static readonly Random Random = new Random();
 
         public static TType? ToRealMessage<TType>(this DomainMessage message)
@@ -37,13 +37,13 @@ namespace Tauron.Application.CQRS.Client
             var type = message.GetType();
 
             var msg = new DomainMessage
-                      {
-                          EventData = JsonSerializer.Serialize(message, message.GetType()),
-                          TypeName = type.AssemblyQualifiedName,
-                          EventName = type.Name,
-                          EventType = EventType.Command,
-                          OperationId = DateTime.UtcNow.Ticks + Random.Next()
-                      };
+            {
+                EventData = JsonSerializer.Serialize(message, message.GetType()),
+                TypeName = type.AssemblyQualifiedName,
+                EventName = type.Name,
+                EventType = EventType.Command,
+                OperationId = DateTime.UtcNow.Ticks + Random.Next()
+            };
 
             switch (message)
             {
@@ -72,7 +72,6 @@ namespace Tauron.Application.CQRS.Client
 
             return msg;
         }
-
 
         public static void AddCqrs(this IServiceCollection serviceCollection, Action<ClientCofiguration> config)
         {

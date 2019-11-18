@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Tauron.Application.CQRS.Client.Infrastructure;
+using Tauron.Application.CQRS.Common.Dto;
 
 namespace Tauron.Application.CQRS.Client.Specifications.Fluent
 {

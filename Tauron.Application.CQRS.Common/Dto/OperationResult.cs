@@ -2,7 +2,7 @@
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace Tauron.Application.CQRS.Client.Infrastructure
+namespace Tauron.Application.CQRS.Common.Dto
 {
     public sealed class OperationResult : IMessage
     {

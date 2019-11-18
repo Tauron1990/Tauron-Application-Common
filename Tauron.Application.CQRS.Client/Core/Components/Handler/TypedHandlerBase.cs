@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Tauron.Application.CQRS.Client.Infrastructure;
+using Tauron.Application.CQRS.Common.Dto;
 using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core.Components.Handler

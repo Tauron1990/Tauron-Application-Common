@@ -12,10 +12,6 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core.Components
 {
-    //TODO AutoReconnection with teimer
-    //TODO Make Conntent State Visible
-
-
     public sealed class SignalRConnectionManager
     {
         public event Action<DomainMessage>? MessageRecived;
@@ -25,6 +21,7 @@ namespace Tauron.Application.CQRS.Client.Core.Components
         private readonly IConnectionStadeManager _connectionStadeManager;
         private readonly IDispatcherApi _dispatcherApi;
         private readonly HubConnection _connection;
+        private readonly  Timer _reconnectTimer;
 
         private int _stopOk;
         private string _oldId = string.Empty;
@@ -36,11 +33,22 @@ namespace Tauron.Application.CQRS.Client.Core.Components
             _logger = logger;
             _connectionStadeManager = connectionStadeManager;
             _dispatcherApi = dispatcherApi;
+
+            _reconnectTimer = new Timer(TryReconnect);
+
             _connection = new HubConnectionBuilder().WithUrl(configuration.Value.EventHubUrl).AddJsonProtocol().Build();
             _connection.Closed += ConnectionOnClosed;
 
             _connection.On(HubMethodNames.PropagateEvent, new Func<DomainMessage, long, Task>(EventRecived));
             _connection.On(HubMethodNames.HeartbeatNames.Heartbeat, async () => await _connection.SendAsync(HubMethodNames.HeartbeatNames.StillConnected));
+        }
+
+        private async void TryReconnect(object state)
+        {
+            if(await Connect())
+                return;
+
+            _reconnectTimer.Change(TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
         }
 
         private async Task EventRecived(DomainMessage msg, long id)
@@ -63,7 +71,10 @@ namespace Tauron.Application.CQRS.Client.Core.Components
 
             _connectionStadeManager.HubConnectionState = _connection.State;
             await Task.Delay(3000);
-            await Connect();
+            if (await Connect())
+                return;
+
+            _reconnectTimer.Change(TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
         }
 
         public async Task<bool> Connect()

@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Tauron.Application.CQRS.Client.Infrastructure;
 using Tauron.Application.CQRS.Common;
+using Tauron.Application.CQRS.Common.Dto;
 
 namespace Tauron.Application.CQRS.Client.Core.Components
 {

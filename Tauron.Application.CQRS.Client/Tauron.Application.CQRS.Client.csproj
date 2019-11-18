@@ -24,4 +24,8 @@
     <ProjectReference Include="..\Tauron.Application.CQRS.Common\Tauron.Application.CQRS.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Infrastructure\" />
+  </ItemGroup>
+
 </Project>

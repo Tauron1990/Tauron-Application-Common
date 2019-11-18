@@ -12,16 +12,18 @@ namespace Tauron.Application.CQRS.Dispatcher.Core
         public CirculationList(IEnumerable<string> content) 
             => _buffer.PushRange(content.ToArray());
 
-        public void Replace(IEnumerable<string> content)
+        public CirculationList Replace(IEnumerable<string> content)
         {
             _buffer.Clear();
 
             _buffer.PushRange(content.ToArray());
+
+            return this;
         }
 
-        public string GetNext()
+        public string? GetNext()
         {
-            if (!_buffer.TryPop(out var element)) return string.Empty;
+            if (!_buffer.TryPop(out var element)) return null;
             
             _buffer.Push(element);
 

@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Tauron.Application.CQRS.Client;
 using Tauron.Application.CQRS.Client.Commands;
-using Tauron.Application.CQRS.Client.Infrastructure;
+using Tauron.Application.CQRS.Common.Dto;
 
 namespace EventDeliveryTest.Test
 {

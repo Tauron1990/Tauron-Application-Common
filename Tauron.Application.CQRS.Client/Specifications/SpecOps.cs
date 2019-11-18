@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Tauron.Application.CQRS.Client.Infrastructure;
+using Tauron.Application.CQRS.Common.Dto;
 
 namespace Tauron.Application.CQRS.Client.Specifications
 {

@@ -5,11 +5,11 @@ using Microsoft.Extensions.Logging;
 using Tauron.Application.CQRS.Client.Commands;
 using Tauron.Application.CQRS.Client.Domain;
 using Tauron.Application.CQRS.Client.Events;
-using Tauron.Application.CQRS.Client.Infrastructure;
 using Tauron.Application.CQRS.Client.Querys;
 using Tauron.Application.CQRS.Client.Specifications;
 using Tauron.Application.CQRS.Client.Specifications.Fluent;
 using Tauron.Application.CQRS.Common;
+using Tauron.Application.CQRS.Common.Dto;
 using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Client.Core.Components.Handler

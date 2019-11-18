@@ -28,6 +28,16 @@ namespace Tauron.Application.CQRS.Dispatcher
         {
             //API GateWay Ocelot
 
+            switch (_config.GetValue<string>("ServiceStore").ToLower())
+            {
+                case "xml":
+                    services.AddSingleton<IServiceRegistrationStore, XmlServiceRegistratonStore>();
+                    break;
+                default:
+                    services.AddSingleton<IServiceRegistrationStore, InMemoryServiceRegistratonStore>();
+                    break;
+            }
+
             services.AddSingleton<IApiKeyStore, ApiKeyStore>();
             services.AddTransient<IObjectFactory, InternalObjectFactory>();
             services.AddScoped<DispatcherDatabaseContext>();

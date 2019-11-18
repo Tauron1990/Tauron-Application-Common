@@ -4,8 +4,10 @@ using Tauron.Application.CQRS.Common.Server;
 
 namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
 {
-    public class EventEntity
+    public class PendingMessageEntity
     {
+        public string? ServiceName { get; set; }
+        
         [Key]
         public long SequenceNumber { get; set; }
 
@@ -25,22 +27,7 @@ namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
 
         public long OperationId { get; set; }
 
-        public EventEntity()
-        {
-            
-        }
-
-        public EventEntity(DomainMessage domainMessage)
-        {
-            Id = domainMessage.Id;
-            EventType = domainMessage.EventType;
-            Data = domainMessage.EventData;
-            EventName = domainMessage.EventName;
-            OriginType = domainMessage.TypeName;
-            Version = domainMessage.Version;
-            TimeStamp = domainMessage.TimeStamp;
-            OperationId = domainMessage.OperationId;
-        }
+        public DateTimeOffset Timeout { get; set; }
 
         public DomainMessage ToDomainMessage()
         {
@@ -55,6 +42,24 @@ namespace Tauron.Application.CQRS.Dispatcher.EventStore.Data
                 Version = Version,
                 TimeStamp = TimeStamp,
             };
+        }
+
+        public PendingMessageEntity()
+        {
+            
+        }
+
+        public PendingMessageEntity(DomainMessage msg, string serviceName)
+        {
+            ServiceName = serviceName;
+            Id = msg.Id;
+            EventType = msg.EventType;
+            Data = msg.EventData;
+            EventName = msg.EventName;
+            OriginType = msg.TypeName;
+            Version = msg.Version;
+            TimeStamp = msg.TimeStamp;
+            OperationId = msg.OperationId;
         }
     }
 }

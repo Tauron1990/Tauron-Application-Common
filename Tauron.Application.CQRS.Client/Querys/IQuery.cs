@@ -1,4 +1,4 @@
-﻿using Tauron.Application.CQRS.Client.Infrastructure;
+﻿using Tauron.Application.CQRS.Common.Dto;
 
 namespace Tauron.Application.CQRS.Client.Querys
 {
