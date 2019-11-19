@@ -18,9 +18,9 @@ namespace ServiceManager.Core.Installation.Core
         }
 
         private bool _running;
-        private object _content;
+        private object? _content;
 
-        public object Content
+        public object? Content
         {
             get => _content;
             protected set
@@ -45,7 +45,7 @@ namespace ServiceManager.Core.Installation.Core
         }
 
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public virtual Task Rollback(InstallerContext context) => Task.CompletedTask;
 
@@ -54,7 +54,7 @@ namespace ServiceManager.Core.Installation.Core
         public abstract Task<string?> RunInstall(InstallerContext context);
 
         [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
 
         public virtual void Dispose()

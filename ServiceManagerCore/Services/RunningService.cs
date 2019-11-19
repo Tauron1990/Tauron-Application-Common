@@ -6,12 +6,11 @@ namespace ServiceManager.Core.Services
 {
     public sealed class RunningService : INotifyPropertyChanged
     {
-        private string _installationPath;
+        private string? _installationPath;
         private ServiceStade _serviceStade;
-        private string _name;
-        private string _exe;
+        private string? _name;
 
-        public string InstallationPath
+        public string? InstallationPath
         {
             get => _installationPath;
             set
@@ -33,7 +32,7 @@ namespace ServiceManager.Core.Services
             }
         }
 
-        public string Name
+        public string? Name
         {
             get => _name;
             set
@@ -44,11 +43,7 @@ namespace ServiceManager.Core.Services
             }
         }
 
-        public string Exe
-        {
-            get => _exe;
-            set => _exe = value;
-        }
+        public string? Exe { get; set; }
 
         public RunningService(string installationPath, ServiceStade serviceStade, string name, string exe)
         {
@@ -62,9 +57,9 @@ namespace ServiceManager.Core.Services
         {
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        private void OnPropertyChanged([CallerMemberName] string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

@@ -21,15 +21,19 @@ namespace ServiceManager.Core.Installation.Tasks
 
         public override Task<string?> RunInstall(InstallerContext context)
         {
-            if (!context.MetaData.TryGetTypedValue(MetaKeys.ArchiveFile, out ZipArchive zipArchive))
-                return Task.FromResult("Zip Erchive nicht gefunden");
+            if (!context.MetaData.TryGetTypedValue(MetaKeys.ArchiveFile, out ZipArchive? zipArchive))
+#pragma warning disable CS8619 // Die NULL-Zulässigkeit von Verweistypen im Wert entspricht nicht dem Zieltyp.
+                return Task.FromResult("Zip Erchive nicht gefunden"!);
+#pragma warning restore CS8619 // Die NULL-Zulässigkeit von Verweistypen im Wert entspricht nicht dem Zieltyp.
 
             DeleteTemp();
 
             zipArchive.ExtractToDirectory(_tempPath);
             context.MetaData[MetaKeys.TempLocation] = _tempPath;
 
-            return Task.FromResult<string>(null);
+#pragma warning disable CS8619 // Die NULL-Zulässigkeit von Verweistypen im Wert entspricht nicht dem Zieltyp.
+            return Task.FromResult<string>(null!);
+#pragma warning restore CS8619 // Die NULL-Zulässigkeit von Verweistypen im Wert entspricht nicht dem Zieltyp.
         }
 
         public override void Dispose() 
