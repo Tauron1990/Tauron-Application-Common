@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>8</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ServiceManager.Core</RootNamespace>
+    <AssemblyName>ServiceManager.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Installation\Tasks\Ui\NameSelection.xaml" />
+    <None Remove="Installation\UnistallWindowOld.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Include="Installation\Tasks\Ui\NameSelection.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Installation\UnistallWindowOld.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tauron.Application.CQRS.Client\Tauron.Application.CQRS.Client.csproj" />
+    <ProjectReference Include="..\Tauron.Application.CQRS.Extensions.ServiceControl\Tauron.Application.CQRS.Extensions.ServiceControl.csproj" />
+  </ItemGroup>
+
+</Project>

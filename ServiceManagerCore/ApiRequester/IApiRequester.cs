@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using RestEase;
 
-namespace ServiceManager.ApiRequester
+namespace ServiceManager.Core.ApiRequester
 {
     public interface IApiRequester
     {

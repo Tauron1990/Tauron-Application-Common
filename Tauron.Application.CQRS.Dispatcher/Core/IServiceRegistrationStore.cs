@@ -10,5 +10,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core
         Task<KnowenService> Get(string serviceName);
 
         Task UpdateSubscriptions(string serviceName, string[] events);
+
+        Task<bool> Remove(string name);
     }
 }

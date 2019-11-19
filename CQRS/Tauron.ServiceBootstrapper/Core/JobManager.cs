@@ -58,7 +58,7 @@ namespace Tauron.ServiceBootstrapper.Core
         private readonly Timer _timer;
 
         private int _stop;
-        private JobContext _jobContext;
+        private JobContext? _jobContext;
 
         public JobManager(ILogger<JobManager> logger, IServiceScopeFactory scopeFactory)
         {

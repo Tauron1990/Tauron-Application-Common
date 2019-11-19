@@ -4,6 +4,6 @@ namespace Tauron.Application.CQRS.Extensions.ServiceControl
 {
     public class StopServiceCommand : IAmbientCommand
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 }

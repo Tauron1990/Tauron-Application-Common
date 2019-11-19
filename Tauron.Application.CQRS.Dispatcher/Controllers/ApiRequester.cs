@@ -30,14 +30,5 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
 
             return key;
         }
-
-        [Route(nameof(RemoveApiKey))]
-        [HttpGet]
-        public async Task<ActionResult<bool>> RemoveApiKey(string serviceName)
-        {
-            if (!_configuration.GetValue<bool>("FreeAcess")) return Forbid();
-
-            return await _keyStore.Remove(serviceName);
-        }
     }
 }

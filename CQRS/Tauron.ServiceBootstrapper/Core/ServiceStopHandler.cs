@@ -24,7 +24,7 @@ namespace Tauron.ServiceBootstrapper.Core
             _eventPublisher = eventPublisher;
         }
 
-        public async Task<OperationResult> Handle(StopServiceCommand message)
+        public async Task<OperationResult?> Handle(StopServiceCommand message)
         {
             if (message.Name != _options.Value.ServiceName) return OperationResult.Success;
             

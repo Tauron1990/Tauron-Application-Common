@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Tauron.Application.CQRS.Common.Dto;
 using Tauron.Application.CQRS.Common.Dto.Persistable;
 using Tauron.Application.CQRS.Common.Server;
@@ -12,8 +13,6 @@ using Tauron.Application.CQRS.Dispatcher.EventStore.Data;
 
 namespace Tauron.Application.CQRS.Dispatcher.Controllers
 {
-    //TODO Uninstall Service From Persisten Store
-
     [ApiController]
     [Route("Api/[controller]")]
     public class DispatcherController : ControllerBase
@@ -21,12 +20,17 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
         private readonly IApiKeyStore _apiKeyStore;
         private readonly DispatcherDatabaseContext _context;
         private readonly IConnectionManager _connectionManager;
+        private readonly IServiceRegistrationStore _store;
+        private readonly IConfiguration _configuration;
 
-        public DispatcherController(IApiKeyStore apiKeyStore, DispatcherDatabaseContext context, IConnectionManager connectionManager)
+        public DispatcherController(IApiKeyStore apiKeyStore, DispatcherDatabaseContext context, IConnectionManager connectionManager, IServiceRegistrationStore store,
+                                    IConfiguration configuration)
         {
             _apiKeyStore = apiKeyStore;
             _context = context;
             _connectionManager = connectionManager;
+            _store = store;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -71,12 +75,14 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
             {
                 var data = stade.ObjectStade?.Data;
                 if (data != null)
+                {
                     _context.ObjectStades.Add(new ObjectStadeEntity
-                    {
-                        Data = data,
-                        Identifer = id,
-                        //OriginType = stade.ObjectStade.OriginalType
-                    });
+                                              {
+                                                  Data = data,
+                                                  Identifer = id,
+                                                  //OriginType = stade.ObjectStade.OriginalType
+                                              });
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -105,5 +111,19 @@ namespace Tauron.Application.CQRS.Dispatcher.Controllers
             await _connectionManager.Validated(validateConnection.NewId ?? string.Empty, serviceName, validateConnection.OldId ?? string.Empty);
             return true;
         }
+
+        [Route("Services")]
+        [HttpDelete]
+        public async Task<ActionResult> RemoveService(string name)
+        {
+            if (!IsFreeAcess()) return base.Forbid();
+
+            if (await _store.Remove(name) &&  await _apiKeyStore.Remove(name))
+                return Ok();
+
+            return NotFound();
+        }
+
+        private bool IsFreeAcess() => _configuration.GetValue<bool>("FreeAcess");
     }
 }

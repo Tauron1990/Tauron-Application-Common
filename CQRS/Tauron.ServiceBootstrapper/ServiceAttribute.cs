@@ -8,7 +8,7 @@ namespace Tauron.ServiceBootstrapper
     {
         public ServiceLifetime Lifetime { get; }
 
-        public Type Interface { get; set; }
+        public Type? Interface { get; set; }
 
         public ServiceAttribute(ServiceLifetime lifetime) 
             => Lifetime = lifetime;

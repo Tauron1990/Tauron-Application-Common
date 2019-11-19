@@ -1,14 +1,16 @@
-﻿using JetBrains.Annotations;
+﻿using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Ookii.CommandLine;
 
 namespace Tauron.ServiceBootstrapper
 {
     [PublicAPI]
     public class StartOptions<TArgs>
+        where TArgs : class
     {
-        public TArgs Args { get; }
+        public TArgs? Args { get; }
 
-        public CommandLineArgumentException Error { get; }
+        public CommandLineArgumentException? Error { get; }
 
         public bool Ok { get; set; }
 

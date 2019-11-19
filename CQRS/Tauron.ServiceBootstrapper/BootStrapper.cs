@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Tauron.Application.CQRS.Client;
+using Tauron.Application.CQRS.Common;
 using Tauron.Application.CQRS.Common.Configuration;
 using Tauron.ServiceBootstrapper.Core;
 using Tauron.ServiceBootstrapper.Jobs;
@@ -20,9 +21,9 @@ namespace Tauron.ServiceBootstrapper
     public static class BootStrapper
     {
         private static readonly ManualResetEvent ExitWaiter = new ManualResetEvent(false);
-        private static IServiceProvider _serviceProvider;
+        private static IServiceProvider? _serviceProvider;
 
-        public static event Func<IServiceProvider, Task> ShutdownEvent; 
+        public static event Func<IServiceProvider, Task>? ShutdownEvent; 
 
         //public static Task Run(
         //    string[] args, Action<ClientCofiguration> clientConfig = null,
@@ -31,9 +32,10 @@ namespace Tauron.ServiceBootstrapper
         //    Run<EmtyOptions>(args, clientConfig, config, startUp);
 
         public static async Task Run<TStartOptions>(
-            string[] args, Action<ClientCofiguration> clientConfig = null,
-            Func<ServiceCollection, Task> config = null, 
-            Func<IServiceProvider, StartOptions<TStartOptions>, Task> startUp = null)
+            string[] args, Action<ClientCofiguration>? clientConfig = null,
+            Func<ServiceCollection, Task>? config = null, 
+            Func<IServiceProvider, StartOptions<TStartOptions>, Task>? startUp = null)
+        where TStartOptions : class
         {
             var rootPath = AppContext.BaseDirectory;
             var collection = new ServiceCollection();
@@ -102,7 +104,7 @@ namespace Tauron.ServiceBootstrapper
             provider.Dispose();
         }
 
-        private static IServiceScopeFactory GetScopeFactory() => _serviceProvider?.GetService<IServiceScopeFactory>();
+        private static IServiceScopeFactory? GetScopeFactory() => _serviceProvider?.GetService<IServiceScopeFactory>();
 
         private static IConfiguration GetServiceConfig(string path)
         {
@@ -113,7 +115,7 @@ namespace Tauron.ServiceBootstrapper
             return configBuilder.Build();
         }
 
-        private static IConfiguration GetAppConfig(string path)
+        private static IConfiguration? GetAppConfig(string path)
         {
             var realPath = Path.Combine(path, "AppSettings.json");
             if (!File.Exists(realPath)) return null;
@@ -127,7 +129,7 @@ namespace Tauron.ServiceBootstrapper
         internal static async Task Shutdown()
         {
             if (ShutdownEvent != null)
-                await ShutdownEvent(_serviceProvider);
+                await ShutdownEvent(Guard.CheckNull(_serviceProvider));
             ExitWaiter.Set();
         }
     }

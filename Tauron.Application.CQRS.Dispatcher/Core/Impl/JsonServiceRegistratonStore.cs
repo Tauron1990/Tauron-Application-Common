@@ -38,6 +38,9 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
             await Save();
         }
 
+        public async Task<bool> Remove(string name) 
+            => _services.TryRemove(name, out _) && await Save();
+
         private void Read()
         {
             try
@@ -55,17 +58,21 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
             }
         }
 
-        private async Task Save()
+        private async Task<bool> Save()
         {
             try
             {
                 var toSave = new List<KnowenService>(_services.Values);
                 var data = JsonSerializer.Serialize(toSave);
                 await File.WriteAllTextAsync(_savePath, data);
+
+                return true;
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Error on Save Services");
+
+                return false;
             }
         }
     }

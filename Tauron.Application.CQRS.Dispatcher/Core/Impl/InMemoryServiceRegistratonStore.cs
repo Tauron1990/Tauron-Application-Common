@@ -16,5 +16,12 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
         public async Task UpdateSubscriptions(string serviceName, string[] events) 
             => (await Get(serviceName)).SafeExcange(events);
+
+        public Task<bool> Remove(string name)
+        {
+            _services.Remove(name, out _);
+
+            return Task.FromResult(true);
+        }
     }
 }

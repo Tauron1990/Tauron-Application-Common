@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tauron.Application.CQRS.Client.Events;
+using Tauron.Application.CQRS.Common;
 using Tauron.Application.CQRS.Common.Configuration;
 using Tauron.Application.CQRS.Extensions.ServiceControl.Logging;
 
@@ -53,19 +54,20 @@ namespace Tauron.ServiceBootstrapper.Core
             }
         }
 
-        private Func<IServiceScopeFactory> _factory;
+        private Func<IServiceScopeFactory?>? _factory;
 
-        private IEventPublisher _eventPublisher;
+        private IEventPublisher? _eventPublisher;
+        private ClientCofiguration? _clientCofiguration;
 
-        public SendingProvider([NotNull]Func<IServiceScopeFactory> factory) => _factory = factory;
+        public SendingProvider([NotNull]Func<IServiceScopeFactory?> factory) => _factory = factory;
 
         private (IEventPublisher, ClientCofiguration) GetEventPublisher()
         {
             lock (this)
             {
-                if (_eventPublisher != null) return default;
+                if (_eventPublisher != null && _clientCofiguration != null) return (_eventPublisher, _clientCofiguration);
 
-                var temp = _factory();
+                var temp = _factory?.Invoke();
                 if (temp == null) return default;
 
                 using var scope = temp.CreateScope();
@@ -73,7 +75,7 @@ namespace Tauron.ServiceBootstrapper.Core
                 if (_eventPublisher != null)
                     _factory = null;
 
-                return (_eventPublisher, scope.ServiceProvider.GetRequiredService<IOptions<ClientCofiguration>>().Value);
+                return (Guard.CheckNull(_eventPublisher), Guard.CheckNull(_clientCofiguration = scope.ServiceProvider.GetRequiredService<IOptions<ClientCofiguration>>().Value));
             }
         }
 

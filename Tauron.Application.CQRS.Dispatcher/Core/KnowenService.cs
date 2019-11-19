@@ -16,10 +16,12 @@ namespace Tauron.Application.CQRS.Dispatcher.Core
 
         public KnowenService()
         {
-            
+            Name = string.Empty;
+            _subscriptions = new string[0];
         }
 
         public KnowenService(string name, string[] subscriptions)
+            : this()
         {
             Name = name;
             Subscriptions = subscriptions;

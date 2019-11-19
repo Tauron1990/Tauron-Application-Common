@@ -8,6 +8,9 @@ namespace Tauron.Application.CQRS.Client.Core
 {
     public interface IDispatcherApi
     {
+        [Delete("Services")]
+        Task RemoveService(string name);
+
         [Get("Hub")]
         Task<bool> Validate([Body] ValidateConnection validateConnection);
 
