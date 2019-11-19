@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -154,13 +155,20 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
                     foreach (var addedGroup in addedGroups)
                     {
-                        if (!dbDic.TryGetValue(addedGroup.Key, out var list)) continue;
+                        if (!dbDic.TryGetValue(addedGroup.Key, out var list))
+                        {
+                            list = new List<PendingMessageEntity>();
+                            dbDic[addedGroup.Key] = list;
+                        }
 
                         foreach (var pendingMessage in addedGroup)
                         {
                             var ent = list.FirstOrDefault(pme => pme.OperationId == pendingMessage.DomainMessage.OperationId);
-                            if (ent == null)
-                                context.Add(new PendingMessageEntity(pendingMessage.DomainMessage, pendingMessage.ServiceName));
+                            if (ent != null) continue;
+
+                            var ent2 = new PendingMessageEntity(pendingMessage.DomainMessage, pendingMessage.ServiceName);
+                            context.Add(ent2);
+                            list.Add(ent2);
                         }
                     }
 
@@ -201,14 +209,29 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
         public int GetCurrentClients() 
             => _registrations.Count;
 
-        public int GetPendingMessages() 
-            => _pendingMessages.Count;
+        public int GetPendingMessages()
+        {
+            var counter = 0;
+            foreach (var (_, messages) in _pendingMessages)
+            {
+                lock (messages) counter += messages.Count();
+            }
+
+            return counter;
+        }
 
         public Task CheckId(string id)
         {
             if (_registrations.TryGetValue(id, out var registration) && registration.Validated) return Task.CompletedTask;
 
             return Task.FromException(new HubException("Id Nicht Validiert"));
+        }
+
+        private PendingMessage CreateAndAddPendingMessage(string name, DomainMessage domainMessage)
+        {
+            var msg = new PendingMessage(name, domainMessage, DateTimeOffset.Now + _messageTimeout);
+            _added.Add(msg);
+            return msg;
         }
 
         public async Task SendEvent(DomainMessage domainMessage)
@@ -224,11 +247,11 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
                     _pendingMessages.AddOrUpdate(
                         Guard.CheckNull(registration.ServiceName),
                         // ReSharper disable once InconsistentlySynchronizedField
-                        s => new List<PendingMessage>(new[] {new PendingMessage(s, domainMessage, DateTimeOffset.Now + _messageTimeout)}),
+                        s => new List<PendingMessage>(new[] {CreateAndAddPendingMessage(s, domainMessage)}),
                         (s, list) =>
                         {
                             lock (list)
-                                list.Add(new PendingMessage(s, domainMessage, DateTimeOffset.Now + _messageTimeout));
+                                list.Add(CreateAndAddPendingMessage(s, domainMessage));
 
                             return list;
                         });
@@ -309,11 +332,13 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
                     list.Replace(GetSubscripedClients(eventName));
             }
             else
+            {
                 _registrations[id] = new Registration(id, await _store.Get(serviceName))
-                {
-                    Validated = true, 
-                    ServiceName = serviceName
-                };
+                                     {
+                                         Validated = true, 
+                                         ServiceName = serviceName
+                                     };
+            }
         }
 
         public Task Disconected(string id)
@@ -355,7 +380,7 @@ namespace Tauron.Application.CQRS.Dispatcher.Core.Impl
 
             try
             {
-                if (_pendingMessages.TryGetValue(_registrations.First(r => r.Value.Id == connectionId).Key, out var list))
+                if (_pendingMessages.TryGetValue(Guard.CheckNull(_registrations.First(r => r.Value.Id == connectionId).Value.ServiceName), out var list))
                 {
                     lock (list)
                     {
