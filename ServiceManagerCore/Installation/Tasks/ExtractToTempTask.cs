@@ -19,7 +19,7 @@ namespace ServiceManager.Core.Installation.Tasks
             return Task.CompletedTask;
         }
 
-        public override Task<string> RunInstall(InstallerContext context)
+        public override Task<string?> RunInstall(InstallerContext context)
         {
             if (!context.MetaData.TryGetTypedValue(MetaKeys.ArchiveFile, out ZipArchive zipArchive))
                 return Task.FromResult("Zip Erchive nicht gefunden");

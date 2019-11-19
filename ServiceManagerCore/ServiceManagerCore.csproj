@@ -9,17 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Installation\Tasks\Ui\NameSelection.xaml" />
-    <None Remove="Installation\UnistallWindowOld.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Include="Installation\Tasks\Ui\NameSelection.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Installation\UnistallWindowOld.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup>

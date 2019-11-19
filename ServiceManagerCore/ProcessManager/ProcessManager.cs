@@ -5,9 +5,12 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Nito.AsyncEx;
 using ServiceManager.Core.Core;
 using ServiceManager.Core.Services;
+using Tauron.Application.CQRS.Client.Commands;
+using Tauron.Application.CQRS.Extensions.ServiceControl;
 
 namespace ServiceManager.Core.ProcessManager
 {
@@ -35,13 +38,15 @@ namespace ServiceManager.Core.ProcessManager
         private readonly ILogger<ProcessManager> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ServiceSettings _serviceSettings;
+        private readonly IOptions<ServiceManagerConfiguration> _config;
         private readonly ConcurrentDictionary<string, ProcessHolder> _processes = new ConcurrentDictionary<string, ProcessHolder>();
 
-        public ProcessManager(ILogger<ProcessManager> logger, IServiceScopeFactory serviceScopeFactory, ServiceSettings serviceSettings)
+        public ProcessManager(ILogger<ProcessManager> logger, IServiceScopeFactory serviceScopeFactory, ServiceSettings serviceSettings, IOptions<ServiceManagerConfiguration> config)
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
             _serviceSettings = serviceSettings;
+            _config = config;
         }
 
         public Task<bool> Start(RunningService service)
@@ -136,7 +141,7 @@ namespace ServiceManager.Core.ProcessManager
             foreach (var service in _serviceSettings.RunningServices) 
                 await Stop(service, 10_000);
 
-            await ServiceSettings.Write(_serviceSettings, MainWindowsModel.SettingsPath);
+            await ServiceSettings.Write(_serviceSettings, _config.Value.SettingsPath);
         }
 
         public void Dispose()

@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using ServiceManager.Core.Core;
 using ServiceManager.Core.Installation.Core;
 using ServiceManager.Core.Installation.Tasks.Ui;
+using ServiceManager.Core.UIInterface;
+using Tauron.Application.CQRS.Common;
 
 namespace ServiceManager.Core.Installation.Tasks
 {
@@ -15,25 +17,25 @@ namespace ServiceManager.Core.Installation.Tasks
     {
         private readonly ILogger<NameSelectionTask> _logger;
         private readonly ServiceSettings _serviceSettings;
-        private NameSelectionModel _nameSelectionModel;
+        private readonly IUIFabric _fabric;
+        private NameSelectionModel? _nameSelectionModel;
 
-        public NameSelectionTask(ILogger<NameSelectionTask> logger, ServiceSettings serviceSettings)
+        public NameSelectionTask(ILogger<NameSelectionTask> logger, ServiceSettings serviceSettings, IUIFabric fabric)
         {
             _logger = logger;
             _serviceSettings = serviceSettings;
+            _fabric = fabric;
         }
 
         public override string Title => "Service Name";
 
-        public override Task Prepare(InstallerContext context)
+        public override async Task Prepare(InstallerContext context)
         {
             _nameSelectionModel = context.ServiceScope.ServiceProvider.GetRequiredService<NameSelectionModel>();
-            Content = context.ServiceScope.ServiceProvider.GetRequiredService<NameSelection>();
-
-            return Task.CompletedTask;
+            Content = await _fabric.CreateNameSelecton(context);
         }
 
-        public override async Task<string> RunInstall(InstallerContext context)
+        public override async Task<string?> RunInstall(InstallerContext context)
         {
             var zip = context.PackageArchive;
             if (zip == null)
@@ -53,8 +55,8 @@ namespace ServiceManager.Core.Installation.Tasks
             {
                 _logger.LogInformation("Awaitng Name Selection");
 
-                await _nameSelectionModel.Wait();
-                name = _nameSelectionModel.NameText;
+                await Guard.CheckNull(_nameSelectionModel).Wait();
+                name = _nameSelectionModel?.NameText;
             }
 
             if (string.IsNullOrWhiteSpace(name))
@@ -69,12 +71,12 @@ namespace ServiceManager.Core.Installation.Tasks
             context.ServiceName = name;
 
             _logger.LogInformation($"{context.ServiceName}: Try Find Exe Name");
-            var exeName = GetExeName(context.PackageArchive);
+            string? exeName = GetExeName(Guard.CheckNull(context.PackageArchive));
 
             if (string.IsNullOrEmpty(exeName))
             {
                 _logger.LogInformation($"{context.ServiceName}: Search for Exe in Package");
-                exeName = context.PackageArchive.Entries.FirstOrDefault(e => e.Name.EndsWith(".exe"))?.FullName;
+                exeName = Guard.CheckNull(context.PackageArchive).Entries.FirstOrDefault(e => e.Name.EndsWith(".exe"))?.FullName;
 
                 if (string.IsNullOrEmpty(exeName))
                 {
@@ -89,14 +91,14 @@ namespace ServiceManager.Core.Installation.Tasks
             return null;
         }
 
-        private static string GetName(ZipArchive zipArchive) 
+        private static string? GetName(ZipArchive zipArchive) 
             => GetConfiguration(zipArchive)?
                .GetValue<string>("ServiceName");
 
-        private static string GetExeName(ZipArchive zipArchive) 
+        private static string? GetExeName(ZipArchive zipArchive) 
             => GetConfiguration(zipArchive)?.GetValue<string>("ExeName");
 
-        private static IConfiguration GetConfiguration(ZipArchive zipArchive)
+        private static IConfiguration? GetConfiguration(ZipArchive zipArchive)
         {
             var file = zipArchive.GetEntry(InstallerContext.ServiceSettingsFileName);
             if (file == null) return null;

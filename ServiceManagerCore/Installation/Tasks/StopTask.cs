@@ -26,7 +26,7 @@ namespace ServiceManager.Core.Installation.Tasks
             return Task.CompletedTask;
         }
 
-        public override async Task<string> RunInstall(InstallerContext context)
+        public override async Task<string?> RunInstall(InstallerContext context)
         {
             Content = "Service wird Gestoppt...";
 

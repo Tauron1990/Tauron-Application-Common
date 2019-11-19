@@ -14,7 +14,7 @@ namespace ServiceManager.Core.Installation.Core
     public sealed class InstallerProcedure : INotifyPropertyChanged
     {
         private readonly ILogger<InstallerProcedure> _logger;
-        private InstallerTask _currentTask;
+        private InstallerTask? _currentTask;
 
         public InstallerProcedure(ILogger<InstallerProcedure> logger) => _logger = logger;
 
@@ -37,7 +37,7 @@ namespace ServiceManager.Core.Installation.Core
 
         public ObservableCollection<InstallerTask> Tasks { get; } = new ObservableCollection<InstallerTask>();
 
-        public InstallerTask CurrentTask
+        public InstallerTask? CurrentTask
         {
             get => _currentTask;
             set
@@ -48,12 +48,12 @@ namespace ServiceManager.Core.Installation.Core
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        public async Task<string> Install(InstallerContext context)
+        public async Task<string?> Install(InstallerContext context)
         {
             var rollback = new List<InstallerTask>();
-            string error = null;
+            string? error = null;
 
             foreach (var installerTask in Tasks)
             {
@@ -113,7 +113,7 @@ namespace ServiceManager.Core.Installation.Core
             ActivatorUtilities.CreateInstance<TType>(context);
 
         [NotifyPropertyChangedInvocator]
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

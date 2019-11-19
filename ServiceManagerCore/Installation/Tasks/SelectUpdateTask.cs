@@ -3,21 +3,22 @@ using System.IO.Compression;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ServiceManager.Core.Installation.Core;
+using ServiceManager.Core.UIInterface;
 
 namespace ServiceManager.Core.Installation.Tasks
 {
     public sealed class SelectUpdateTask : InstallerTask
     {
-        private readonly MainWindow _mainWindow;
         private readonly ILogger<SelectUpdateTask> _logger;
-        private ZipArchive _zipArchive;
+        private readonly IUIFabric _fabric;
+        private ZipArchive? _zipArchive;
 
         public override string Title => "Datei Wählen";
 
-        public SelectUpdateTask(MainWindow mainWindow, ILogger<SelectUpdateTask> logger)
+        public SelectUpdateTask(ILogger<SelectUpdateTask> logger, IUIFabric fabric)
         {
-            _mainWindow = mainWindow;
             _logger = logger;
+            _fabric = fabric;
         }
 
         public override Task Prepare(InstallerContext context)
@@ -27,20 +28,18 @@ namespace ServiceManager.Core.Installation.Tasks
             return base.Prepare(context);
         }
 
-        public override Task<string> RunInstall(InstallerContext context)
+        public override async Task<string?> RunInstall(InstallerContext context)
         {
             var service = context.CreateRunningService();
 
-            using var diag = new OpenFileDialog { AutoUpgradeEnabled = true };
+             var path = await _fabric.OpenFileDialog();
 
-
-            if (diag.ShowDialog(new Win32Proxy(_mainWindow)) != DialogResult.OK)
+            if (path == null)
             {
                 _logger.LogWarning($"{service.Name}: Update File not Selected");
-                return Task.FromResult("Es wurde Keine Datei fürs Update gewählt.");
+                return "Es wurde Keine Datei fürs Update gewählt.";
             }
 
-            var path = diag.FileName;
             try
             {
                 var archive = new ZipArchive(new FileStream(path, FileMode.Open));
@@ -53,10 +52,10 @@ namespace ServiceManager.Core.Installation.Tasks
             catch
             {
                 _logger.LogWarning($"{service.Name}: Error Open Update File");
-                return Task.FromResult("Die Datei konnte nicht geöffnet werden");
+                return "Die Datei konnte nicht geöffnet werden";
             }
 
-            return Task.FromResult <string>(null);
+            return null;
         }
 
         public override void Dispose() 

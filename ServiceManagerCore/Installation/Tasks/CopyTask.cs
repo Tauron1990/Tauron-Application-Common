@@ -1,35 +1,29 @@
 ﻿using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ServiceManager.Core.Core;
 using ServiceManager.Core.Installation.Core;
+using ServiceManager.Core.UIInterface;
 
 namespace ServiceManager.Core.Installation.Tasks
 {
     public sealed class CopyTask : InstallerTask
     {
         private readonly ILogger<CopyTask> _logger;
-       
+        private readonly IUIFabric _fabric;
+
         public override string Title => "Daten Kopieren";
 
-        public CopyTask(ILogger<CopyTask> logger)
+        public CopyTask(ILogger<CopyTask> logger, IUIFabric fabric)
         {
             _logger = logger;
+            _fabric = fabric;
         }
 
-        public override async Task Prepare(InstallerContext context)
-        {
-            var dispatcher = context.ServiceScope.ServiceProvider.GetRequiredService<Dispatcher>();
-            Content = await dispatcher.InvokeAsync(() => new TextBlock
-                                                          {
-                                                              TextAlignment = TextAlignment.Center,
-                                                              TextWrapping = TextWrapping.Wrap,
-                                                              Text = $"Daten werden für {context.ServiceName} Kopiert"
-                                                          });
-        }
+        public override async Task Prepare(InstallerContext context) => Content = await _fabric.CreateCopyTaskUI(context);
 
-        public override Task<string> RunInstall(InstallerContext context)
+        public override Task<string?> RunInstall(InstallerContext context)
         {
             var path = Path.Combine("Apps", context.ServiceName).ToApplicationPath();
             if (!Directory.Exists(path))
@@ -43,7 +37,7 @@ namespace ServiceManager.Core.Installation.Tasks
             _logger.LogInformation($"{context.ServiceName}: Extraction Compled");
             context.InstalledPath = path;
 
-            return Task.FromResult<string>(null);
+            return Task.FromResult<string>(null!)!;
         }
 
         public override Task Rollback(InstallerContext context)

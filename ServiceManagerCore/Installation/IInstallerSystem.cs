@@ -5,7 +5,7 @@ namespace ServiceManager.Core.Installation
 {
     public interface IInstallerSystem
     {
-        Task<RunningService> Install(string path);
+        Task<RunningService?> Install(string path);
 
         Task<bool?> Unistall(RunningService service);
 

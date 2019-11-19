@@ -12,12 +12,12 @@ namespace ServiceManager.Core.Installation.Tasks.Ui
     public sealed class NameSelectionModel : INotifyPropertyChanged
     {
         private readonly AsyncManualResetEvent _manualResetEvent = new AsyncManualResetEvent(false);
-        private string _nameText;
+        private string? _nameText;
 
         public NameSelectionModel(ServiceSettings serviceSettings)
             => NameList = new ObservableCollection<string>(serviceSettings.RunningServices.Select(r => r.Name));
 
-        public string NameText
+        public string? NameText
         {
             get => _nameText;
             set
@@ -30,13 +30,13 @@ namespace ServiceManager.Core.Installation.Tasks.Ui
 
         public ObservableCollection<string> NameList { get; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public Task Wait() => _manualResetEvent.WaitAsync();
 
         public void Click() => _manualResetEvent.Set();
 
         [NotifyPropertyChangedInvocator]
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        private void OnPropertyChanged([CallerMemberName] string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

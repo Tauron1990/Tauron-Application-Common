@@ -51,7 +51,7 @@ namespace ServiceManager.Core.Installation.Core
 
         public virtual Task Prepare(InstallerContext context) => Task.CompletedTask;
 
-        public abstract Task<string> RunInstall(InstallerContext context);
+        public abstract Task<string?> RunInstall(InstallerContext context);
 
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

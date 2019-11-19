@@ -20,7 +20,7 @@ namespace ServiceManager.Core.Installation.Tasks
             return base.Prepare(context);
         }
 
-        public override async Task<string> RunInstall(InstallerContext context)
+        public override async Task<string?> RunInstall(InstallerContext context)
         {
             if(await _processManager.Start(context.CreateRunningService())) return null;
 

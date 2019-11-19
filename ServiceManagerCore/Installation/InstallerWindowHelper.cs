@@ -43,7 +43,7 @@ namespace ServiceManager.Core
                     installerProcedure.InitInstall(scope.ServiceProvider);
 
 
-                await _installWindow.SyncUI(() => _installWindow.DataContext = installerProcedure);
+                await _installWindow.InvokeAsync(() => _installWindow.DataContext = installerProcedure);
 
 
                 using var context = Update ? InstallerContext.CreateFrom(RunningService, scope) : new InstallerContext(scope, Path);
@@ -55,17 +55,19 @@ namespace ServiceManager.Core
 
                 if (string.IsNullOrEmpty(error))
                 {
-                    await _installWindow.SyncUI(() => _installWindow.SetResult(true));
+                    await _installWindow.InvokeAsync(() => _installWindow.SetResult(true));
                     RunningService = context.CreateRunningService();
                 }
                 else
-                    await _installWindow.SyncUI(() => _installWindow.SetResult(true));
+                    await _installWindow.InvokeAsync(() => _installWindow.SetResult(true));
             }
             catch (Exception exception)
             {
                 Error = exception.Message;
-                await _installWindow.SyncUI(() => _installWindow.SetResult(false));
+                await _installWindow.InvokeAsync(() => _installWindow.SetResult(false));
             }
         }
+
+        public Task<bool?> ShowDialog() => _installWindow.InvokeAsync(() => _installWindow.ShowDialog());
     }
 }

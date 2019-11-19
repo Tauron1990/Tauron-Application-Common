@@ -1,20 +1,27 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using ServiceManager.Core.ApiRequester;
 using ServiceManager.Core.Installation.Core;
+using Tauron.Application.CQRS.Common.Configuration;
 
 namespace ServiceManager.Core.Installation.Tasks
 {
     public sealed class ApiRequestingTask : InstallerTask
     {
         private readonly Lazy<IApiRequester> _apiRequester;
-        
+        private readonly IOptions<ClientCofiguration> _config;
+
         public override string Title => "Api Schlüssel";
 
-        public ApiRequestingTask(Lazy<IApiRequester> apiRequester) 
-            => _apiRequester = apiRequester;
+        public ApiRequestingTask(Lazy<IApiRequester> apiRequester, IOptions<ClientCofiguration> config)
+        {
+            _apiRequester = apiRequester;
+            _config = config;
+        }
 
         public override Task Prepare(InstallerContext context)
         {
@@ -22,7 +29,7 @@ namespace ServiceManager.Core.Installation.Tasks
             return base.Prepare(context);
         }
 
-        public override async Task<string> RunInstall(InstallerContext context)
+        public override async Task<string?> RunInstall(InstallerContext context)
         {
             var key = await _apiRequester.Value.RegisterApiKey(context.ServiceName);
 
@@ -35,7 +42,7 @@ namespace ServiceManager.Core.Installation.Tasks
             var settings = JToken.Parse(await File.ReadAllTextAsync(path));
 
             settings["ApiKey"] = key;
-            settings["Dispatcher"] = App.ClientCofiguration.BaseUrl;
+            settings["Dispatcher"] = _config.Value.BaseUrl;
 
             await using (var file = new FileStream(path, FileMode.Create))
             {

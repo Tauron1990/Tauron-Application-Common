@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using ServiceManager.Core.Installation.Core;
+using Tauron.Application.CQRS.Common;
 
 namespace ServiceManager.Core.Installation.Tasks
 {
@@ -16,11 +17,11 @@ namespace ServiceManager.Core.Installation.Tasks
         public UpdateFilesTask(ILogger<UpdateFilesTask> logger) 
             => _logger = logger;
 
-        public override async Task<string> RunInstall(InstallerContext context)
+        public override async Task<string?> RunInstall(InstallerContext context)
         {
             Content = "Einstellungen werden Übernommen";
 
-            if (!context.MetaData.TryGetTypedValue(MetaKeys.TempLocation, out string tempPath))
+            if (!context.MetaData.TryGetTypedValue(MetaKeys.TempLocation, out string? tempPath))
                 return "Temporärer Pfad nich angegeben";
 
             var serviceSettings = Path.Combine(tempPath, InstallerContext.ServiceSettingsFileName);
@@ -51,7 +52,7 @@ namespace ServiceManager.Core.Installation.Tasks
 
             Content = "Daten Übertragen";
 
-            DirectoryCopy(tempPath, context.InstalledPath);
+            DirectoryCopy(Guard.CheckNull(tempPath), context.InstalledPath);
 
             return null;
         }
@@ -67,8 +68,7 @@ namespace ServiceManager.Core.Installation.Tasks
                 ((JContainer)root).Merge(sourceToken, new JsonMergeSettings
                                                       {
                                                           MergeArrayHandling = MergeArrayHandling.Union, 
-                                                          MergeNullValueHandling = MergeNullValueHandling.Ignore, 
-                                                          PropertyNameComparison = StringComparison.Ordinal
+                                                          MergeNullValueHandling = MergeNullValueHandling.Ignore
                                                       });
 
                 await File.WriteAllTextAsync(rootPath, root.ToString());
