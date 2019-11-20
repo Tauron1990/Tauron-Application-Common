@@ -52,7 +52,7 @@ namespace ServiceManager.Core.Installation.Tasks
 
             Content = "Daten Übertragen";
 
-            DirectoryCopy(Guard.CheckNull(tempPath), context.InstalledPath);
+            DirectoryCopy(Guard.CheckNull(tempPath), Guard.CheckNull(context.InstalledPath));
 
             return null;
         }

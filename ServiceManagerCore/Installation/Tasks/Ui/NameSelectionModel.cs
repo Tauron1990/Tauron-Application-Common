@@ -15,7 +15,10 @@ namespace ServiceManager.Core.Installation.Tasks.Ui
         private string? _nameText;
 
         public NameSelectionModel(ServiceSettings serviceSettings)
-            => NameList = new ObservableCollection<string>(serviceSettings.RunningServices.Select(r => r.Name));
+            => NameList = new ObservableCollection<string>(from service in serviceSettings.RunningServices
+                                                           let name = service.Name
+                                                           where name != null
+                                                           select name);
 
         public string? NameText
         {

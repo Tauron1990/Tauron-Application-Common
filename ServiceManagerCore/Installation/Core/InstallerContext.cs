@@ -64,7 +64,7 @@ namespace ServiceManager.Core.Installation.Core
             InstalledPath = runningService.InstallationPath;
             ExeName = runningService.Exe;
             ServiceScope = serviceScope;
-            ServiceName = runningService.Name;
+            ServiceName = Guard.CheckNull(runningService.Name);
             _runningService = runningService;
         }
 

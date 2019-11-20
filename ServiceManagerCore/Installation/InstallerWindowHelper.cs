@@ -1,12 +1,10 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using ServiceManager.Core.Installation;
 using ServiceManager.Core.Installation.Core;
 using ServiceManager.Core.Services;
 
-namespace ServiceManager.Core
+namespace ServiceManager.Core.Installation
 {
     public sealed class InstallerWindowHelper
     {
@@ -19,7 +17,7 @@ namespace ServiceManager.Core
 
         internal string Path { get; set; }
 
-        internal string Error { get; private set; }
+        internal string? Error { get; private set; }
 
         public InstallerWindowHelper(IInstallWindow installWindow, IServiceScopeFactory serviceScopeFactory)
         {

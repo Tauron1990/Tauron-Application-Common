@@ -51,25 +51,28 @@ namespace ServiceManager.Core.ProcessManager
 
         public Task<bool> Start(RunningService service)
         {
-            if(_processes.ContainsKey(service.Name)) return Task.FromResult(false);
+            string? serviceName = service.Name;
+            if (serviceName == null) return Task.FromResult(false);
+
+            if(_processes.ContainsKey(serviceName)) return Task.FromResult(false);
 
             try
             {
                 var process = Process.Start(Path.Combine(service.InstallationPath, service.Exe));
                 process.EnableRaisingEvents = true;
 
-                _processes[service.Name] = new ProcessHolder(process);
+                _processes[serviceName] = new ProcessHolder(process);
 
                 service.ServiceStade = ServiceStade.Running;
 
                 process.Exited += (sender, args) =>
                 {
                     service.ServiceStade = ServiceStade.Ready;
-                    if (_processes.TryRemove(service.Name, out var holder)) 
+                    if (_processes.TryRemove(serviceName, out var holder)) 
                         holder.Dispose();
                 };
 
-                _logger.LogInformation($"Service Started: {service.Name}");
+                _logger.LogInformation($"Service Started: {serviceName}");
 
                 return Task.FromResult(true);
             }
@@ -84,6 +87,9 @@ namespace ServiceManager.Core.ProcessManager
 
         public async Task<bool> Stop(RunningService service, int timeToKill)
         {
+            string? serviceName = service.Name;
+            if (serviceName == null) return false;
+
             if (_processes.TryGetValue(service.Name, out var process))
             {
                 return await process.Execute(async p =>

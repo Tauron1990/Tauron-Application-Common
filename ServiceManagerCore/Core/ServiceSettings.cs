@@ -8,9 +8,9 @@ namespace ServiceManager.Core.Core
 {
     public sealed class ServiceSettings
     {
-        public string Url { get; set; }
+        public string? Url { get; set; }
 
-        public string ApiKey { get; set; }
+        public string? ApiKey { get; set; }
 
         public List<RunningService> RunningServices { get; set; } = new List<RunningService>();
 
